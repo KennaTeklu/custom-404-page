@@ -1,0 +1,101 @@
+{
+  "type": "categories",
+  "items": [
+    {
+      "name": "Behavioral Sciences",
+      "children": [
+        { "name": "Biology and Behavior", "quizBankUrl": "quizzes/behavioral_sciences_biology_and_behavior_mcq.json", "fillBlankUrl": "quizzes/behavioral_sciences_biology_and_behavior_fillblank.json" },
+        { "name": "Sensation and Perception", "quizBankUrl": "quizzes/behavioral_sciences_sensation_and_perception_mcq.json", "fillBlankUrl": "quizzes/behavioral_sciences_sensation_and_perception_fillblank.json" },
+        { "name": "Learning and Memory", "quizBankUrl": "quizzes/behavioral_sciences_learning_and_memory_mcq.json", "fillBlankUrl": "quizzes/behavioral_sciences_learning_and_memory_fillblank.json" },
+        { "name": "Cognition, Consciousness, and Language", "quizBankUrl": "quizzes/behavioral_sciences_cognition_consciousness_and_language_mcq.json", "fillBlankUrl": "quizzes/behavioral_sciences_cognition_consciousness_and_language_fillblank.json" },
+        { "name": "Motivation, Emotion, and Stress", "quizBankUrl": "quizzes/behavioral_sciences_motivation_emotion_and_stress_mcq.json", "fillBlankUrl": "quizzes/behavioral_sciences_motivation_emotion_and_stress_fillblank.json" },
+        { "name": "Identity and Personality", "quizBankUrl": "quizzes/behavioral_sciences_identity_and_personality_mcq.json", "fillBlankUrl": "quizzes/behavioral_sciences_identity_and_personality_fillblank.json" },
+        { "name": "Psychological Disorders", "quizBankUrl": "quizzes/behavioral_sciences_psychological_disorders_mcq.json", "fillBlankUrl": "quizzes/behavioral_sciences_psychological_disorders_fillblank.json" },
+        { "name": "Social Processes, Attitudes, and Behavior", "quizBankUrl": "quizzes/behavioral_sciences_social_processes_attitudes_and_behavior_mcq.json", "fillBlankUrl": "quizzes/behavioral_sciences_social_processes_attitudes_and_behavior_fillblank.json" },
+        { "name": "Social Interaction", "quizBankUrl": "quizzes/behavioral_sciences_social_interaction_mcq.json", "fillBlankUrl": "quizzes/behavioral_sciences_social_interaction_fillblank.json" },
+        { "name": "Social Thinking", "quizBankUrl": "quizzes/behavioral_sciences_social_thinking_mcq.json", "fillBlankUrl": "quizzes/behavioral_sciences_social_thinking_fillblank.json" },
+        { "name": "Social Structure and Demographics", "quizBankUrl": "quizzes/behavioral_sciences_social_structure_and_demographics_mcq.json", "fillBlankUrl": "quizzes/behavioral_sciences_social_structure_and_demographics_fillblank.json" },
+        { "name": "Social Stratification", "quizBankUrl": "quizzes/behavioral_sciences_social_stratification_mcq.json", "fillBlankUrl": "quizzes/behavioral_sciences_social_stratification_fillblank.json" }
+      ]
+    },
+    {
+      "name": "Biochemistry",
+      "children": [
+        { "name": "Amino Acids, Peptides, and Proteins", "quizBankUrl": "quizzes/biochemistry_amino_acids_peptides_and_proteins_mcq.json", "fillBlankUrl": "quizzes/biochemistry_amino_acids_peptides_and_proteins_fillblank.json" },
+        { "name": "Enzymes", "quizBankUrl": "quizzes/biochemistry_enzymes_mcq.json", "fillBlankUrl": "quizzes/biochemistry_enzymes_fillblank.json" },
+        { "name": "Nonenzymatic Protein Function and Protein Analysis", "quizBankUrl": "quizzes/biochemistry_nonenzymatic_protein_function_and_protein_analysis_mcq.json", "fillBlankUrl": "quizzes/biochemistry_nonenzymatic_protein_function_and_protein_analysis_fillblank.json" },
+        { "name": "Carbohydrate Structure and Function", "quizBankUrl": "quizzes/biochemistry_carbohydrate_structure_and_function_mcq.json", "fillBlankUrl": "quizzes/biochemistry_carbohydrate_structure_and_function_fillblank.json" },
+        { "name": "Lipid Structure and Function", "quizBankUrl": "quizzes/biochemistry_lipid_structure_and_function_mcq.json", "fillBlankUrl": "quizzes/biochemistry_lipid_structure_and_function_fillblank.json" },
+        { "name": "Biological Membranes", "quizBankUrl": "quizzes/biochemistry_biological_membranes_mcq.json", "fillBlankUrl": "quizzes/biochemistry_biological_membranes_fillblank.json" },
+        { "name": "DNA and Biotechnology", "quizBankUrl": "quizzes/biochemistry_dna_and_biotechnology_mcq.json", "fillBlankUrl": "quizzes/biochemistry_dna_and_biotechnology_fillblank.json" },
+        { "name": "RNA and the Genetic Code", "quizBankUrl": "quizzes/biochemistry_rna_and_the_genetic_code_mcq.json", "fillBlankUrl": "quizzes/biochemistry_rna_and_the_genetic_code_fillblank.json" },
+        { "name": "Carbohydrate Metabolism I: Anaerobic Respiration", "quizBankUrl": "quizzes/biochemistry_carbohydrate_metabolism_i_anaerobic_respiration_mcq.json", "fillBlankUrl": "quizzes/biochemistry_carbohydrate_metabolism_i_anaerobic_respiration_fillblank.json" },
+        { "name": "Carbohydrate Metabolism II: Aerobic Respiration", "quizBankUrl": "quizzes/biochemistry_carbohydrate_metabolism_ii_aerobic_respiration_mcq.json", "fillBlankUrl": "quizzes/biochemistry_carbohydrate_metabolism_ii_aerobic_respiration_fillblank.json" },
+        { "name": "Lipid and Amino Acid Metabolism", "quizBankUrl": "quizzes/biochemistry_lipid_and_amino_acid_metabolism_mcq.json", "fillBlankUrl": "quizzes/biochemistry_lipid_and_amino_acid_metabolism_fillblank.json" },
+        { "name": "Bioenergetics and Regulation of Metabolism", "quizBankUrl": "quizzes/biochemistry_bioenergetics_and_regulation_of_metabolism_mcq.json", "fillBlankUrl": "quizzes/biochemistry_bioenergetics_and_regulation_of_metabolism_fillblank.json" }
+      ]
+    },
+    {
+      "name": "Biology",
+      "children": [
+        { "name": "Cell", "quizBankUrl": "quizzes/biology_cell_mcq.json", "fillBlankUrl": "quizzes/biology_cell_fillblank.json" },
+        { "name": "Reproduction", "quizBankUrl": "quizzes/biology_reproduction_mcq.json", "fillBlankUrl": "quizzes/biology_reproduction_fillblank.json" },
+        { "name": "Embryogenesis and Development", "quizBankUrl": "quizzes/biology_embryogenesis_and_development_mcq.json", "fillBlankUrl": "quizzes/biology_embryogenesis_and_development_fillblank.json" },
+        { "name": "Nervous System", "quizBankUrl": "quizzes/biology_nervous_system_mcq.json", "fillBlankUrl": "quizzes/biology_nervous_system_fillblank.json" },
+        { "name": "Endocrine System", "quizBankUrl": "quizzes/biology_endocrine_system_mcq.json", "fillBlankUrl": "quizzes/biology_endocrine_system_fillblank.json" },
+        { "name": "Respiratory System", "quizBankUrl": "quizzes/biology_respiratory_system_mcq.json", "fillBlankUrl": "quizzes/biology_respiratory_system_fillblank.json" },
+        { "name": "Cardiovascular System", "quizBankUrl": "quizzes/biology_cardiovascular_system_mcq.json", "fillBlankUrl": "quizzes/biology_cardiovascular_system_fillblank.json" },
+        { "name": "Immune System", "quizBankUrl": "quizzes/biology_immune_system_mcq.json", "fillBlankUrl": "quizzes/biology_immune_system_fillblank.json" },
+        { "name": "Digestive System", "quizBankUrl": "quizzes/biology_digestive_system_mcq.json", "fillBlankUrl": "quizzes/biology_digestive_system_fillblank.json" },
+        { "name": "Homeostasis", "quizBankUrl": "quizzes/biology_homeostasis_mcq.json", "fillBlankUrl": "quizzes/biology_homeostasis_fillblank.json" },
+        { "name": "Musculoskeletal System", "quizBankUrl": "quizzes/biology_musculoskeletal_system_mcq.json", "fillBlankUrl": "quizzes/biology_musculoskeletal_system_fillblank.json" },
+        { "name": "Genetics and Evolution", "quizBankUrl": "quizzes/biology_genetics_and_evolution_mcq.json", "fillBlankUrl": "quizzes/biology_genetics_and_evolution_fillblank.json" }
+      ]
+    },
+    {
+      "name": "General Chemistry",
+      "children": [
+        { "name": "Atomic Structure", "quizBankUrl": "quizzes/general_chemistry_atomic_structure_mcq.json", "fillBlankUrl": "quizzes/general_chemistry_atomic_structure_fillblank.json" },
+        { "name": "Periodic Table", "quizBankUrl": "quizzes/general_chemistry_periodic_table_mcq.json", "fillBlankUrl": "quizzes/general_chemistry_periodic_table_fillblank.json" },
+        { "name": "Bonding and Chemical Interactions", "quizBankUrl": "quizzes/general_chemistry_bonding_and_chemical_interactions_mcq.json", "fillBlankUrl": "quizzes/general_chemistry_bonding_and_chemical_interactions_fillblank.json" },
+        { "name": "Compounds and Stoichiometry", "quizBankUrl": "quizzes/general_chemistry_compounds_and_stoichiometry_mcq.json", "fillBlankUrl": "quizzes/general_chemistry_compounds_and_stoichiometry_fillblank.json" },
+        { "name": "Equilibrium", "quizBankUrl": "quizzes/general_chemistry_equilibrium_mcq.json", "fillBlankUrl": "quizzes/general_chemistry_equilibrium_fillblank.json" },
+        { "name": "Thermochemistry", "quizBankUrl": "quizzes/general_chemistry_thermochemistry_mcq.json", "fillBlankUrl": "quizzes/general_chemistry_thermochemistry_fillblank.json" },
+        { "name": "Gas Phase", "quizBankUrl": "quizzes/general_chemistry_gas_phase_mcq.json", "fillBlankUrl": "quizzes/general_chemistry_gas_phase_fillblank.json" },
+        { "name": "Solutions", "quizBankUrl": "quizzes/general_chemistry_solutions_mcq.json", "fillBlankUrl": "quizzes/general_chemistry_solutions_fillblank.json" },
+        { "name": "Acids and Bases", "quizBankUrl": "quizzes/general_chemistry_acids_and_bases_mcq.json", "fillBlankUrl": "quizzes/general_chemistry_acids_and_bases_fillblank.json" },
+        { "name": "Electrochemistry", "quizBankUrl": "quizzes/general_chemistry_electrochemistry_mcq.json", "fillBlankUrl": "quizzes/general_chemistry_electrochemistry_fillblank.json" }
+      ]
+    },
+    {
+      "name": "Organic Chemistry",
+      "children": [
+        { "name": "Alcohols", "quizBankUrl": "quizzes/organic_chemistry_alcohols_mcq.json", "fillBlankUrl": "quizzes/organic_chemistry_alcohols_fillblank.json" },
+        { "name": "Carboxylic Acids", "quizBankUrl": "quizzes/organic_chemistry_carboxylic_acids_mcq.json", "fillBlankUrl": "quizzes/organic_chemistry_carboxylic_acids_fillblank.json" },
+        { "name": "Carboxylic Acid Derivatives", "quizBankUrl": "quizzes/organic_chemistry_carboxylic_acid_derivatives_mcq.json", "fillBlankUrl": "quizzes/organic_chemistry_carboxylic_acid_derivatives_fillblank.json" },
+        { "name": "Nitrogen- and Phosphorus-Containing Compounds", "quizBankUrl": "quizzes/organic_chemistry_nitrogen_and_phosphorus_containing_compounds_mcq.json", "fillBlankUrl": "quizzes/organic_chemistry_nitrogen_and_phosphorus_containing_compounds_fillblank.json" },
+        { "name": "Separations and Purifications", "quizBankUrl": "quizzes/organic_chemistry_separations_and_purifications_mcq.json", "fillBlankUrl": "quizzes/organic_chemistry_separations_and_purifications_fillblank.json" }
+      ]
+    },
+    {
+      "name": "Physics",
+      "children": [
+        { "name": "Kinematics and Dynamics", "quizBankUrl": "quizzes/physics_kinematics_and_dynamics_mcq.json", "fillBlankUrl": "quizzes/physics_kinematics_and_dynamics_fillblank.json" },
+        { "name": "Work and Energy", "quizBankUrl": "quizzes/physics_work_and_energy_mcq.json", "fillBlankUrl": "quizzes/physics_work_and_energy_fillblank.json" },
+        { "name": "Fluids", "quizBankUrl": "quizzes/physics_fluids_mcq.json", "fillBlankUrl": "quizzes/physics_fluids_fillblank.json" },
+        { "name": "Electrostatics and Magnetism", "quizBankUrl": "quizzes/physics_electrostatics_and_magnetism_mcq.json", "fillBlankUrl": "quizzes/physics_electrostatics_and_magnetism_fillblank.json" },
+        { "name": "Circuits", "quizBankUrl": "quizzes/physics_circuits_mcq.json", "fillBlankUrl": "quizzes/physics_circuits_fillblank.json" },
+        { "name": "Waves and Sound", "quizBankUrl": "quizzes/physics_waves_and_sound_mcq.json", "fillBlankUrl": "quizzes/physics_waves_and_sound_fillblank.json" },
+        { "name": "Light and Optics", "quizBankUrl": "quizzes/physics_light_and_optics_mcq.json", "fillBlankUrl": "quizzes/physics_light_and_optics_fillblank.json" },
+        { "name": "Atomic and Nuclear Phenomena", "quizBankUrl": "quizzes/physics_atomic_and_nuclear_phenomena_mcq.json", "fillBlankUrl": "quizzes/physics_atomic_and_nuclear_phenomena_fillblank.json" }
+      ]
+    },
+    {
+      "name": "CARS",
+      "children": [
+        { "name": "Humanities", "quizBankUrl": "quizzes/cars_humanities_mcq.json", "fillBlankUrl": "quizzes/cars_humanities_fillblank.json" },
+        { "name": "Social Sciences", "quizBankUrl": "quizzes/cars_social_sciences_mcq.json", "fillBlankUrl": "quizzes/cars_social_sciences_fillblank.json" }
+      ]
+    }
+  ]
+}

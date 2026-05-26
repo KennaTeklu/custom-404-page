@@ -1,0 +1,9 @@
+[
+  {
+    "id": "mcat_advanced_prep",
+    "name": "MCAT Advanced Prep",
+    "version": "1.0.0",
+    "description": "Full MCAT content review with quizzes for every topic",
+    "baseUrl": "https://raw.githubusercontent.com/YOUR_USERNAME/brain/main/mcat_advanced_prep/"
+  }
+]
