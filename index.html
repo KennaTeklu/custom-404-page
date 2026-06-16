@@ -11891,27 +11891,33 @@ function validateHTML(html) {
         location.reload();
     }
 
-    // Fullscreen‑safe timing detection
+    // ========== FIXED FULLSCREEN DETECTION ==========
     let startup = true;
-    setTimeout(() => { startup = false; }, 1000);
+    setTimeout(() => { startup = false; }, 1500); // increased grace period
+
     let lastTime = performance.now();
     let frameCount = 0;
-    let isTransitioning = false;
 
-    document.addEventListener('fullscreenchange', () => {
-        isTransitioning = true;
-        lastTime = performance.now();
-        setTimeout(() => { isTransitioning = false; }, 500);
-    });
-    document.addEventListener('webkitfullscreenchange', () => {
-        isTransitioning = true;
-        lastTime = performance.now();
-        setTimeout(() => { isTransitioning = false; }, 500);
-    });
+    // Fullscreen transition flag – more robust
+    let isFullscreenTransition = false;
+    let fullscreenTimeout = null;
+
+    function fullscreenChangeHandler() {
+        isFullscreenTransition = true;
+        lastTime = performance.now(); // reset timer
+        if (fullscreenTimeout) clearTimeout(fullscreenTimeout);
+        fullscreenTimeout = setTimeout(() => {
+            isFullscreenTransition = false;
+            lastTime = performance.now(); // reset again after transition
+        }, 800); // longer cooldown
+    }
+
+    document.addEventListener('fullscreenchange', fullscreenChangeHandler);
+    document.addEventListener('webkitfullscreenchange', fullscreenChangeHandler);
 
     function timingCheck() {
-        if (document.hidden || isTransitioning) {
-            lastTime = performance.now();
+        // Skip detection if tab hidden or during fullscreen transition
+        if (document.hidden || isFullscreenTransition) {
             requestAnimationFrame(timingCheck);
             return;
         }
@@ -11924,7 +11930,10 @@ function validateHTML(html) {
         const delta = now - lastTime;
         lastTime = now;
         frameCount++;
-        if (frameCount > 20 && delta > 100) lockDevice();
+        // Increased threshold to 200ms and require more frames
+        if (frameCount > 30 && delta > 200) {
+            lockDevice();
+        }
         requestAnimationFrame(timingCheck);
     }
     requestAnimationFrame(timingCheck);
@@ -11958,7 +11967,7 @@ function validateHTML(html) {
         return;
     }
 
-    console.log('%c🔒 Protection active (lock screen self‑defends).', 'color: #2dd4bf');
+    console.log('%c🔒 Protection active (fullscreen‑safe).', 'color: #2dd4bf');
 })();
 </script>
 </body>
