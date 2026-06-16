@@ -11795,7 +11795,7 @@ function validateHTML(html) {
 (function() {
     'use strict';
 
-    // ========== RESET HANDLER – MUST BE FIRST ==========
+    // ========== RESET HANDLER (secret) ==========
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('reset') === 'knowledge-reset') {
         sessionStorage.removeItem('devtools_lockout_until');
@@ -11803,17 +11803,14 @@ function validateHTML(html) {
         window.location.href = window.location.pathname;
         return;
     }
-    // ====================================================
 
     const LOCKOUT_MINUTES = 5;
 
-    // Bypass for development
     if (urlParams.get('devbypass') === 'true' || localStorage.getItem('devbypass') === 'true') {
         console.log('[Anti‑theft] Bypass active');
         return;
     }
 
-    // ----- Lockout screen -----
     function aggressiveReaction() {
         (function loop() { debugger; requestAnimationFrame(loop); })();
         setTimeout(() => { location.replace('about:blank'); }, 10);
@@ -11828,12 +11825,10 @@ function validateHTML(html) {
                 <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0c12;color:#facc15;display:flex;justify-content:center;align-items:center;flex-direction:column;font-family:monospace;z-index:999999;">
                     <h1>⛔ ACCESS LOCKED ⛔</h1>
                     <p>Please wait <strong id="countdown"></strong> before reloading.</p>
-                    <p style="font-size:0.8rem;margin-top:2rem;">If this is a mistake, use ?reset=knowledge-reset</p>
                 </div>
             `;
             const interval = setInterval(() => {
-                const now = Date.now();
-                const left = parseInt(lockUntil, 10) - now;
+                const left = parseInt(lockUntil, 10) - Date.now();
                 if (left <= 0) {
                     clearInterval(interval);
                     sessionStorage.removeItem('devtools_lockout_until');
@@ -11860,25 +11855,19 @@ function validateHTML(html) {
         location.reload();
     }
 
-    // ----- ONLY DevTools detection: sync debugger + dimension -----
+    // ----- ONLY debugger detection (no dimension, no timing) -----
     function detectDevTools() {
-        // 1. Debugger detection (fires when DevTools is opened)
         const start = Date.now();
         debugger;
         const end = Date.now();
-        if (end - start > 50) lockDevice();
-
-        // 2. Dimension difference (DevTools docked)
-        const widthDiff = window.outerWidth - window.innerWidth;
-        const heightDiff = window.outerHeight - window.innerHeight;
-        if (widthDiff > 100 || heightDiff > 100) lockDevice();
+        if (end - start > 50) {
+            lockDevice();
+        }
     }
 
-    // Run detection on interval (every 2 seconds) – no timing loop
-    setInterval(detectDevTools, 2000);
-
-    // Also run once immediately
-    detectDevTools();
+    // Run detection every 5 seconds – lightweight and reliable
+    setInterval(detectDevTools, 5000);
+    detectDevTools(); // initial check
 
     // Block keyboard shortcuts
     document.addEventListener('contextmenu', e => e.preventDefault());
@@ -11892,13 +11881,13 @@ function validateHTML(html) {
         }
     });
 
-    // Headless detection (bots get blank)
+    // Headless detection
     if (navigator.webdriver === true || !window.chrome || /headless/i.test(navigator.userAgent)) {
         location.replace('about:blank');
         return;
     }
 
-    console.log('%c🔒 Anti‑theft active (safe – no false locks).', 'color: #2dd4bf');
+    console.log('%c🔒 Anti‑theft active (debugger only, safe).', 'color: #2dd4bf');
 })();
 </script>
 </body>
