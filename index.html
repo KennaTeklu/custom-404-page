@@ -11813,21 +11813,17 @@ function validateHTML(html) {
         return;
     }
 
-    // ----- Aggressive response to DevTools (even on lock screen) -----
+    // ----- Lockout screen -----
     function aggressiveReaction() {
-        // Infinite debugger loop – freezes DevTools immediately
         (function loop() { debugger; requestAnimationFrame(loop); })();
-        // Also redirect to blank after a split second
         setTimeout(() => { location.replace('about:blank'); }, 10);
     }
 
-    // ----- Lockout screen with self‑defense -----
     function isLockedOut() {
         const lockUntil = sessionStorage.getItem('devtools_lockout_until') || localStorage.getItem('devtools_lockout_until');
         if (!lockUntil) return false;
         const remaining = parseInt(lockUntil, 10) - Date.now();
         if (remaining > 0) {
-            // Replace the entire page with lock screen
             document.body.innerHTML = `
                 <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0c12;color:#facc15;display:flex;justify-content:center;align-items:center;flex-direction:column;font-family:monospace;z-index:999999;">
                     <h1>⛔ ACCESS LOCKED ⛔</h1>
@@ -11835,37 +11831,11 @@ function validateHTML(html) {
                     <p style="font-size:0.8rem;margin-top:2rem;">If this is a mistake, use ?reset=knowledge-reset</p>
                 </div>
             `;
-
-            // ---- Continuous DevTools detection on lock screen ----
-            let lastTime = performance.now();
-            function detectOnLockScreen() {
-                const now = performance.now();
-                const delta = now - lastTime;
-                lastTime = now;
-                // If delta > 100ms, DevTools likely open
-                if (delta > 100) aggressiveReaction();
-                requestAnimationFrame(detectOnLockScreen);
-            }
-            requestAnimationFrame(detectOnLockScreen);
-
-            // Also check debugger sync every 200ms
-            const debugInterval = setInterval(() => {
-                const start = Date.now();
-                debugger;
-                const end = Date.now();
-                if (end - start > 50) {
-                    clearInterval(debugInterval);
-                    aggressiveReaction();
-                }
-            }, 200);
-
-            // Countdown timer (seconds precision)
             const interval = setInterval(() => {
                 const now = Date.now();
                 const left = parseInt(lockUntil, 10) - now;
                 if (left <= 0) {
                     clearInterval(interval);
-                    clearInterval(debugInterval);
                     sessionStorage.removeItem('devtools_lockout_until');
                     localStorage.removeItem('devtools_lockout_until');
                     location.reload();
@@ -11881,9 +11851,8 @@ function validateHTML(html) {
         return false;
     }
 
-    if (isLockedOut()) return; // Stop here – page is locked
+    if (isLockedOut()) return;
 
-    // ----- Normal operation – lock if DevTools opened -----
     function lockDevice() {
         const lockUntil = Date.now() + (LOCKOUT_MINUTES * 60 * 1000);
         sessionStorage.setItem('devtools_lockout_until', lockUntil);
@@ -11891,65 +11860,27 @@ function validateHTML(html) {
         location.reload();
     }
 
-    // ========== FIXED FULLSCREEN DETECTION ==========
-    let startup = true;
-    setTimeout(() => { startup = false; }, 1500); // increased grace period
-
-    let lastTime = performance.now();
-    let frameCount = 0;
-
-    // Fullscreen transition flag – more robust
-    let isFullscreenTransition = false;
-    let fullscreenTimeout = null;
-
-    function fullscreenChangeHandler() {
-        isFullscreenTransition = true;
-        lastTime = performance.now(); // reset timer
-        if (fullscreenTimeout) clearTimeout(fullscreenTimeout);
-        fullscreenTimeout = setTimeout(() => {
-            isFullscreenTransition = false;
-            lastTime = performance.now(); // reset again after transition
-        }, 800); // longer cooldown
-    }
-
-    document.addEventListener('fullscreenchange', fullscreenChangeHandler);
-    document.addEventListener('webkitfullscreenchange', fullscreenChangeHandler);
-
-    function timingCheck() {
-        // Skip detection if tab hidden or during fullscreen transition
-        if (document.hidden || isFullscreenTransition) {
-            requestAnimationFrame(timingCheck);
-            return;
-        }
-        if (startup) {
-            lastTime = performance.now();
-            requestAnimationFrame(timingCheck);
-            return;
-        }
-        const now = performance.now();
-        const delta = now - lastTime;
-        lastTime = now;
-        frameCount++;
-        // Increased threshold to 200ms and require more frames
-        if (frameCount > 30 && delta > 200) {
-            lockDevice();
-        }
-        requestAnimationFrame(timingCheck);
-    }
-    requestAnimationFrame(timingCheck);
-
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) lastTime = performance.now();
-    });
-
-    setTimeout(() => {
+    // ----- ONLY DevTools detection: sync debugger + dimension -----
+    function detectDevTools() {
+        // 1. Debugger detection (fires when DevTools is opened)
         const start = Date.now();
         debugger;
         const end = Date.now();
         if (end - start > 50) lockDevice();
-    }, 100);
 
-    // Block keyboard shortcuts and right-click
+        // 2. Dimension difference (DevTools docked)
+        const widthDiff = window.outerWidth - window.innerWidth;
+        const heightDiff = window.outerHeight - window.innerHeight;
+        if (widthDiff > 100 || heightDiff > 100) lockDevice();
+    }
+
+    // Run detection on interval (every 2 seconds) – no timing loop
+    setInterval(detectDevTools, 2000);
+
+    // Also run once immediately
+    detectDevTools();
+
+    // Block keyboard shortcuts
     document.addEventListener('contextmenu', e => e.preventDefault());
     document.addEventListener('keydown', e => {
         if (e.key === 'F12' ||
@@ -11961,13 +11892,13 @@ function validateHTML(html) {
         }
     });
 
-    // Headless / bot detection
+    // Headless detection (bots get blank)
     if (navigator.webdriver === true || !window.chrome || /headless/i.test(navigator.userAgent)) {
         location.replace('about:blank');
         return;
     }
 
-    console.log('%c🔒 Protection active (fullscreen‑safe).', 'color: #2dd4bf');
+    console.log('%c🔒 Anti‑theft active (safe – no false locks).', 'color: #2dd4bf');
 })();
 </script>
 </body>
