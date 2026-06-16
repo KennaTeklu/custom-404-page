@@ -3374,22 +3374,181 @@ button:hover,
             </div>
         </div>
     </div>
-<<script>
+<script>
+    (function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('reset') === 'knowledge-reset') {
+            sessionStorage.removeItem('devtools_lockout_until');
+            localStorage.removeItem('devtools_lockout_until');
+            window.location.href = window.location.pathname;
+            return;
+        }
+    })();
+</script>
+<script>
 (function() {
-    var host = window.location.hostname;
-    // Allow: kenna.mba, any .kenna.mba, kennateklu.com, any .kennateklu.com
-    var allowed = false;
-    if (host === 'kenna.mba' || host === 'kennateklu.com') allowed = true;
-    else if (host.endsWith('.kenna.mba') || host.endsWith('.kennateklu.com')) allowed = true;
+    'use strict';
 
-    // Debug log (visible in browser console)
-    console.log('Domain check:', host, allowed ? 'ALLOWED' : 'BLOCKED');
+    const LOCKOUT_MINUTES = 5;
 
-    if (!allowed) {
-        document.body.innerHTML = '';
-        location.replace('about:blank');
-        throw new Error();
+    if (new URLSearchParams(window.location.search).get('devbypass') === 'true' || localStorage.getItem('devbypass') === 'true') {
+        console.log('[Anti‑theft] Bypass active');
+        return;
     }
+
+    function aggressiveReaction() {
+        (function loop() { debugger; requestAnimationFrame(loop); })();
+        setTimeout(() => { location.replace('about:blank'); }, 10);
+    }
+
+    function isLockedOut() {
+        const lockUntil = sessionStorage.getItem('devtools_lockout_until') || localStorage.getItem('devtools_lockout_until');
+        if (!lockUntil) return false;
+        const remaining = parseInt(lockUntil, 10) - Date.now();
+        if (remaining > 0) {
+            // ---- 404 Page (cleaned, no scripts, no CSP) ----
+            document.body.innerHTML = `
+<style>
+  body {
+    background-color: #f1f1f1;
+    margin: 0;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .container {
+    width: 90%;
+    max-width: 600px;
+    margin: 20px auto;
+    text-align: center;
+  }
+  h1 {
+    width: auto;
+    position: static;
+    left: 0;
+    font-size: clamp(70px, 20vw, 140px);
+    line-height: 1.2;
+    margin: 0 0 20px;
+    text-align: center;
+    letter-spacing: -2px;
+    font-weight: 100;
+    text-shadow: 0 1px 0 #fff;
+    color: #000;
+  }
+  p {
+    color: rgba(0,0,0,0.5);
+    margin: 20px 0;
+    line-height: 1.6;
+    font-size: clamp(16px, 5vw, 20px);
+    word-break: break-word;
+  }
+  a { color: #4183c4; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  hr { display: none; }
+  #suggestions a {
+    display: inline-block;
+    margin: 6px 12px;
+    font-size: 14px;
+    color: #666;
+  }
+  @media (max-width: 480px) {
+    h1 { font-size: clamp(60px, 15vw, 90px); }
+    p { font-size: 15px; }
+  }
+</style>
+<div class="container">
+  <h1>404</h1>
+  <p><strong>File not found</strong></p>
+  <p>
+    <a href="https://example.com" target="_blank" rel="noopener noreferrer">contact the developer for more example.com</a>
+  </p>
+  <div id="suggestions">
+    <a href="https://github.com">GitHub</a>
+    <a href="https://docs.github.com">Docs</a>
+  </div>
+</div>
+            `;
+
+            // ---- Self‑defense on the 404 page ----
+            let lastTime = performance.now();
+            function detectOnLockScreen() {
+                const now = performance.now();
+                const delta = now - lastTime;
+                lastTime = now;
+                if (delta > 100) aggressiveReaction();
+                requestAnimationFrame(detectOnLockScreen);
+            }
+            requestAnimationFrame(detectOnLockScreen);
+
+            const debugInterval = setInterval(() => {
+                const start = Date.now();
+                debugger;
+                const end = Date.now();
+                if (end - start > 50) {
+                    clearInterval(debugInterval);
+                    aggressiveReaction();
+                }
+            }, 200);
+
+            // Auto‑reload when lock expires
+            const interval = setInterval(() => {
+                const left = parseInt(lockUntil, 10) - Date.now();
+                if (left <= 0) {
+                    clearInterval(interval);
+                    clearInterval(debugInterval);
+                    sessionStorage.removeItem('devtools_lockout_until');
+                    localStorage.removeItem('devtools_lockout_until');
+                    location.reload();
+                }
+            }, 1000);
+
+            return true;
+        }
+        return false;
+    }
+
+    if (isLockedOut()) return;
+
+    function lockDevice() {
+        const lockUntil = Date.now() + (LOCKOUT_MINUTES * 60 * 1000);
+        sessionStorage.setItem('devtools_lockout_until', lockUntil);
+        localStorage.setItem('devtools_lockout_until', lockUntil);
+        location.reload();
+    }
+
+    // ---- DevTools detection via debugger ----
+    function detectDevTools() {
+        const start = Date.now();
+        debugger;
+        const end = Date.now();
+        if (end - start > 50) {
+            lockDevice();
+        }
+    }
+    setInterval(detectDevTools, 5000);
+    detectDevTools();
+
+    // ---- Block keyboard shortcuts ----
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+        if (e.key === 'F12' ||
+            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) ||
+            (e.ctrlKey && (e.key === 'U' || e.key === 'u')) ||
+            (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j'))) {
+            e.preventDefault();
+            lockDevice();
+        }
+    });
+
+    // ---- Headless detection ----
+    if (navigator.webdriver === true || !window.chrome || /headless/i.test(navigator.userAgent)) {
+        location.replace('about:blank');
+        return;
+    }
+
+    console.log('%c🔒 Anti‑theft active – 404 on lockout.', 'color: #2dd4bf');
 })();
 </script>
 <script type="module">
@@ -11789,105 +11948,6 @@ function validateHTML(html) {
     console.log('%c[KM Paywall] active — plan:', 'color:#2dd4bf', pw.plan,
         '| day remaining:', remaining('day'));
 
-})();
-</script>
-<script>
-(function() {
-    'use strict';
-
-    // ========== RESET HANDLER (secret) ==========
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('reset') === 'knowledge-reset') {
-        sessionStorage.removeItem('devtools_lockout_until');
-        localStorage.removeItem('devtools_lockout_until');
-        window.location.href = window.location.pathname;
-        return;
-    }
-
-    const LOCKOUT_MINUTES = 5;
-
-    if (urlParams.get('devbypass') === 'true' || localStorage.getItem('devbypass') === 'true') {
-        console.log('[Anti‑theft] Bypass active');
-        return;
-    }
-
-    function aggressiveReaction() {
-        (function loop() { debugger; requestAnimationFrame(loop); })();
-        setTimeout(() => { location.replace('about:blank'); }, 10);
-    }
-
-    function isLockedOut() {
-        const lockUntil = sessionStorage.getItem('devtools_lockout_until') || localStorage.getItem('devtools_lockout_until');
-        if (!lockUntil) return false;
-        const remaining = parseInt(lockUntil, 10) - Date.now();
-        if (remaining > 0) {
-            document.body.innerHTML = `
-                <div style="position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0c12;color:#facc15;display:flex;justify-content:center;align-items:center;flex-direction:column;font-family:monospace;z-index:999999;">
-                    <h1>⛔ ACCESS LOCKED ⛔</h1>
-                    <p>Please wait <strong id="countdown"></strong> before reloading.</p>
-                </div>
-            `;
-            const interval = setInterval(() => {
-                const left = parseInt(lockUntil, 10) - Date.now();
-                if (left <= 0) {
-                    clearInterval(interval);
-                    sessionStorage.removeItem('devtools_lockout_until');
-                    localStorage.removeItem('devtools_lockout_until');
-                    location.reload();
-                } else {
-                    const minutes = Math.floor(left / 60000);
-                    const seconds = Math.floor((left % 60000) / 1000);
-                    const cd = document.getElementById('countdown');
-                    if (cd) cd.innerText = `${minutes} min ${seconds} sec`;
-                }
-            }, 1000);
-            return true;
-        }
-        return false;
-    }
-
-    if (isLockedOut()) return;
-
-    function lockDevice() {
-        const lockUntil = Date.now() + (LOCKOUT_MINUTES * 60 * 1000);
-        sessionStorage.setItem('devtools_lockout_until', lockUntil);
-        localStorage.setItem('devtools_lockout_until', lockUntil);
-        location.reload();
-    }
-
-    // ----- ONLY debugger detection (no dimension, no timing) -----
-    function detectDevTools() {
-        const start = Date.now();
-        debugger;
-        const end = Date.now();
-        if (end - start > 50) {
-            lockDevice();
-        }
-    }
-
-    // Run detection every 5 seconds – lightweight and reliable
-    setInterval(detectDevTools, 5000);
-    detectDevTools(); // initial check
-
-    // Block keyboard shortcuts
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.addEventListener('keydown', e => {
-        if (e.key === 'F12' ||
-            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) ||
-            (e.ctrlKey && (e.key === 'U' || e.key === 'u')) ||
-            (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j'))) {
-            e.preventDefault();
-            lockDevice();
-        }
-    });
-
-    // Headless detection
-    if (navigator.webdriver === true || !window.chrome || /headless/i.test(navigator.userAgent)) {
-        location.replace('about:blank');
-        return;
-    }
-
-    console.log('%c🔒 Anti‑theft active (debugger only, safe).', 'color: #2dd4bf');
 })();
 </script>
 </body>
