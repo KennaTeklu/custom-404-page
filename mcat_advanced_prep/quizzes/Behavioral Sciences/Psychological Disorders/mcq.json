@@ -1,0 +1,112 @@
+[
+  {
+    "question": "A patient presents with a persistently depressed mood, anhedonia, significant weight loss, insomnia, fatigue, feelings of worthlessness, and difficulty concentrating for the past three weeks. Which diagnosis best fits this clinical picture?",
+    "choices": [
+      "Major depressive disorder, single episode",
+      "Persistent depressive disorder (dysthymia)",
+      "Bipolar II disorder, current episode depressed",
+      "Adjustment disorder with depressed mood"
+    ],
+    "correct": 0,
+    "explanation": "The symptoms (≥5 including depressed mood or anhedonia for ≥2 weeks) meet criteria for major depressive disorder. Dysthymia requires ≥2 years. Bipolar II requires past hypomania. Adjustment disorder occurs after a stressor and is less severe."
+  },
+  {
+    "question": "Which of the following is a positive symptom of schizophrenia?",
+    "choices": [
+      "Flat affect",
+      "Alogia (poverty of speech)",
+      "Delusions",
+      "Anhedonia"
+    ],
+    "correct": 2,
+    "explanation": "Positive symptoms are excess or distortion of normal functions: hallucinations, delusions, disorganized speech/behavior. Negative symptoms (flat affect, alogia, anhedonia, avolition) are loss of normal functions."
+  },
+  {
+    "question": "A person experiences recurrent, unexpected panic attacks and has persistent concern about having additional attacks, leading to maladaptive behavioral changes (e.g., avoiding exercise). No agoraphobia is present. The most likely diagnosis is:",
+    "choices": [
+      "Panic disorder",
+      "Agoraphobia",
+      "Generalized anxiety disorder",
+      "Specific phobia"
+    ],
+    "correct": 0,
+    "explanation": "Panic disorder requires recurrent unexpected panic attacks plus ≥1 month of worry about future attacks or maladaptive change. Agoraphobia involves fear of places where escape is difficult; GAD has chronic worry; specific phobia is fear of a specific object/situation."
+  },
+  {
+    "question": "Which personality disorder is characterized by a pervasive pattern of grandiosity, need for admiration, and lack of empathy, beginning by early adulthood?",
+    "choices": [
+      "Histrionic personality disorder",
+      "Narcissistic personality disorder",
+      "Antisocial personality disorder",
+      "Borderline personality disorder"
+    ],
+    "correct": 1,
+    "explanation": "Narcissistic PD features grandiosity, entitlement, need for admiration, and low empathy. Histrionic is dramatic/excessive emotionality, antisocial is disregard for others' rights, borderline is instability in relationships/affect/impulse control."
+  },
+  {
+    "question": "The presence of two or more distinct personality states (alters) with recurrent gaps in recall of everyday events or personal information, causing clinically significant distress, is characteristic of:",
+    "choices": [
+      "Schizophrenia",
+      "Dissociative identity disorder",
+      "Dissociative amnesia",
+      "Borderline personality disorder"
+    ],
+    "correct": 1,
+    "explanation": "Dissociative identity disorder (DID) involves disruption of identity with two or more distinct personality states and memory gaps. Dissociative amnesia lacks alters; schizophrenia has psychotic symptoms; BPD has identity disturbance but not distinct personalities."
+  },
+  {
+    "question": "A 22-year-old college student reports persistent, intrusive thoughts about contamination (e.g., germs on doorknobs) and engages in repetitive hand washing for hours each day. These symptoms are time-consuming and cause marked distress. The most likely diagnosis is:",
+    "choices": [
+      "Specific phobia (blood-injection-injury type)",
+      "Obsessive-compulsive disorder (OCD)",
+      "Generalized anxiety disorder",
+      "Illness anxiety disorder"
+    ],
+    "correct": 1,
+    "explanation": "OCD is defined by obsessions (intrusive unwanted thoughts) and compulsions (repetitive behaviors) to reduce anxiety. Phobia involves fear of specific objects; GAD is excessive worry; illness anxiety disorder is fear of having a serious illness without obsessions/compulsions."
+  },
+  {
+    "question": "In the DSM-5-TR, which of the following is required for the diagnosis of generalized anxiety disorder (GAD)?",
+    "choices": [
+      "Presence of panic attacks",
+      "Excessive anxiety and worry occurring more days than not for at least 6 months, about multiple events or activities",
+      "Recurrent unexpected panic attacks followed by persistent concern",
+      "Presence of a traumatic event"
+    ],
+    "correct": 1,
+    "explanation": "GAD requires excessive uncontrollable worry most days for ≥6 months about multiple domains (e.g., work, health). Panic attacks are not required (panic disorder). Recurrent panic attacks with worry about future attacks is panic disorder. Trauma is for PTSD."
+  },
+  {
+    "question": "Which of the following best differentiates bipolar I disorder from bipolar II disorder?",
+    "choices": [
+      "Presence of major depressive episodes",
+      "Presence of at least one full manic episode (bipolar I) vs. hypomanic episodes without full mania (bipolar II)",
+      "Severity of depressive symptoms",
+      "Age of onset"
+    ],
+    "correct": 1,
+    "explanation": "Bipolar I requires at least one manic episode (≥1 week, marked impairment, or psychosis). Bipolar II requires at least one hypomanic episode (≥4 days, less severe) and one major depressive episode, but no full mania. Both have depressive episodes."
+  },
+  {
+    "question": "A patient is brought to the emergency room after ingesting a large quantity of pills. He states that he 'hears voices telling him he is worthless' and that his 'thoughts are being broadcast on television.' He has no previous psychiatric history. The most likely diagnosis is:",
+    "choices": [
+      "Major depressive disorder with psychotic features",
+      "Schizoaffective disorder",
+      "Schizophrenia, first episode",
+      "Substance-induced psychotic disorder"
+    ],
+    "correct": 2,
+    "explanation": "Presence of auditory hallucinations, delusions (thought broadcasting), and no prior mood episode before psychosis suggests schizophrenia. MDD with psychotic features requires prominent mood symptoms; schizoaffective requires mood episodes concurrent with psychosis plus 2 weeks of psychosis alone; substance-induced requires a causal substance (none mentioned)."
+  },
+  {
+    "question": "The dopamine hypothesis of schizophrenia suggests that positive symptoms are primarily due to:",
+    "choices": [
+      "Decreased dopamine activity in the mesocortical pathway",
+      "Increased dopamine activity in the mesolimbic pathway",
+      "Decreased serotonin activity in the raphe nuclei",
+      "Increased norepinephrine activity in the locus coeruleus"
+    ],
+    "correct": 1,
+    "explanation": "The dopamine hypothesis states that positive symptoms (hallucinations, delusions) result from excess dopamine in the mesolimbic pathway. Mesocortical hypoactivity may relate to negative symptoms. Serotonin and norepinephrine are more implicated in mood and anxiety disorders."
+  }
+]

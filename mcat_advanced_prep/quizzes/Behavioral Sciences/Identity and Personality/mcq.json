@@ -1,0 +1,112 @@
+[
+  {
+    "question": "According to Erik Erikson's theory of psychosocial development, the primary conflict during adolescence is:",
+    "choices": [
+      "Identity vs. Role Confusion",
+      "Intimacy vs. Isolation",
+      "Industry vs. Inferiority",
+      "Autonomy vs. Shame and Doubt"
+    ],
+    "correct": 0,
+    "explanation": "Erikson's fifth stage (approximately ages 12–18) is Identity vs. Role Confusion, where teens explore roles and develop a sense of self. Intimacy vs. Isolation is young adulthood, Industry vs. Inferiority is school age, and Autonomy vs. Shame is early childhood."
+  },
+  {
+    "question": "In James Marcia's identity status theory, which status describes individuals who have made a commitment without engaging in exploration?",
+    "choices": [
+      "Identity Diffusion",
+      "Identity Foreclosure",
+      "Identity Moratorium",
+      "Identity Achievement"
+    ],
+    "correct": 1,
+    "explanation": "Foreclosure occurs when a person adopts an identity (often from parents or society) without exploring alternatives. Diffusion is no commitment/no exploration, moratorium is exploration without commitment, and achievement is exploration followed by commitment."
+  },
+  {
+    "question": "According to Freudian psychoanalytic theory, which component of personality operates on the reality principle and mediates between the id and the superego?",
+    "choices": [
+      "Id",
+      "Ego",
+      "Superego",
+      "Libido"
+    ],
+    "correct": 1,
+    "explanation": "The ego develops from the id and uses reality principle to satisfy id's desires in socially acceptable ways. The id is pleasure principle, superego is moral conscience, and libido is psychic energy."
+  },
+  {
+    "question": "Which of the following Big Five personality traits is characterized by imagination, curiosity, and preference for novelty?",
+    "choices": [
+      "Extraversion",
+      "Agreeableness",
+      "Conscientiousness",
+      "Openness to experience"
+    ],
+    "correct": 3,
+    "explanation": "Openness (vs. closedness) includes creativity, intellectual curiosity, and appreciation for art and adventure. Extraversion is sociability, agreeableness is cooperativeness, and conscientiousness is organization/dependability."
+  },
+  {
+    "question": "Social identity theory, proposed by Tajfel and Turner, suggests that individuals derive part of their self-concept from:",
+    "choices": [
+      "Their genetic makeup and biological traits",
+      "Unresolved psychosexual conflicts",
+      "Membership in social groups and the emotional significance attached to that membership",
+      "Their position in a fixed hierarchy of personality types"
+    ],
+    "correct": 2,
+    "explanation": "Social identity theory posits that people categorize themselves into in-groups and out-groups, leading to self-esteem derived from group membership. It explains in-group bias and intergroup behavior, not genetics or Freudian conflicts."
+  },
+  {
+    "question": "According to Carl Rogers, the degree to which a person's self-concept matches their actual experiences and feelings is called:",
+    "choices": [
+      "Self-efficacy",
+      "Conditional positive regard",
+      "Congruence",
+      "Unconditional positive regard"
+    ],
+    "correct": 2,
+    "explanation": "Congruence is alignment between self-concept and genuine experiences; incongruence leads to anxiety. Unconditional positive regard is acceptance without conditions, self-efficacy is belief in one's abilities, and conditional regard places worth on meeting expectations."
+  },
+  {
+    "question": "Which of the following is a criticism of trait theories of personality (e.g., Big Five)?",
+    "choices": [
+      "They ignore genetic influences on behavior",
+      "They overemphasize situational variability and ignore consistency",
+      "They lack empirical evidence or reliable measurement",
+      "They often do not explain the mechanisms behind behavior or why traits develop"
+    ],
+    "correct": 3,
+    "explanation": "Trait theories describe and measure traits but often fail to explain underlying causes or processes (e.g., why someone is extraverted). The Big Five are well-validated (not lacking evidence) and do not ignore genetics; they are often criticized for being descriptive rather than explanatory."
+  },
+  {
+    "question": "In Albert Bandura's social cognitive theory, the concept of reciprocal determinism refers to:",
+    "choices": [
+      "Personality is entirely determined by environmental reinforcement",
+      "Behavior, personal factors (e.g., cognition), and environmental influences interact and affect each other bidirectionally",
+      "Personality traits are fixed from childhood and unchangeable",
+      "Observational learning requires punishment for the model to be effective"
+    ],
+    "correct": 1,
+    "explanation": "Reciprocal determinism states that behavior, cognitive/personal factors, and environment mutually influence each other. It rejects unidirectional causality (e.g., environment alone). The other options misrepresent Bandura's views."
+  },
+  {
+    "question": "Which of the following best describes the 'self-serving bias' in attribution?",
+    "choices": [
+      "Attributing one's successes to internal factors and failures to external factors",
+      "Attributing both successes and failures to luck or chance",
+      "Tendency to blame others for their own misfortunes",
+      "Overestimating the role of dispositional factors in explaining others' behavior"
+    ],
+    "correct": 0,
+    "explanation": "Self-serving bias protects self-esteem: success is due to ability/effort (internal), failure due to external circumstances. Option D describes fundamental attribution error (actor-observer bias differs)."
+  },
+  {
+    "question": "According to the psychosexual stage theory, fixation at the anal stage (approximately 1–3 years) may lead to which adult personality traits?",
+    "choices": [
+      "Smoking, overeating, and gullibility",
+      "Orderliness, stinginess, and obstinacy (anal retentive) or messiness and disorganization (anal expulsive)",
+      "Vanity, exhibitionism, and flirtatious behavior",
+      "Independence, assertiveness, and leadership"
+    ],
+    "correct": 1,
+    "explanation": "Freud proposed that fixation during anal stage (toilet training) results in anal-retentive traits (neat, rigid, miserly) or anal-expulsive traits (messy, impulsive). Oral fixation (choice A) occurs earlier; phallic fixation (choice C) involves Oedipus complex."
+  }
+]

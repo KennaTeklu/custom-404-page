@@ -1,0 +1,95 @@
+{
+  "cheatsheet": {
+    "columns": ["Concept", "Definition", "Key Details/Example"],
+    "rows": [
+      ["Consciousness", "Subjective awareness of oneself and the environment, ranging from wakefulness to altered states.", "Includes normal waking consciousness, sleep, hypnosis, and meditation."],
+      ["Circadian rhythm", "Internal biological clock regulating sleep-wake cycles roughly every 24 hours.", "Controlled by suprachiasmatic nucleus (SCN); influenced by light (melatonin)."],
+      ["REM sleep", "Stage of sleep with rapid eye movements, vivid dreaming, and EEG resembling wakefulness.", "Associated with memory consolidation; muscles are atonic (paralyzed)."],
+      ["Selective attention", "Focusing on one stimulus or task while filtering out other irrelevant stimuli.", "Example: Cocktail party effect (hearing your name in unattended conversation)."],
+      ["Inattentional blindness", "Failure to perceive a fully visible but unexpected object because attention is elsewhere.", "Classic study: 'invisible gorilla' experiment."],
+      ["Working memory", "Temporary storage and manipulation of information for complex cognitive tasks.", "Baddeley's model: phonological loop, visuospatial sketchpad, central executive, episodic buffer."],
+      ["Semantic memory", "Long-term memory for factual knowledge and general information, independent of personal experience.", "Example: 'Paris is the capital of France'."],
+      ["Procedural memory", "Long-term memory for skills, habits, and how to perform actions.", "Example: riding a bicycle; often implicit (nondeclarative)."],
+      ["Phoneme", "Smallest unit of sound that can change meaning in a language.", "Example: /r/ and /l/ in English; /b/ vs /p/."],
+      ["Broca's area", "Region in left frontal lobe responsible for speech production.", "Damage causes non-fluent (expressive) aphasia: effortful, telegraphic speech."],
+      ["Availability heuristic", "Judging probability based on how easily examples come to mind.", "Overestimating shark attacks because they are vivid and memorable."],
+      ["Sapir-Whorf hypothesis", "Theory that language influences or determines thought and perception.", "Weak version (linguistic relativity): language affects cognition (e.g., color terms, spatial orientation)."]
+    ]
+  },
+  "test": {
+    "questions": [
+      {
+        "type": "cloze",
+        "text": "The subjective awareness of oneself and the environment, ranging from wakefulness to altered states, is called ________.",
+        "correct": "consciousness",
+        "acceptableAlternatives": ["Consciousness", "conscious experience", "awareness"]
+      },
+      {
+        "type": "cloze",
+        "text": "The internal biological clock regulating sleep-wake cycles roughly every 24 hours is the ________ rhythm.",
+        "correct": "circadian",
+        "acceptableAlternatives": ["Circadian", "circadian rhythm", "diurnal"]
+      },
+      {
+        "type": "cloze",
+        "text": "The stage of sleep with rapid eye movements, vivid dreaming, and EEG resembling wakefulness is ________ sleep.",
+        "correct": "REM",
+        "acceptableAlternatives": ["Rapid eye movement", "REM", "R.E.M."]
+      },
+      {
+        "type": "cloze",
+        "text": "Focusing on one stimulus or task while filtering out other irrelevant stimuli is known as ________ attention.",
+        "correct": "selective",
+        "acceptableAlternatives": ["Selective", "focused", "selective attention"]
+      },
+      {
+        "type": "cloze",
+        "text": "The failure to perceive a fully visible but unexpected object because attention is elsewhere is called ________ blindness.",
+        "correct": "inattentional",
+        "acceptableAlternatives": ["Inattentional", "inattentional blindness"]
+      },
+      {
+        "type": "cloze",
+        "text": "The temporary storage and manipulation of information for complex cognitive tasks, such as Baddeley's model, is ________ memory.",
+        "correct": "working",
+        "acceptableAlternatives": ["Working", "short-term memory", "STM", "working memory"]
+      },
+      {
+        "type": "cloze",
+        "text": "The type of long-term memory for factual knowledge and general information independent of personal experience (e.g., 'Paris is the capital of France') is ________ memory.",
+        "correct": "semantic",
+        "acceptableAlternatives": ["Semantic", "declarative memory", "semantic memory"]
+      },
+      {
+        "type": "cloze",
+        "text": "The type of long-term memory for skills, habits, and how to perform actions (e.g., riding a bicycle) is ________ memory.",
+        "correct": "procedural",
+        "acceptableAlternatives": ["Procedural", "implicit memory", "nondeclarative memory"]
+      },
+      {
+        "type": "cloze",
+        "text": "The smallest unit of sound that can change meaning in a language (e.g., /r/ vs /l/ in English) is called a ________.",
+        "correct": "phoneme",
+        "acceptableAlternatives": ["Phoneme", "speech sound", "phonemes"]
+      },
+      {
+        "type": "cloze",
+        "text": "The region in the left frontal lobe responsible for speech production, damage to which causes non-fluent aphasia, is ________ area.",
+        "correct": "Broca's",
+        "acceptableAlternatives": ["Broca", "Broca's area", "Broca area"]
+      },
+      {
+        "type": "cloze",
+        "text": "Judging probability based on how easily examples come to mind, leading to overestimating vivid events (e.g., shark attacks), is the ________ heuristic.",
+        "correct": "availability",
+        "acceptableAlternatives": ["Availability", "availability heuristic"]
+      },
+      {
+        "type": "cloze",
+        "text": "The theory that language influences or determines thought and perception, with a weak version called linguistic relativity, is the ________-________ hypothesis.",
+        "correct": "Sapir-Whorf",
+        "acceptableAlternatives": ["Sapir Whorf", "Sapir–Whorf", "Whorfian", "linguistic relativity hypothesis"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "cheatsheet": {
+    "columns": ["Term", "Definition", "Example/Key Fact"],
+    "rows": [
+      ["Neuron", "Basic functional unit of the nervous system that transmits electrical and chemical signals.", "Dendrites receive input, axon transmits output to synapse."],
+      ["Action potential", "Rapid depolarization and repolarization of the neuronal membrane that propagates a signal.", "Triggered when threshold is reached; Na+ influx, then K+ efflux."],
+      ["Synapse", "Junction between two neurons where neurotransmitters are released to communicate.", "Presynaptic neuron releases vesicles containing neurotransmitters into the synaptic cleft."],
+      ["Dopamine", "Neurotransmitter involved in reward, motivation, and motor control.", "Parkinson's disease involves dopamine loss; addiction involves dopamine dysregulation."],
+      ["Serotonin", "Neurotransmitter that regulates mood, appetite, and sleep.", "Low serotonin levels are linked to depression; SSRIs increase synaptic serotonin."],
+      ["Central nervous system (CNS)", "Part of the nervous system consisting of the brain and spinal cord.", "Integrates and processes information; protected by meninges and blood-brain barrier."],
+      ["Peripheral nervous system (PNS)", "Nerves and ganglia outside the brain and spinal cord.", "Divided into somatic (voluntary) and autonomic (involuntary) systems."],
+      ["Sympathetic nervous system", "Division of autonomic PNS that mobilizes the body for 'fight or flight'.", "Increases heart rate, dilates pupils, inhibits digestion."],
+      ["Parasympathetic nervous system", "Division of autonomic PNS that promotes 'rest and digest'.", "Slows heart rate, stimulates digestion, constricts pupils."],
+      ["Frontal lobe", "Brain region responsible for executive functions, planning, and impulse control.", "Phineas Gage's damage to frontal lobe altered personality."],
+      ["Limbic system", "Set of brain structures involved in emotion, memory, and motivation.", "Includes amygdala (fear/aggression) and hippocampus (memory formation)."],
+      ["Hypothalamus", "Brain structure that maintains homeostasis and regulates endocrine function via pituitary gland.", "Controls body temperature, hunger, thirst, and circadian rhythms."],
+      ["Broca's area", "Region in left frontal lobe responsible for speech production.", "Damage causes expressive aphasia (know what to say but cannot produce fluent speech)."],
+      ["Wernicke's area", "Region in left temporal lobe responsible for language comprehension.", "Damage causes receptive aphasia (fluent but nonsensical speech, poor comprehension)."],
+      ["Heritability", "Proportion of phenotypic variance in a population due to genetic differences.", "Heritability of IQ is estimated around 0.5; does not apply to individuals."]
+    ]
+  },
+  "test": {
+    "questions": [
+      {
+        "type": "cloze",
+        "text": "The basic functional unit of the nervous system that transmits electrical and chemical signals is the ________.",
+        "correct": "neuron",
+        "acceptableAlternatives": ["Neuron", "nerve cell", "neurons"]
+      },
+      {
+        "type": "cloze",
+        "text": "The rapid depolarization and repolarization of the neuronal membrane that propagates a signal is called the ________.",
+        "correct": "action potential",
+        "acceptableAlternatives": ["action potentials", "Action potential", "nerve impulse"]
+      },
+      {
+        "type": "cloze",
+        "text": "The junction between two neurons where neurotransmitters are released to communicate is the ________.",
+        "correct": "synapse",
+        "acceptableAlternatives": ["Synapse", "synaptic cleft", "synaptic junction"]
+      },
+      {
+        "type": "cloze",
+        "text": "The neurotransmitter involved in reward, motivation, and motor control, which is lost in Parkinson's disease, is ________.",
+        "correct": "dopamine",
+        "acceptableAlternatives": ["Dopamine", "DA"]
+      },
+      {
+        "type": "cloze",
+        "text": "The neurotransmitter that regulates mood, appetite, and sleep and is targeted by SSRIs for depression is ________.",
+        "correct": "serotonin",
+        "acceptableAlternatives": ["Serotonin", "5-HT"]
+      },
+      {
+        "type": "cloze",
+        "text": "The part of the nervous system consisting of the brain and spinal cord is the ________.",
+        "correct": "central nervous system",
+        "acceptableAlternatives": ["Central nervous system", "CNS", "Central Nervous System"]
+      },
+      {
+        "type": "cloze",
+        "text": "Nerves and ganglia outside the brain and spinal cord form the ________.",
+        "correct": "peripheral nervous system",
+        "acceptableAlternatives": ["Peripheral nervous system", "PNS", "Peripheral Nervous System"]
+      },
+      {
+        "type": "cloze",
+        "text": "The division of the autonomic nervous system that mobilizes the body for 'fight or flight' is the ________ nervous system.",
+        "correct": "sympathetic",
+        "acceptableAlternatives": ["Sympathetic", "sympathetic nervous system"]
+      },
+      {
+        "type": "cloze",
+        "text": "The division of the autonomic nervous system that promotes 'rest and digest' is the ________ nervous system.",
+        "correct": "parasympathetic",
+        "acceptableAlternatives": ["Parasympathetic", "parasympathetic nervous system"]
+      },
+      {
+        "type": "cloze",
+        "text": "The brain lobe responsible for executive functions, planning, and impulse control, and damaged in Phineas Gage, is the ________ lobe.",
+        "correct": "frontal",
+        "acceptableAlternatives": ["Frontal", "frontal lobe"]
+      },
+      {
+        "type": "cloze",
+        "text": "The set of brain structures involved in emotion, memory, and motivation, including the amygdala and hippocampus, is the ________ system.",
+        "correct": "limbic",
+        "acceptableAlternatives": ["Limbic", "limbic system"]
+      },
+      {
+        "type": "cloze",
+        "text": "The brain structure that maintains homeostasis and regulates the endocrine system via the pituitary gland is the ________.",
+        "correct": "hypothalamus",
+        "acceptableAlternatives": ["Hypothalamus", "hypothalamic"]
+      },
+      {
+        "type": "cloze",
+        "text": "The region in the left frontal lobe responsible for speech production, damaged in expressive aphasia, is ________ area.",
+        "correct": "Broca's",
+        "acceptableAlternatives": ["Broca", "Broca area", "Broca's area"]
+      },
+      {
+        "type": "cloze",
+        "text": "The region in the left temporal lobe responsible for language comprehension, damaged in receptive aphasia, is ________ area.",
+        "correct": "Wernicke's",
+        "acceptableAlternatives": ["Wernicke", "Wernicke area", "Wernicke's area"]
+      },
+      {
+        "type": "cloze",
+        "text": "The proportion of phenotypic variance in a population due to genetic differences is called ________.",
+        "correct": "heritability",
+        "acceptableAlternatives": ["Heritability", "heritability coefficient"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "cheatsheet": {
+    "columns": ["Term", "Definition", "MCAT Key Point"],
+    "rows": [
+      ["Classical conditioning", "Learning through association of a neutral stimulus with an unconditioned stimulus to elicit a conditioned response.", "Pavlov's dog: US (food) → UR (salivation); CS (bell) → CR (salivation)."],
+      ["Operant conditioning", "Learning through consequences (reinforcement and punishment) that shape behavior.", "Skinner box: Reinforcement increases behavior; punishment decreases behavior."],
+      ["Positive reinforcement", "Adding a desirable stimulus to increase a behavior.", "Example: Giving a child candy for cleaning room → cleaning increases."],
+      ["Negative reinforcement", "Removing an aversive stimulus to increase a behavior.", "Example: Fastening seatbelt to stop annoying beep → seatbelt use increases."],
+      ["Positive punishment", "Adding an aversive stimulus to decrease a behavior.", "Example: Scolding a dog for jumping on couch → jumping decreases."],
+      ["Negative punishment", "Removing a desirable stimulus to decrease a behavior.", "Example: Taking away phone for breaking curfew → curfew violations decrease."],
+      ["Observational learning", "Learning by watching and imitating others (modeling).", "Bandura's Bobo doll experiment: children imitated aggressive actions of adult model."],
+      ["Encoding", "The process of converting information into a memory representation.", "Automatic (e.g., time, space) vs. effortful (e.g., rehearsal, mnemonics)."],
+      ["Storage", "The retention of encoded information over time.", "Sensory → short-term → long-term memory (Atkinson-Shiffrin model)."],
+      ["Retrieval", "Accessing stored information from long-term memory.", "Recognition (e.g., multiple choice) vs. recall (e.g., fill-in-the-blank)."],
+      ["Hippocampus", "Brain structure critical for forming new declarative (explicit) memories.", "H.M. had hippocampi removed → anterograde amnesia (could not form new facts/events)."],
+      ["Proactive interference", "Old information hinders recall of newly learned information.", "Example: Calling your new partner by your ex's name."],
+      ["Retroactive interference", "New information hinders recall of previously learned information.", "Example: Learning Spanish makes it harder to recall French vocabulary."]
+    ]
+  },
+  "test": {
+    "questions": [
+      {
+        "type": "cloze",
+        "text": "The type of learning in which a neutral stimulus becomes associated with an unconditioned stimulus to elicit a conditioned response is called ________ conditioning.",
+        "correct": "classical",
+        "acceptableAlternatives": ["classical", "pavlovian", "respondent"]
+      },
+      {
+        "type": "cloze",
+        "text": "Learning through consequences such as reinforcement and punishment is known as ________ conditioning.",
+        "correct": "operant",
+        "acceptableAlternatives": ["operant", "instrumental"]
+      },
+      {
+        "type": "cloze",
+        "text": "In operant conditioning, adding a desirable stimulus to increase a behavior is called ________ reinforcement.",
+        "correct": "positive",
+        "acceptableAlternatives": ["positive", "pos"]
+      },
+      {
+        "type": "cloze",
+        "text": "Removing an aversive stimulus to increase a behavior is called ________ reinforcement.",
+        "correct": "negative",
+        "acceptableAlternatives": ["negative", "neg"]
+      },
+      {
+        "type": "cloze",
+        "text": "Adding an aversive stimulus to decrease a behavior is known as ________ punishment.",
+        "correct": "positive",
+        "acceptableAlternatives": ["positive", "pos"]
+      },
+      {
+        "type": "cloze",
+        "text": "Removing a desirable stimulus to decrease a behavior is known as ________ punishment.",
+        "correct": "negative",
+        "acceptableAlternatives": ["negative", "neg"]
+      },
+      {
+        "type": "cloze",
+        "text": "Learning by watching and imitating others, demonstrated by Bandura's Bobo doll experiment, is called ________ learning.",
+        "correct": "observational",
+        "acceptableAlternatives": ["observational", "social", "modeling"]
+      },
+      {
+        "type": "cloze",
+        "text": "The process of converting information into a memory representation is called ________.",
+        "correct": "encoding",
+        "acceptableAlternatives": ["encoding", "encode"]
+      },
+      {
+        "type": "cloze",
+        "text": "The retention of encoded information over time is called ________.",
+        "correct": "storage",
+        "acceptableAlternatives": ["storage", "storing", "memory storage"]
+      },
+      {
+        "type": "cloze",
+        "text": "Accessing stored information from long-term memory is called ________.",
+        "correct": "retrieval",
+        "acceptableAlternatives": ["retrieval", "recall", "remembering"]
+      },
+      {
+        "type": "cloze",
+        "text": "The brain structure critical for forming new declarative memories, damaged in patient H.M., is the ________.",
+        "correct": "hippocampus",
+        "acceptableAlternatives": ["hippocampus", "hippocampal formation"]
+      },
+      {
+        "type": "cloze",
+        "text": "The type of interference in which old information hinders recall of newly learned information is called ________ interference.",
+        "correct": "proactive",
+        "acceptableAlternatives": ["proactive", "proactive interference", "proactive inhibition"]
+      },
+      {
+        "type": "cloze",
+        "text": "The type of interference in which new information hinders recall of previously learned information is called ________ interference.",
+        "correct": "retroactive",
+        "acceptableAlternatives": ["retroactive", "retroactive interference", "retroactive inhibition"]
+      }
+    ]
+  }
+}

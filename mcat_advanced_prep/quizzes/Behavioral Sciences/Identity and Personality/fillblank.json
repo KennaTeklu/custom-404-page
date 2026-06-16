@@ -1,0 +1,81 @@
+{
+  "cheatsheet": {
+    "columns": ["Concept", "Definition", "Key Example/Detail"],
+    "rows": [
+      ["Identity", "A person's sense of who they are, including values, beliefs, and life goals.", "Erikson's psychosocial theory centers on identity formation in adolescence."],
+      ["Personality", "An individual's characteristic pattern of thinking, feeling, and acting.", "Relatively stable over time and across situations."],
+      ["Erikson's stage: Identity vs. Role Confusion", "Psychosocial crisis of adolescence (ages ~12–18) where one must develop a coherent self-identity or face confusion about future roles.", "Successful resolution leads to fidelity; failure leads to identity diffusion."],
+      ["Marcia's identity statuses", "Four categories based on exploration and commitment: diffusion, foreclosure, moratorium, achievement.", "Foreclosure = commitment without exploration (e.g., adopting parents' beliefs)."],
+      ["Freud's structural model", "Personality composed of id (pleasure principle), ego (reality principle), superego (morality).", "Id seeks immediate gratification; ego mediates; superego internalizes societal rules."],
+      ["Big Five traits (OCEAN)", "Five broad dimensions: Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism.", "Openness = curiosity, creativity; Conscientiousness = organization, discipline."],
+      ["Rogers' self-concept", "The organized set of beliefs and perceptions about oneself.", "Congruence = alignment between self-concept and actual experience; incongruence leads to anxiety."],
+      ["Social identity theory (Tajfel & Turner)", "People derive self-esteem from membership in social groups (in-groups) and compare favorably to out-groups.", "Leads to in-group bias (favoring one's own group)."],
+      ["Bandura's reciprocal determinism", "Behavior, personal factors (cognitions), and environment interact and influence each other bidirectionally.", "Example: A student's belief (personal) affects study behavior, which affects grades (environment), which feeds back."],
+      ["Self-serving bias", "Attributing successes to internal factors (ability, effort) and failures to external factors (luck, task difficulty).", "Protects self-esteem; common in achievement contexts."]
+    ]
+  },
+  "test": {
+    "questions": [
+      {
+        "type": "cloze",
+        "text": "A person's sense of who they are, including values, beliefs, and life goals, is called ________.",
+        "correct": "identity",
+        "acceptableAlternatives": ["Identity", "self-identity", "personal identity"]
+      },
+      {
+        "type": "cloze",
+        "text": "The characteristic pattern of thinking, feeling, and acting that is relatively stable over time is known as ________.",
+        "correct": "personality",
+        "acceptableAlternatives": ["Personality", "temperament", "character"]
+      },
+      {
+        "type": "cloze",
+        "text": "According to Erikson, the psychosocial crisis of adolescence (ages ~12–18) is Identity vs. ________.",
+        "correct": "Role Confusion",
+        "acceptableAlternatives": ["role confusion", "Role confusion", "Identity vs. Role Confusion", "role diffusion"]
+      },
+      {
+        "type": "cloze",
+        "text": "In James Marcia's theory, the identity status characterized by commitment without exploration (e.g., adopting parents' beliefs) is called ________.",
+        "correct": "foreclosure",
+        "acceptableAlternatives": ["Foreclosure", "identity foreclosure"]
+      },
+      {
+        "type": "cloze",
+        "text": "In Freud's structural model, the component of personality that operates on the pleasure principle, seeking immediate gratification, is the ________.",
+        "correct": "id",
+        "acceptableAlternatives": ["Id", "id", "ID"]
+      },
+      {
+        "type": "cloze",
+        "text": "The Big Five personality dimension characterized by curiosity, imagination, and preference for novelty is ________.",
+        "correct": "openness",
+        "acceptableAlternatives": ["Openness", "Openness to experience", "O"]
+      },
+      {
+        "type": "cloze",
+        "text": "According to Carl Rogers, the alignment between a person's self-concept and their actual experiences is called ________.",
+        "correct": "congruence",
+        "acceptableAlternatives": ["Congruence", "self-congruence"]
+      },
+      {
+        "type": "cloze",
+        "text": "Tajfel and Turner's theory that people derive self-esteem from membership in social groups and favor their own groups is ________ identity theory.",
+        "correct": "social",
+        "acceptableAlternatives": ["Social", "social identity theory"]
+      },
+      {
+        "type": "cloze",
+        "text": "Bandura's concept that behavior, personal factors (cognitions), and the environment mutually influence each other is called reciprocal ________.",
+        "correct": "determinism",
+        "acceptableAlternatives": ["determinism", "reciprocal determinism"]
+      },
+      {
+        "type": "cloze",
+        "text": "The attributional bias where one credits successes to internal factors and failures to external factors is the ________-serving bias.",
+        "correct": "self",
+        "acceptableAlternatives": ["Self", "self-serving bias", "self serving"]
+      }
+    ]
+  }
+}

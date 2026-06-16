@@ -1,0 +1,112 @@
+[
+  {
+    "question": "Which part of the brain is primarily responsible for regulating basic life functions such as breathing, heart rate, and blood pressure?",
+    "choices": [
+      "Cerebellum",
+      "Hypothalamus",
+      "Medulla oblongata",
+      "Amygdala"
+    ],
+    "correct": 2,
+    "explanation": "The medulla oblongata, located in the brainstem, controls autonomic functions like breathing, heart rate, and blood pressure. The cerebellum coordinates movement, the hypothalamus regulates homeostasis and hormones, and the amygdala processes emotions."
+  },
+  {
+    "question": "Which neurotransmitter is most closely associated with reward, motivation, and voluntary movement, and is dysregulated in Parkinson's disease?",
+    "choices": [
+      "Serotonin",
+      "Dopamine",
+      "Acetylcholine",
+      "GABA"
+    ],
+    "correct": 1,
+    "explanation": "Dopamine plays key roles in reward processing, motivation, and motor control. Parkinson's disease results from dopamine neuron loss. Serotonin regulates mood, acetylcholine is involved in muscle activation, and GABA is the main inhibitory neurotransmitter."
+  },
+  {
+    "question": "The famous case of Phineas Gage, who survived an iron rod passing through his skull, provided early evidence for the role of the ________ in personality and impulse control.",
+    "choices": [
+      "Occipital lobe",
+      "Prefrontal cortex",
+      "Hippocampus",
+      "Thalamus"
+    ],
+    "correct": 1,
+    "explanation": "Gage's injury damaged his prefrontal cortex, leading to profound changes in personality, decision-making, and social behavior. The occipital lobe processes vision, the hippocampus is involved in memory, and the thalamus relays sensory information."
+  },
+  {
+    "question": "Which brain imaging technique measures neural activity indirectly by detecting changes in blood oxygen levels (BOLD signal)?",
+    "choices": [
+      "EEG (electroencephalography)",
+      "PET (positron emission tomography)",
+      "fMRI (functional magnetic resonance imaging)",
+      "CT (computed tomography)"
+    ],
+    "correct": 2,
+    "explanation": "Functional MRI (fMRI) tracks blood flow and oxygen consumption (BOLD signal) to infer brain activity. EEG records electrical activity on the scalp, PET uses radioactive tracers, and CT provides structural images without functional data."
+  },
+  {
+    "question": "The 'fight or flight' response is primarily mediated by which division of the autonomic nervous system?",
+    "choices": [
+      "Somatic nervous system",
+      "Parasympathetic nervous system",
+      "Sympathetic nervous system",
+      "Enteric nervous system"
+    ],
+    "correct": 2,
+    "explanation": "The sympathetic nervous system prepares the body for stress by increasing heart rate, dilating pupils, and releasing adrenaline. The parasympathetic system promotes 'rest and digest,' the somatic system controls voluntary muscles, and the enteric system governs the gut."
+  },
+  {
+    "question": "Which hormone, secreted by the pineal gland, helps regulate circadian rhythms and sleep-wake cycles?",
+    "choices": [
+      "Cortisol",
+      "Melatonin",
+      "Oxytocin",
+      "Thyroxine"
+    ],
+    "correct": 1,
+    "explanation": "Melatonin is produced by the pineal gland in response to darkness, signaling the body to prepare for sleep. Cortisol is a stress hormone, oxytocin is involved in bonding and childbirth, and thyroxine regulates metabolism."
+  },
+  {
+    "question": "In a split-brain patient (corpus callosum severed), if a picture of a key is shown only to the left visual field, the patient will likely:",
+    "choices": [
+      "Verbalize 'key' without hesitation",
+      "Not be able to see the key at all",
+      "Say they saw nothing but can pick out a key with the left hand",
+      "Use the right hand to draw the key accurately"
+    ],
+    "correct": 2,
+    "explanation": "The left visual field projects to the right hemisphere, which lacks language centers. The patient cannot name the object verbally but the right hemisphere can guide the left hand to select or draw the object. The right hand (controlled by left hemisphere) cannot."
+  },
+  {
+    "question": "In behavioral genetics, the term 'heritability' refers to:",
+    "choices": [
+      "The proportion of an individual's trait that is determined by their genes",
+      "The likelihood that a trait will be passed from parent to offspring",
+      "The proportion of variance in a trait within a population due to genetic differences",
+      "The extent to which a trait is influenced by the environment"
+    ],
+    "correct": 2,
+    "explanation": "Heritability is a population statistic ranging from 0 to 1 that estimates how much of the variation in a trait (e.g., intelligence, height) among individuals is due to genetic factors. It does not apply to a single individual's trait expression."
+  },
+  {
+    "question": "Which lobe of the cerebral cortex is primarily responsible for processing auditory information and is critical for language comprehension?",
+    "choices": [
+      "Frontal lobe",
+      "Parietal lobe",
+      "Occipital lobe",
+      "Temporal lobe"
+    ],
+    "correct": 3,
+    "explanation": "The temporal lobe houses the primary auditory cortex and Wernicke's area (in the left hemisphere), which is essential for language comprehension. The frontal lobe controls executive functions, the parietal lobe processes somatosensation, and the occipital lobe processes vision."
+  },
+  {
+    "question": "The rapid depolarization phase of a neuronal action potential is caused by the influx of which ion?",
+    "choices": [
+      "Potassium (K+)",
+      "Chloride (Cl-)",
+      "Sodium (Na+)",
+      "Calcium (Ca2+)"
+    ],
+    "correct": 2,
+    "explanation": "When a neuron reaches threshold, voltage-gated sodium channels open, allowing Na+ to rush into the cell, causing rapid depolarization. K+ efflux repolarizes the cell, Cl- typically hyperpolarizes, and Ca2+ is involved in neurotransmitter release at the synapse."
+  }
+]

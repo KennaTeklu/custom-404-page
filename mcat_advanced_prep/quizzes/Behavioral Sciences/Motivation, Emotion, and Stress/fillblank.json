@@ -1,0 +1,116 @@
+{
+  "cheatsheet": {
+    "columns": ["Term", "Definition", "MCAT Key Point"],
+    "rows": [
+      ["Motivation", "Internal process that initiates, guides, and maintains goal-directed behavior.", "Divided into intrinsic (internal reward) and extrinsic (external reward) motivation."],
+      ["Drive reduction theory", "Motivation arises from physiological needs creating drives that push organism to reduce tension (homeostasis).", "Primary drives: hunger, thirst, sex; secondary drives: learned (e.g., money)."],
+      ["Maslow's hierarchy of needs", "Hierarchy: physiological → safety → love/belonging → esteem → self-actualization.", "Lower needs must be substantially met before higher needs motivate."],
+      ["Self-determination theory", "Three innate psychological needs: autonomy, competence, relatedness. Intrinsic motivation thrives when these are satisfied.", "Deci & Ryan; contrasts with extrinsic rewards sometimes undermining intrinsic motivation."],
+      ["Emotion", "Complex psychological state involving subjective experience, physiological arousal, and behavioral/expressive response.", "Components: cognitive (appraisal), physiological (heart rate, hormones), behavioral (facial expressions)."],
+      ["James-Lange theory", "Physiological arousal precedes and causes emotional experience (e.g., 'I am afraid because I tremble').", "Criticized for similar physiological patterns in different emotions; lacks cognitive appraisal."],
+      ["Cannon-Bard theory", "Physiological arousal and emotional experience occur simultaneously and independently via thalamus.", "Thalamus sends signals to cortex (emotion) and hypothalamus/autonomic NS (arousal) at same time."],
+      ["Schachter-Singer two-factor theory", "Emotion = physiological arousal + cognitive label (interpretation of context).", "Example: unexplained arousal + angry person nearby → feeling anger."],
+      ["Amygdala", "Brain structure central to fear processing, emotional learning, and threat detection.", "Damage impairs fear conditioning; integrates sensory input for rapid emotional response."],
+      ["Stress", "Physiological and psychological response to perceived threat or challenge (stressor).", "Can be acute (short-term) or chronic (long-term)."],
+      ["General adaptation syndrome (GAS)", "Selye's three-stage model: alarm, resistance, exhaustion.", "Alarm: sympathetic activation; resistance: cortisol sustained; exhaustion: resource depletion, disease risk."],
+      ["Yerkes-Dodson law", "Inverted-U relationship between arousal and performance.", "Simple tasks: high arousal optimal; difficult/complex tasks: low to moderate arousal best."],
+      ["Primary appraisal (Lazarus)", "First evaluation of whether a situation is irrelevant, benign-positive, or stressful (threat/challenge/harm).", "Part of transactional model of stress and coping."],
+      ["Secondary appraisal (Lazarus)", "Evaluation of coping resources and options available to deal with the stressor.", "If resources are sufficient, stress may be lower; if insufficient, distress increases."],
+      ["Eustress", "Positive, beneficial stress that enhances motivation and performance.", "Contrast with distress; e.g., excitement before a competition."]
+    ]
+  },
+  "test": {
+    "questions": [
+      {
+        "type": "cloze",
+        "text": "The internal process that initiates, guides, and maintains goal-directed behavior is called ________.",
+        "correct": "motivation",
+        "acceptableAlternatives": ["Motivation", "motive"]
+      },
+      {
+        "type": "cloze",
+        "text": "The theory that motivation arises from physiological needs creating drives to reduce tension is the ________ reduction theory.",
+        "correct": "drive",
+        "acceptableAlternatives": ["Drive", "drive reduction", "homeostatic drive"]
+      },
+      {
+        "type": "cloze",
+        "text": "According to Maslow, the highest need in his hierarchy (involving personal growth and fulfillment) is self-________.",
+        "correct": "actualization",
+        "acceptableAlternatives": ["actualization", "self-actualization", "self actualization"]
+      },
+      {
+        "type": "cloze",
+        "text": "Deci and Ryan's ________-determination theory identifies autonomy, competence, and relatedness as basic psychological needs.",
+        "correct": "self",
+        "acceptableAlternatives": ["Self", "self determination", "SDT"]
+      },
+      {
+        "type": "cloze",
+        "text": "A complex psychological state involving subjective experience, physiological arousal, and behavioral response is called ________.",
+        "correct": "emotion",
+        "acceptableAlternatives": ["Emotion", "affect", "feeling"]
+      },
+      {
+        "type": "cloze",
+        "text": "The theory that physiological arousal precedes and causes emotional experience (e.g., 'I am afraid because I tremble') is the ________-Lange theory.",
+        "correct": "James",
+        "acceptableAlternatives": ["James", "James-Lange", "James Lange"]
+      },
+      {
+        "type": "cloze",
+        "text": "The theory that physiological arousal and emotional experience occur simultaneously and independently is the ________-Bard theory.",
+        "correct": "Cannon",
+        "acceptableAlternatives": ["Cannon", "Cannon-Bard", "Cannon Bard"]
+      },
+      {
+        "type": "cloze",
+        "text": "The ________-Singer two-factor theory states that emotion = physiological arousal + cognitive label.",
+        "correct": "Schachter",
+        "acceptableAlternatives": ["Schachter", "Schachter-Singer", "Schachter Singer"]
+      },
+      {
+        "type": "cloze",
+        "text": "The brain structure central to fear processing and threat detection is the ________.",
+        "correct": "amygdala",
+        "acceptableAlternatives": ["Amygdala", "amygdaloid body"]
+      },
+      {
+        "type": "cloze",
+        "text": "The physiological and psychological response to a perceived threat or challenge is called ________.",
+        "correct": "stress",
+        "acceptableAlternatives": ["Stress", "distress", "strain"]
+      },
+      {
+        "type": "cloze",
+        "text": "Selye's three-stage model of stress response (alarm, resistance, exhaustion) is called the general ________ syndrome.",
+        "correct": "adaptation",
+        "acceptableAlternatives": ["adaptation", "adaptive", "GAS"]
+      },
+      {
+        "type": "cloze",
+        "text": "The inverted-U relationship between arousal and performance is described by the ________-Dodson law.",
+        "correct": "Yerkes",
+        "acceptableAlternatives": ["Yerkes", "Yerkes-Dodson", "Yerkes Dodson"]
+      },
+      {
+        "type": "cloze",
+        "text": "In Lazarus's transactional model, the first evaluation of whether a situation is irrelevant, benign-positive, or stressful is ________ appraisal.",
+        "correct": "primary",
+        "acceptableAlternatives": ["Primary", "primary appraisal"]
+      },
+      {
+        "type": "cloze",
+        "text": "Evaluation of coping resources and options to deal with a stressor is ________ appraisal.",
+        "correct": "secondary",
+        "acceptableAlternatives": ["Secondary", "secondary appraisal"]
+      },
+      {
+        "type": "cloze",
+        "text": "The term for positive, beneficial stress that enhances motivation and performance is ________.",
+        "correct": "eustress",
+        "acceptableAlternatives": ["Eustress", "positive stress"]
+      }
+    ]
+  }
+}

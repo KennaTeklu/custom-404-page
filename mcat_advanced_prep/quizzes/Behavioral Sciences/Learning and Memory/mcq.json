@@ -1,0 +1,112 @@
+[
+  {
+    "question": "In classical conditioning, the neutral stimulus that, after pairing with an unconditioned stimulus, comes to elicit a conditioned response is called the:",
+    "choices": [
+      "Unconditioned stimulus (US)",
+      "Conditioned stimulus (CS)",
+      "Unconditioned response (UR)",
+      "Conditioned response (CR)"
+    ],
+    "correct": 1,
+    "explanation": "A conditioned stimulus (CS) is initially neutral but after association with an unconditioned stimulus (US) it triggers a conditioned response (CR). The US automatically elicits a UR without prior learning."
+  },
+  {
+    "question": "Which type of memory holds a small amount of information for a very brief period (seconds) and is often tested using digit span tasks?",
+    "choices": [
+      "Sensory memory",
+      "Long-term memory",
+      "Short-term memory",
+      "Episodic memory"
+    ],
+    "correct": 2,
+    "explanation": "Short-term memory (STM) temporarily stores limited information (about 7±2 items) for up to ~20-30 seconds without rehearsal. Sensory memory lasts milliseconds to seconds, long-term memory is permanent, and episodic memory is a type of LTM."
+  },
+  {
+    "question": "In operant conditioning, removing an unpleasant stimulus to increase the likelihood of a behavior is known as:",
+    "choices": [
+      "Positive reinforcement",
+      "Positive punishment",
+      "Negative reinforcement",
+      "Negative punishment"
+    ],
+    "correct": 2,
+    "explanation": "Negative reinforcement increases behavior by removing an aversive stimulus (e.g., fastening seatbelt to stop beeping). Positive reinforcement adds a reward, positive punishment adds a penalty, negative punishment removes a desirable stimulus."
+  },
+  {
+    "question": "The classic case of 'H.M.' (Henry Molaison), who had severe anterograde amnesia after removal of his medial temporal lobes, provided evidence that the ________ is critical for forming new declarative memories.",
+    "choices": [
+      "Cerebellum",
+      "Hippocampus",
+      "Amygdala",
+      "Basal ganglia"
+    ],
+    "correct": 1,
+    "explanation": "H.M. lost the ability to form new explicit (declarative) memories but retained procedural memory. The hippocampus is essential for consolidating declarative memories. Cerebellum and basal ganglia are involved in implicit/procedural learning, amygdala in emotional memory."
+  },
+  {
+    "question": "Which memory phenomenon occurs when previously learned information interferes with the recall of newly learned information?",
+    "choices": [
+      "Proactive interference",
+      "Retroactive interference",
+      "Retrograde amnesia",
+      "Source amnesia"
+    ],
+    "correct": 0,
+    "explanation": "Proactive interference occurs when old memories hinder new learning (e.g., calling a new partner by an ex's name). Retroactive interference is new info disrupting old memories. Retrograde amnesia is loss of past memories; source amnesia is forgetting the origin of a fact."
+  },
+  {
+    "question": "In Bandura's Bobo doll experiment, children who watched an adult act aggressively toward the doll were more likely to imitate those actions. This demonstrates:",
+    "choices": [
+      "Classical conditioning",
+      "Operant conditioning",
+      "Observational learning (modeling)",
+      "Latent learning"
+    ],
+    "correct": 2,
+    "explanation": "Observational learning occurs by watching and imitating a model. Bandura showed that learning can happen without direct reinforcement (vicarious reinforcement also influenced performance). Classical/operant conditioning require direct experience; latent learning is hidden until needed."
+  },
+  {
+    "question": "The 'magic number 7 ± 2' is most closely associated with the capacity of:",
+    "choices": [
+      "Echoic memory",
+      "Working memory",
+      "Short-term memory",
+      "Long-term memory"
+    ],
+    "correct": 2,
+    "explanation": "George Miller's classic paper (1956) proposed that short-term memory can hold about 7±2 chunks of information. Working memory includes manipulation, but its storage capacity is similar; echoic memory is a sensory store. LTM capacity is essentially unlimited."
+  },
+  {
+    "question": "Which of the following is an example of a fixed-interval schedule of reinforcement in operant conditioning?",
+    "choices": [
+      "A rat receives a food pellet every 10 lever presses",
+      "A rat receives a food pellet on average every 2 minutes (unpredictably)",
+      "A rat receives a food pellet the first time it presses the lever after 30 seconds have elapsed",
+      "A rat receives a food pellet for every lever press"
+    ],
+    "correct": 2,
+    "explanation": "Fixed-interval schedules reinforce the first response after a set time interval (e.g., checking mail every day). Option A is fixed-ratio, B is variable-interval, D is continuous reinforcement."
+  },
+  {
+    "question": "The process by which memories become stable in the brain over time after initial encoding is called:",
+    "choices": [
+      "Encoding",
+      "Retrieval",
+      "Consolidation",
+      "Reconsolidation"
+    ],
+    "correct": 2,
+    "explanation": "Consolidation transforms short-term memories into long-term storage, involving cellular (synaptic consolidation) and systems (hippocampus to cortex) processes. Encoding is initial learning, retrieval is accessing memory, reconsolidation occurs when a retrieved memory becomes labile again."
+  },
+  {
+    "question": "Which form of non-associative learning involves a decreased response to a repeated, non-threatening stimulus?",
+    "choices": [
+      "Sensitization",
+      "Habituation",
+      "Conditioning",
+      "Priming"
+    ],
+    "correct": 1,
+    "explanation": "Habituation is a reduction in response to a repeated stimulus (e.g., not noticing a ticking clock). Sensitization is an increased response (e.g., being startled more after a loud noise). Conditioning is associative learning; priming is implicit memory facilitation."
+  }
+]

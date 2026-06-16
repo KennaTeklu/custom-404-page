@@ -1,0 +1,112 @@
+[
+  {
+    "question": "According to Maslow's hierarchy of needs, which need must be substantially satisfied before an individual can be motivated by esteem or self-actualization?",
+    "choices": [
+      "Love and belonging",
+      "Safety and security",
+      "Physiological needs (e.g., hunger, thirst)",
+      "Cognitive needs"
+    ],
+    "correct": 2,
+    "explanation": "Maslow's hierarchy is often depicted as a pyramid: physiological needs at the base, then safety, love/belonging, esteem, and finally self-actualization. Lower needs (physiological) must be met before higher needs emerge as motivators."
+  },
+  {
+    "question": "The James-Lange theory of emotion proposes that:",
+    "choices": [
+      "Emotional experience precedes and causes physiological arousal",
+      "Physiological arousal and emotional experience occur simultaneously and independently",
+      "Physiological arousal follows a cognitive appraisal of the situation",
+      "Physiological arousal leads to the subjective experience of emotion after the brain interprets the bodily changes"
+    ],
+    "correct": 3,
+    "explanation": "James-Lange theory states that we feel emotion because we perceive bodily changes (e.g., 'I am afraid because I am trembling'). A is common sense view, C is Schachter-Singer (two-factor), B is Cannon-Bard."
+  },
+  {
+    "question": "Which of the following is a primary drive in drive reduction theory?",
+    "choices": [
+      "Achievement",
+      "Hunger",
+      "Power",
+      "Curiosity"
+    ],
+    "correct": 1,
+    "explanation": "Drive reduction theory (Hull) states that physiological needs (e.g., hunger, thirst, sex) create drives that motivate behavior to restore homeostasis. Achievement, power, and curiosity are secondary or acquired drives."
+  },
+  {
+    "question": "In the general adaptation syndrome (GAS) model of stress, the stage characterized by mobilization of the sympathetic nervous system and release of adrenaline is the:",
+    "choices": [
+      "Alarm stage",
+      "Resistance stage",
+      "Exhaustion stage",
+      "Recovery stage"
+    ],
+    "correct": 0,
+    "explanation": "Selye's GAS has three stages: alarm (fight-or-flight, sympathetic activation), resistance (body adapts, cortisol remains elevated), and exhaustion (resources depleted, increased disease risk)."
+  },
+  {
+    "question": "According to the Yerkes-Dodson law, performance on a difficult task is best when arousal level is:",
+    "choices": [
+      "Extremely high",
+      "Moderately high",
+      "Low to moderate",
+      "Very low"
+    ],
+    "correct": 2,
+    "explanation": "The Yerkes-Dodson law states an inverted-U relationship: simple tasks benefit from high arousal, difficult/complex tasks require lower arousal for optimal performance. For difficult tasks, low to moderate arousal is best."
+  },
+  {
+    "question": "Which brain structure is central to processing fear and emotional memories, particularly in response to threatening stimuli?",
+    "choices": [
+      "Hypothalamus",
+      "Amygdala",
+      "Hippocampus",
+      "Thalamus"
+    ],
+    "correct": 1,
+    "explanation": "The amygdala is critical for fear conditioning, emotional learning, and detecting threats. Hypothalamus regulates homeostasis, hippocampus consolidates memories (including context of fear), thalamus relays sensory info."
+  },
+  {
+    "question": "Self-determination theory (Deci & Ryan) identifies three basic psychological needs that underlie intrinsic motivation. Which of the following is NOT one of them?",
+    "choices": [
+      "Autonomy",
+      "Competence",
+      "Relatedness",
+      "Need for power"
+    ],
+    "correct": 3,
+    "explanation": "Self-determination theory posits autonomy (choice), competence (mastery), and relatedness (connection) as universal needs. Need for power is associated with other motivation theories (e.g., McClelland's learned needs)."
+  },
+  {
+    "question": "The concept of 'eustress' refers to:",
+    "choices": [
+      "Stress that is chronic and debilitating",
+      "Stress that results from major life traumas",
+      "Positive stress that can improve performance and well-being",
+      "The initial alarm reaction to a stressor"
+    ],
+    "correct": 2,
+    "explanation": "Eustress (from Greek 'eu' = good) is beneficial stress that motivates and enhances function (e.g., excitement before a competition). Distress is negative, harmful stress. The other options describe distress or aspects of GAS."
+  },
+  {
+    "question": "Which of the following scenarios best illustrates the opponent-process theory of emotion?",
+    "choices": [
+      "Feeling happy when receiving a reward after working hard",
+      "Feeling fear after seeing a snake, then relief after the snake is removed",
+      "Experiencing an initial thrill from skydiving that diminishes with repeated jumps, followed by a subsequent feeling of boredom or letdown",
+      "Becoming more motivated to study after failing an exam"
+    ],
+    "correct": 2,
+    "explanation": "Opponent-process theory (Solomon) explains that a strong emotional response (A process) is followed by an opposing emotional state (B process) that grows stronger with repetition, leading to addiction or habituation. Skydiving thrill → later letdown is classic example."
+  },
+  {
+    "question": "In the context of stress and coping, 'primary appraisal' refers to:",
+    "choices": [
+      "Evaluating whether one has the resources to cope with a stressor",
+      "Judging whether a situation is irrelevant, benign-positive, or stressful (i.e., a threat, challenge, or loss)",
+      "Seeking social support to manage emotional distress",
+      "Using problem-focused strategies to change the situation"
+    ],
+    "correct": 1,
+    "explanation": "Lazarus & Folkman's transactional model: primary appraisal evaluates the significance of an event for one's well-being; secondary appraisal assesses available coping resources. Options A is secondary, C and D are coping strategies."
+  }
+]

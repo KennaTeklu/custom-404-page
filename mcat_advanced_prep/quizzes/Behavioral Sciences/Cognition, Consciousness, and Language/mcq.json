@@ -1,0 +1,112 @@
+[
+  {
+    "question": "Which stage of sleep is most strongly associated with vivid dreaming and high-frequency, low-amplitude brain waves resembling wakefulness?",
+    "choices": [
+      "Stage 1 NREM",
+      "Stage 2 NREM",
+      "Stage 3 NREM",
+      "REM sleep"
+    ],
+    "correct": 3,
+    "explanation": "REM (rapid eye movement) sleep is characterized by desynchronized EEG patterns similar to wakefulness, vivid dreaming, and muscle atonia. NREM stages lack vivid dreaming and show slower brain waves."
+  },
+  {
+    "question": "In the context of language acquisition, which of the following best describes the 'critical period hypothesis'?",
+    "choices": [
+      "Children must be explicitly taught grammar by age 7 to develop normal language",
+      "There is a limited developmental window during which language must be acquired to achieve native-like proficiency",
+      "Adults learn second languages faster than children due to cognitive maturity",
+      "Language development is entirely determined by genetic factors with no environmental influence"
+    ],
+    "correct": 1,
+    "explanation": "The critical period hypothesis, proposed by Lenneberg, suggests that first language acquisition must occur between early childhood and puberty; after this window, native-like fluency becomes very difficult. The other options misrepresent the concept."
+  },
+  {
+    "question": "Which type of long-term memory involves knowledge of facts and general information that can be consciously recalled, such as 'Paris is the capital of France'?",
+    "choices": [
+      "Episodic memory",
+      "Procedural memory",
+      "Semantic memory",
+      "Working memory"
+    ],
+    "correct": 2,
+    "explanation": "Semantic memory stores general world knowledge, facts, and concepts independent of personal experience. Episodic memory stores personal events, procedural memory stores skills, and working memory temporarily manipulates information."
+  },
+  {
+    "question": "What is the term for the attentional phenomenon where individuals fail to perceive a fully visible but unexpected object because their attention is engaged on another task?",
+    "choices": [
+      "Change blindness",
+      "Inattentional blindness",
+      "Spatial neglect",
+      "Repetition blindness"
+    ],
+    "correct": 1,
+    "explanation": "Inattentional blindness occurs when focused attention prevents awareness of unexpected stimuli (e.g., the famous 'invisible gorilla' experiment). Change blindness is failure to notice changes in a scene; spatial neglect involves ignoring one side of space due to brain damage."
+  },
+  {
+    "question": "Which heuristic involves estimating the probability of an event based on how easily similar instances come to mind, often leading to overestimation of vivid or recent events?",
+    "choices": [
+      "Availability heuristic",
+      "Representativeness heuristic",
+      "Anchoring heuristic",
+      "Confirmation bias"
+    ],
+    "correct": 0,
+    "explanation": "The availability heuristic relies on mental ease of retrieving examples. For instance, people overestimate shark attacks because they are memorable. Representativeness compares to prototypes, anchoring uses a reference point, and confirmation bias seeks confirming evidence."
+  },
+  {
+    "question": "Damage to Broca's area in the left frontal lobe typically results in which type of aphasia?",
+    "choices": [
+      "Fluent, nonsensical speech with poor comprehension",
+      "Non-fluent, effortful speech with relatively intact comprehension",
+      "Inability to repeat phrases with intact spontaneous speech",
+      "Pure loss of the ability to name objects"
+    ],
+    "correct": 1,
+    "explanation": "Broca's aphasia (expressive aphasia) is characterized by halting, telegraphic speech but patients understand language reasonably well. Wernicke's aphasia (choice A) produces fluent but meaningless speech and poor comprehension."
+  },
+  {
+    "question": "The 'cocktail party effect' refers to the ability to:",
+    "choices": [
+      "Ignore all background conversations while focusing on a single speaker",
+      "Selectively attend to one auditory stream while unconsciously monitoring other streams for meaningful information (e.g., one's own name)",
+      "Remember every word spoken in a noisy environment",
+      "Switch attention rapidly between multiple conversations without losing track"
+    ],
+    "correct": 1,
+    "explanation": "The cocktail party effect demonstrates selective attention: you can focus on one conversation but your name or salient words from unattended channels can break through, showing some nonconscious processing. The other options mischaracterize the phenomenon."
+  },
+  {
+    "question": "Which of the following is a characteristic of the 'global workspace theory' of consciousness?",
+    "choices": [
+      "Consciousness arises from a single brain region localized in the cerebellum",
+      "Conscious access occurs when information is broadcast widely across multiple cortical regions via a central 'workspace'",
+      "Consciousness is identical to the brain's ability to detect novel stimuli automatically",
+      "Consciousness requires no neural binding across different sensory modalities"
+    ],
+    "correct": 1,
+    "explanation": "Global workspace theory (Baars) proposes that conscious information is made available to many specialized processors through a distributed workspace in the cortex and thalamus, allowing integration and voluntary report. It is not localized to one region."
+  },
+  {
+    "question": "In the Atkinson-Shiffrin multi-store model of memory, which process is necessary to transfer information from sensory memory to short-term memory?",
+    "choices": [
+      "Rehearsal",
+      "Encoding",
+      "Attention",
+      "Retrieval"
+    ],
+    "correct": 2,
+    "explanation": "Attention selects information from sensory registers (iconic/echoic memory) to move it into short-term memory. Rehearsal maintains information in STM, encoding transfers to long-term memory, and retrieval brings information back from LTM."
+  },
+  {
+    "question": "The linguistic principle that the structure of a language (e.g., its vocabulary and grammar) can shape or constrain its speakers' perception and cognition is known as:",
+    "choices": [
+      "Universal grammar hypothesis",
+      "Sapir-Whorf hypothesis (linguistic relativity)",
+      "Chomsky's nativist theory",
+      "Interactionist theory of language"
+    ],
+    "correct": 1,
+    "explanation": "The Sapir-Whorf hypothesis posits that language influences thought and perception. Strong version (determinism) is largely discredited, but weak version (relativity) has empirical support (e.g., color terms, spatial navigation). Universal grammar (Chomsky) focuses on innate language structures, not cognitive relativity."
+  }
+]

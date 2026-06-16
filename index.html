@@ -3374,13 +3374,17 @@ button:hover,
             </div>
         </div>
     </div>
-<script>
+<<script>
 (function() {
-    const host = window.location.hostname;
-    const allowed = host === 'kenna.mba' ||
-                    host === 'kennateklu.com' ||
-                    host.endsWith('.kenna.mba') ||
-                    host.endsWith('.kennateklu.com');
+    var host = window.location.hostname;
+    // Allow: kenna.mba, any .kenna.mba, kennateklu.com, any .kennateklu.com
+    var allowed = false;
+    if (host === 'kenna.mba' || host === 'kennateklu.com') allowed = true;
+    else if (host.endsWith('.kenna.mba') || host.endsWith('.kennateklu.com')) allowed = true;
+
+    // Debug log (visible in browser console)
+    console.log('Domain check:', host, allowed ? 'ALLOWED' : 'BLOCKED');
+
     if (!allowed) {
         document.body.innerHTML = '';
         location.replace('about:blank');
