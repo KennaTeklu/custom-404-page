@@ -1,9 +1,9 @@
 [
   {
     "id": "mcat_advanced_prep",
-    "name": "MCAT Advanced Prep",
+    "name": "Sample Content",
     "version": "1.0.0",
-    "description": "Full MCAT content review with quizzes for every topic",
-    "baseUrl": "https://raw.githubusercontent.com/YOUR_USERNAME/brain/main/mcat_advanced_prep/"
+    "description": "Example data for the 404 page template.",
+    "baseUrl": "https://raw.githubusercontent.com/KennaTeklu/custom-404-page/main/mcat_advanced_prep/"
   }
 ]
