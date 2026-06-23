@@ -9862,7 +9862,7 @@ const setupDrop = (zoneId, fileInputId, isCat) => {
         e.preventDefault(); zone.style.borderColor = 'var(--border)';
         if (e.dataTransfer.files.length === 0) return;
         // Check subscription
-        if (!window.__paywall.isAllowed()) {
+        if (!(await window.__paywall.isAllowed())) {
             window.__paywall.showPanel(document.getElementById('upload-hub-modal').querySelector('.modal-large'));
             return;
         }
@@ -9870,7 +9870,7 @@ const setupDrop = (zoneId, fileInputId, isCat) => {
     });
     document.getElementById(fileInputId).addEventListener('change', async (e) => {
         if (e.target.files[0]) {
-            if (!window.__paywall.isAllowed()) {
+            if (!(await window.__paywall.isAllowed())) {
                 window.__paywall.showPanel(document.getElementById('upload-hub-modal').querySelector('.modal-large'));
                 e.target.value = ''; // reset input
                 return;
@@ -9904,7 +9904,7 @@ document.querySelectorAll('.paste-json-btn').forEach(btn => {
 });
 document.getElementById('paste-submit-btn').addEventListener('click', async () => {
     // Check subscription
-    if (!window.__paywall.isAllowed()) {
+    if (!(await window.__paywall.isAllowed())) {
         // Show paywall in the modal
         window.__paywall.showPanel(document.getElementById('paste-json-modal').querySelector('.modal-medium'));
         return;
@@ -11548,83 +11548,76 @@ function validateHTML(html) {
 </script>
 <script>
 // ══════════════════════════════════════════════════════════════════════════════
-// 🔐 SUBSCRIPTION PAYWALL – Single tier (monthly / yearly)
+// 🔐 SUBSCRIPTION PAYWALL – Backend via Cloudflare Worker
 // ══════════════════════════════════════════════════════════════════════════════
 (function() {
     'use strict';
 
-    const SUBSCRIPTION_KEY = 'upload_subscription_expiry';
-    const SECRET = 'K3yM@p_2026_Sch0l@r';
+    // ───── CONFIG ─────
+    const WORKER_URL = 'https://your-worker.workers.dev'; // <-- CHANGE THIS
+    const USER_KEY = 'paywall_userId';
+    const MONTHLY_PRICE = 48.99;
+    const YEARLY_PRICE = 489.99;
 
-    // ---- Helpers ----
-    function _sign(data) {
-        const str = typeof data === 'string' ? data : JSON.stringify(data);
-        let h = 0;
-        for (let i = 0; i < str.length; i++) {
-            h = ((h << 5) - h) + str.charCodeAt(i);
-            h = h & h;
+    // ───── HELPERS ─────
+    function getUserId() {
+        let userId = localStorage.getItem(USER_KEY);
+        if (!userId) {
+            userId = 'u_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+            localStorage.setItem(USER_KEY, userId);
         }
-        const sh = SECRET.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-        return (h ^ sh).toString(36);
+        return userId;
     }
 
-    function _verify(obj, sig) {
-        const clone = { ...obj };
-        delete clone._sig;
-        return _sign(clone) === sig;
+    async function checkStatus() {
+        const userId = getUserId();
+        const res = await fetch(`${WORKER_URL}/api/status?userId=${userId}`);
+        if (!res.ok) return { active: false, remaining: 0 };
+        return await res.json();
     }
 
-    // ---- Subscription state ----
-    function getExpiry() {
-        const raw = localStorage.getItem(SUBSCRIPTION_KEY);
-        if (!raw) return 0;
-        try {
-            const data = JSON.parse(raw);
-            if (data._sig && _verify(data, data._sig)) {
-                return data.expiry || 0;
+    async function validateKey(key) {
+        const res = await fetch(`${WORKER_URL}/api/validate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key })
+        });
+        if (!res.ok) return { valid: false };
+        return await res.json();
+    }
+
+    async function subscribe(plan) {
+        const userId = getUserId();
+        const res = await fetch(`${WORKER_URL}/api/subscribe`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan, userId })
+        });
+        if (!res.ok) return null;
+        return await res.json();
+    }
+
+    // ───── PUBLIC API ─────
+    window.__paywall = {
+        isAllowed: async function() {
+            const status = await checkStatus();
+            return status.active === true;
+        },
+        applyKey: async function(key) {
+            const result = await validateKey(key);
+            if (result.valid) {
+                localStorage.setItem('paywall_key', key);
+                return true;
             }
-        } catch(_) {}
-        return 0;
-    }
-
-    function setExpiry(expiry) {
-        const data = { expiry, _sig: _sign({ expiry }) };
-        localStorage.setItem(SUBSCRIPTION_KEY, JSON.stringify(data));
-    }
-
-    function isAllowed() {
-        const expiry = getExpiry();
-        return expiry > Date.now();
-    }
-
-    // ---- Generate license key ----
-    function _genKey(months, userId) {
-        const raw = `${months}|${userId}|${Date.now()}`;
-        return btoa(`${raw}|${_sign(raw)}`).replace(/=/g, '');
-    }
-
-    function parseKey(key) {
-        try {
-            const parts = atob(key.replace(/-/g, '')).split('|');
-            if (parts.length !== 4) return null;
-            const [months, userId, ts, sig] = parts;
-            if (_sign(`${months}|${userId}|${ts}`) !== sig) return null;
-            return { months: parseInt(months, 10), userId, ts: parseInt(ts, 10) };
-        } catch(_) {
-            return null;
+            return false;
+        },
+        getStatus: checkStatus,
+        showPanel: function(container) {
+            buildWall(container, () => {});
         }
-    }
+    };
 
-    function applyKey(key) {
-        const parsed = parseKey(key.trim());
-        if (!parsed) return false;
-        // Set expiry: months from now
-        const expiry = Date.now() + parsed.months * 30 * 24 * 60 * 60 * 1000;
-        setExpiry(expiry);
-        return true;
-    }
-
-    // ---- Paywall UI ----
+    // ───── UI ─────
     const CSS = `
     .pw-wall{display:flex;flex-direction:column;align-items:center;gap:0.8rem;
         background:rgba(0,0,0,0.6);border:1px solid rgba(45,212,191,0.3);
@@ -11661,6 +11654,8 @@ function validateHTML(html) {
     .pw-notice{font-size:0.62rem;color:#475569;text-align:center;max-width:400px;margin:0}
     `;
 
+    let _selPlan = 'monthly';
+
     function _injectCSS() {
         if (!document.getElementById('km-pw-css')) {
             const s = document.createElement('style');
@@ -11669,10 +11664,6 @@ function validateHTML(html) {
             document.head.appendChild(s);
         }
     }
-
-    let _selPlan = 'monthly'; // 'monthly' or 'yearly'
-    const MONTHLY_PRICE = 48.99;
-    const YEARLY_PRICE = 489.99;
 
     function _planCards() {
         return `
@@ -11743,7 +11734,8 @@ function validateHTML(html) {
                 color: '#f8fafc'
             });
             if (!result.value) return;
-            if (applyKey(result.value)) {
+            const valid = await window.__paywall.applyKey(result.value);
+            if (valid) {
                 targetEl.innerHTML = wall._originalContent;
                 Swal.fire({
                     title: '✅ Activated!',
@@ -11765,7 +11757,7 @@ function validateHTML(html) {
             }
         });
 
-        // Payment
+        // Payment → call Worker API
         wall.querySelector(`#${wall.id}-pay`).addEventListener('click', async () => {
             const cardRaw = (wall.querySelector(`#${wall.id}-card`)?.value || '').replace(/\s/g, '');
             const exp = (wall.querySelector(`#${wall.id}-expiry`)?.value || '').trim();
@@ -11785,18 +11777,16 @@ function validateHTML(html) {
             payBtn.disabled = true;
             payBtn.textContent = 'Processing…';
 
-            await new Promise(r => setTimeout(r, 1200));
+            const plan = _selPlan; // 'monthly' or 'yearly'
+            const result = await subscribe(plan);
 
-            // Determine months: 1 for monthly, 12 for yearly
-            const months = (_selPlan === 'monthly') ? 1 : 12;
-            const userId = 'u_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-            const newKey = _genKey(months, userId);
-            if (applyKey(newKey)) {
+            if (result && result.key) {
+                localStorage.setItem('paywall_key', result.key);
                 targetEl.innerHTML = wall._originalContent;
                 await Swal.fire({
                     title: '🎉 Subscription active!',
-                    html: `<p>You have subscribed for ${months} month(s).</p>
-                           <div style="font-family:monospace;background:#1e293b;padding:0.6rem;border-radius:0.5rem;word-break:break-all;margin:0.75rem 0">${newKey}</div>
+                    html: `<p>You have subscribed for ${plan === 'yearly' ? 12 : 1} month(s).</p>
+                           <div style="font-family:monospace;background:#1e293b;padding:0.6rem;border-radius:0.5rem;word-break:break-all;margin:0.75rem 0">${result.key}</div>
                            <p style="font-size:0.75rem;color:#94a3b8">Save this key – use <em>Import key</em> on other browsers.</p>`,
                     icon: 'success',
                     background: '#0f172a',
@@ -11813,49 +11803,9 @@ function validateHTML(html) {
         return wall;
     }
 
-    // ---- Public API ----
-    window.__paywall = {
-        isAllowed,
-        applyKey,
-        exportKey() {
-            const expiry = getExpiry();
-            if (expiry <= Date.now()) return null;
-            // We don't store the key, but we can generate a new one for the current subscription
-            // For simplicity, we'll return a generic key based on the expiry
-            const userId = 'u_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-            const months = Math.round((expiry - Date.now()) / (30 * 24 * 60 * 60 * 1000));
-            return _genKey(months, userId);
-        },
-        getStatus() {
-            const expiry = getExpiry();
-            return {
-                active: expiry > Date.now(),
-                expiry: expiry,
-                remaining: Math.max(0, Math.floor((expiry - Date.now()) / (1000 * 60 * 60 * 24)))
-            };
-        },
-        showPanel(container) {
-            const el = typeof container === 'string' ? document.getElementById(container) : container;
-            if (el) {
-                const existingWall = el.querySelector('.pw-wall');
-                if (existingWall && existingWall._originalContent) {
-                    el.innerHTML = existingWall._originalContent;
-                }
-                buildWall(el, () => {});
-            } else {
-                // fallback: show in a modal
-                const overlay = document.createElement('div');
-                overlay.style.cssText = 'position:fixed;inset:0;z-index:999999;background:rgba(3,4,8,0.92);backdrop-filter:blur(24px);display:flex;align-items:center;justify-content:center;padding:1.5rem;overflow-y:auto';
-                const inner = document.createElement('div');
-                inner.style.cssText = 'max-width:640px;width:100%';
-                overlay.appendChild(inner);
-                document.body.appendChild(overlay);
-                buildWall(inner, () => { overlay.remove(); });
-            }
-        }
-    };
-
-    console.log('%c[Paywall] Upload subscription paywall active.', 'color:#2dd4bf');
+    // ───── INIT ─────
+    _injectCSS();
+    console.log('[Paywall] Backend‑based paywall active.');
 })();
 </script>
 </body>
