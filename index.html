@@ -11548,13 +11548,13 @@ function validateHTML(html) {
 </script>
 <script>
 // ══════════════════════════════════════════════════════════════════════════════
-// 🔐 SUBSCRIPTION PAYWALL – Backend via Cloudflare Worker
+// SUBSCRIPTION PAYWALL – Backend via Cloudflare Worker
 // ══════════════════════════════════════════════════════════════════════════════
 (function() {
     'use strict';
 
     // ───── CONFIG ─────
-    const WORKER_URL = 'https://brain-paywall.kennateklu.workers.dev/';
+    const WORKER_URL = 'https://brain-paywall.kennateklu.workers.dev'; // <-- your Worker URL
     const USER_KEY = 'paywall_userId';
     const MONTHLY_PRICE = 48.99;
     const YEARLY_PRICE = 489.99;
@@ -11576,16 +11576,6 @@ function validateHTML(html) {
         return await res.json();
     }
 
-    async function validateKey(key) {
-        const res = await fetch(`${WORKER_URL}/api/validate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ key })
-        });
-        if (!res.ok) return { valid: false };
-        return await res.json();
-    }
-
     async function subscribe(plan) {
         const userId = getUserId();
         const res = await fetch(`${WORKER_URL}/api/subscribe`, {
@@ -11603,55 +11593,144 @@ function validateHTML(html) {
             const status = await checkStatus();
             return status.active === true;
         },
-        applyKey: async function(key) {
-            const result = await validateKey(key);
-            if (result.valid) {
-                localStorage.setItem('paywall_key', key);
-                return true;
-            }
-            return false;
-        },
         getStatus: checkStatus,
         showPanel: function(container) {
-            buildWall(container, () => {});
+            buildWall(container);
         }
     };
 
     // ───── UI ─────
     const CSS = `
-    .pw-wall{display:flex;flex-direction:column;align-items:center;gap:0.8rem;
-        background:rgba(0,0,0,0.6);border:1px solid rgba(45,212,191,0.3);
-        border-radius:20px;padding:1.2rem;margin:0;color:#f8fafc;
-        font-family:'Inter',system-ui,sans-serif;width:100%;box-sizing:border-box}
-    .pw-title{font-size:1.1rem;font-weight:700;text-align:center;
-        background:linear-gradient(135deg,#2dd4bf,#3b82f6);
-        -webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .pw-hint{font-size:0.8rem;color:#94a3b8;text-align:center;max-width:420px;margin:0}
-    .pw-plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.6rem;width:100%}
-    .pw-plan{background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.08);
-        border-radius:14px;padding:0.8rem;cursor:pointer;transition:0.15s;position:relative;text-align:center}
-    .pw-plan:hover,.pw-plan.sel{border-color:#2dd4bf;background:rgba(45,212,191,0.08)}
-    .pw-plan-name{font-weight:700;font-size:0.9rem;margin-bottom:0.1rem}
-    .pw-price{font-size:1rem;font-weight:800;color:#2dd4bf}
-    .pw-sub{font-size:0.6rem;color:#64748b;margin-bottom:0.3rem}
-    .pw-card-area{width:100%;background:rgba(0,0,0,0.3);border-radius:16px;padding:0.8rem}
-    .pw-card-row{display:flex;gap:0.4rem;flex-wrap:wrap;margin:0.3rem 0}
-    .pw-input{background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.12);
-        border-radius:10px;padding:0.35rem 0.7rem;color:#fff;font-size:0.8rem;flex:1;min-width:70px}
-    .pw-input:focus{outline:none;border-color:#2dd4bf}
-    .pw-err{color:#f87171;font-size:0.7rem;min-height:0.9rem;margin-top:0.2rem}
-    .pw-pay{width:100%;background:#2dd4bf;border:none;border-radius:40px;padding:0.5rem;
-        font-weight:700;color:#030408;cursor:pointer;font-size:0.9rem;margin-top:0.4rem;transition:0.1s}
-    .pw-pay:hover{background:#14b8a6}
-    .pw-pay:disabled{opacity:0.5;cursor:not-allowed}
-    .pw-row{display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;width:100%}
-    .pw-ghost{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);
-        border-radius:40px;padding:0.25rem 0.9rem;font-size:0.72rem;cursor:pointer;
-        color:#e2e8f0;transition:0.1s}
-    .pw-ghost:hover{background:rgba(255,255,255,0.1);border-color:#2dd4bf}
-    .pw-free{background:transparent;border:none;color:#64748b;cursor:pointer;
-        font-size:0.72rem;text-decoration:underline;padding:0.2rem}
-    .pw-notice{font-size:0.62rem;color:#475569;text-align:center;max-width:400px;margin:0}
+    .pw-wall {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.2rem;
+        background: rgba(0,0,0,0.75);
+        border: 1px solid rgba(45,212,191,0.25);
+        border-radius: 24px;
+        padding: 2rem 1.5rem;
+        margin: 0;
+        color: #f8fafc;
+        font-family: 'Inter', system-ui, sans-serif;
+        width: 100%;
+        max-width: 480px;
+        box-sizing: border-box;
+    }
+    .pw-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #f8fafc;
+        margin: 0;
+    }
+    .pw-title span {
+        color: #2dd4bf;
+    }
+    .pw-hint {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        text-align: center;
+        margin: 0;
+        line-height: 1.5;
+    }
+    .pw-plans {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        width: 100%;
+    }
+    .pw-plan {
+        background: rgba(255,255,255,0.04);
+        border: 2px solid rgba(255,255,255,0.08);
+        border-radius: 16px;
+        padding: 1rem 0.75rem;
+        cursor: pointer;
+        transition: 0.2s;
+        text-align: center;
+    }
+    .pw-plan:hover {
+        border-color: rgba(45,212,191,0.4);
+        background: rgba(45,212,191,0.05);
+    }
+    .pw-plan.sel {
+        border-color: #2dd4bf;
+        background: rgba(45,212,191,0.1);
+    }
+    .pw-plan-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #f8fafc;
+    }
+    .pw-price {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #2dd4bf;
+        margin-top: 0.2rem;
+    }
+    .pw-sub {
+        font-size: 0.65rem;
+        color: #64748b;
+        margin-top: 0.1rem;
+    }
+    .pw-card-area {
+        width: 100%;
+        background: rgba(0,0,0,0.3);
+        border-radius: 16px;
+        padding: 0.8rem;
+    }
+    .pw-card-row {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+        margin: 0.3rem 0;
+    }
+    .pw-input {
+        background: rgba(0,0,0,0.4);
+        border: 1px solid rgba(255,255,255,0.12);
+        border-radius: 10px;
+        padding: 0.5rem 0.7rem;
+        color: #fff;
+        font-size: 0.8rem;
+        flex: 1;
+        min-width: 70px;
+    }
+    .pw-input:focus {
+        outline: none;
+        border-color: #2dd4bf;
+    }
+    .pw-err {
+        color: #f87171;
+        font-size: 0.7rem;
+        min-height: 0.9rem;
+        margin-top: 0.2rem;
+    }
+    .pw-pay {
+        width: 100%;
+        background: #2dd4bf;
+        border: none;
+        border-radius: 40px;
+        padding: 0.6rem;
+        font-weight: 700;
+        color: #030408;
+        cursor: pointer;
+        font-size: 0.9rem;
+        margin-top: 0.4rem;
+        transition: 0.15s;
+    }
+    .pw-pay:hover {
+        background: #14b8a6;
+    }
+    .pw-pay:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .pw-notice {
+        font-size: 0.65rem;
+        color: #475569;
+        text-align: center;
+        max-width: 400px;
+        margin: 0;
+    }
     `;
 
     let _selPlan = 'monthly';
@@ -11665,147 +11744,107 @@ function validateHTML(html) {
         }
     }
 
-    function _planCards() {
-        return `
-        <div class="pw-plan ${_selPlan === 'monthly' ? 'sel' : ''}" data-plan="monthly">
-            <div class="pw-plan-name">Monthly</div>
-            <div class="pw-price">$${MONTHLY_PRICE}/mo</div>
-        </div>
-        <div class="pw-plan ${_selPlan === 'yearly' ? 'sel' : ''}" data-plan="yearly">
-            <div class="pw-plan-name">Yearly</div>
-            <div class="pw-price">$${YEARLY_PRICE}/yr</div>
-            <div class="pw-sub">($${(YEARLY_PRICE/12).toFixed(2)}/mo)</div>
-        </div>
-        `;
-    }
-
-    function buildWall(targetEl, onGranted) {
+    function buildWall(targetEl) {
         _injectCSS();
 
         const originalContent = targetEl.innerHTML;
 
         const wall = document.createElement('div');
         wall.className = 'pw-wall';
-        wall.id = 'km-pw-wall-' + Date.now();
 
         wall.innerHTML = `
-            <div class="pw-title">✦ Subscribe to Upload</div>
-            <p class="pw-hint">You need an active subscription to upload categories or books.</p>
-            <div class="pw-plans">${_planCards()}</div>
-            <div class="pw-row">
-                <button class="pw-ghost" id="${wall.id}-toggle">Toggle monthly/yearly</button>
-                <button class="pw-ghost" id="${wall.id}-key">🔑 Enter license key</button>
+            <div class="pw-title">Subscribe to <span>Upload</span></div>
+            <p class="pw-hint">An active subscription is required to upload categories or books.</p>
+            <div class="pw-plans">
+                <div class="pw-plan ${_selPlan === 'monthly' ? 'sel' : ''}" data-plan="monthly">
+                    <div class="pw-plan-name">Monthly</div>
+                    <div class="pw-price">$${MONTHLY_PRICE}</div>
+                    <div class="pw-sub">per month</div>
+                </div>
+                <div class="pw-plan ${_selPlan === 'yearly' ? 'sel' : ''}" data-plan="yearly">
+                    <div class="pw-plan-name">Yearly</div>
+                    <div class="pw-price">$${YEARLY_PRICE}</div>
+                    <div class="pw-sub">$${(YEARLY_PRICE/12).toFixed(2)} per month</div>
+                </div>
             </div>
             <div class="pw-card-area">
-                <div style="font-size:0.68rem;color:#64748b;margin-bottom:0.35rem">
-                    💳 Test card: <code style="background:rgba(45,212,191,0.1);padding:0.1rem 0.4rem;border-radius:8px;color:#2dd4bf">4242 4242 4242 4242</code>
-                </div>
                 <div class="pw-card-row">
-                    <input id="${wall.id}-card" class="pw-input" value="4242 4242 4242 4242" placeholder="Card number" style="flex:2;min-width:130px">
-                    <input id="${wall.id}-expiry" class="pw-input" value="12/28" placeholder="MM/YY">
-                    <input id="${wall.id}-cvc" class="pw-input" value="123" placeholder="CVC">
+                    <input class="pw-input pw-card-number" placeholder="Card number" value="4242424242424242" style="flex:2;min-width:130px">
+                    <input class="pw-input pw-card-expiry" placeholder="MM/YY" value="12/28">
+                    <input class="pw-input pw-card-cvc" placeholder="CVC" value="123">
                 </div>
-                <div class="pw-err" id="${wall.id}-err"></div>
-                <button class="pw-pay" id="${wall.id}-pay">⚡ Subscribe and continue</button>
+                <div class="pw-err"></div>
+                <button class="pw-pay">Subscribe</button>
             </div>
-            <p class="pw-notice">🔐 After subscribing, you'll receive a license key you can import on other browsers.</p>
+            <p class="pw-notice">You will receive a license key after payment.</p>
         `;
 
         targetEl.innerHTML = '';
         targetEl.appendChild(wall);
         wall._originalContent = originalContent;
 
-        // Toggle plan
-        wall.querySelector(`#${wall.id}-toggle`).addEventListener('click', () => {
-            _selPlan = (_selPlan === 'monthly') ? 'yearly' : 'monthly';
-            targetEl.innerHTML = wall._originalContent;
-            buildWall(targetEl, onGranted);
-        });
-
-        // License key
-        wall.querySelector(`#${wall.id}-key`).addEventListener('click', async () => {
-            const result = await Swal.fire({
-                title: 'Enter your license key',
-                input: 'text',
-                inputPlaceholder: 'Paste license key here',
-                showCancelButton: true,
-                confirmButtonColor: '#2dd4bf',
-                background: '#0f172a',
-                color: '#f8fafc'
+        // ── Plan selection via card click ──
+        wall.querySelectorAll('.pw-plan').forEach(card => {
+            card.addEventListener('click', () => {
+                wall.querySelectorAll('.pw-plan').forEach(c => c.classList.remove('sel'));
+                card.classList.add('sel');
+                _selPlan = card.dataset.plan;
             });
-            if (!result.value) return;
-            const valid = await window.__paywall.applyKey(result.value);
-            if (valid) {
-                targetEl.innerHTML = wall._originalContent;
-                Swal.fire({
-                    title: '✅ Activated!',
-                    text: 'Your subscription is now active.',
-                    icon: 'success',
-                    background: '#0f172a',
-                    color: '#f8fafc',
-                    timer: 1800,
-                    showConfirmButton: false
-                });
-                onGranted();
-            } else {
-                Swal.fire({
-                    title: '❌ Invalid key',
-                    icon: 'error',
-                    background: '#0f172a',
-                    color: '#f8fafc'
-                });
-            }
         });
 
-        // Payment → call Worker API
-        wall.querySelector(`#${wall.id}-pay`).addEventListener('click', async () => {
-            const cardRaw = (wall.querySelector(`#${wall.id}-card`)?.value || '').replace(/\s/g, '');
-            const exp = (wall.querySelector(`#${wall.id}-expiry`)?.value || '').trim();
-            const errEl = wall.querySelector(`#${wall.id}-err`);
+        // ── Subscribe ──
+        wall.querySelector('.pw-pay').addEventListener('click', async () => {
+            const card = wall.querySelector('.pw-card-number').value.replace(/\s/g, '');
+            const expiry = wall.querySelector('.pw-card-expiry').value.trim();
+            const errEl = wall.querySelector('.pw-err');
 
-            if (!/^\d{16}$/.test(cardRaw)) {
-                if (errEl) errEl.textContent = '⚠ Use test card: 4242 4242 4242 4242';
+            if (!/^\d{16}$/.test(card)) {
+                errEl.textContent = 'Please enter a valid 16-digit card number.';
                 return;
             }
-            if (!/^\d{2}\/\d{2}$/.test(exp)) {
-                if (errEl) errEl.textContent = '⚠ Expiry format: MM/YY';
+            if (!/^\d{2}\/\d{2}$/.test(expiry)) {
+                errEl.textContent = 'Expiry format: MM/YY';
                 return;
             }
-            if (errEl) errEl.textContent = '';
+            errEl.textContent = '';
 
-            const payBtn = wall.querySelector(`#${wall.id}-pay`);
-            payBtn.disabled = true;
-            payBtn.textContent = 'Processing…';
+            const btn = wall.querySelector('.pw-pay');
+            btn.disabled = true;
+            btn.textContent = 'Processing…';
 
-            const plan = _selPlan; // 'monthly' or 'yearly'
-            const result = await subscribe(plan);
+            const result = await subscribe(_selPlan);
 
             if (result && result.key) {
                 localStorage.setItem('paywall_key', result.key);
                 targetEl.innerHTML = wall._originalContent;
-                await Swal.fire({
-                    title: '🎉 Subscription active!',
-                    html: `<p>You have subscribed for ${plan === 'yearly' ? 12 : 1} month(s).</p>
-                           <div style="font-family:monospace;background:#1e293b;padding:0.6rem;border-radius:0.5rem;word-break:break-all;margin:0.75rem 0">${result.key}</div>
-                           <p style="font-size:0.75rem;color:#94a3b8">Save this key – use <em>Import key</em> on other browsers.</p>`,
-                    icon: 'success',
-                    background: '#0f172a',
-                    color: '#f8fafc'
-                });
-                onGranted();
+                onSubscriptionSuccess(result.key, _selPlan);
             } else {
-                payBtn.disabled = false;
-                payBtn.textContent = '⚡ Subscribe and continue';
-                if (errEl) errEl.textContent = '⚠ Could not activate. Try again.';
+                btn.disabled = false;
+                btn.textContent = 'Subscribe';
+                errEl.textContent = 'Subscription failed. Please try again.';
             }
         });
+    }
 
-        return wall;
+    function onSubscriptionSuccess(key, plan) {
+        const months = plan === 'yearly' ? 12 : 1;
+        Swal.fire({
+            title: 'Subscription active',
+            html: `<p>You have subscribed for ${months} month(s).</p>
+                   <div style="font-family:monospace;background:#1e293b;padding:0.6rem;border-radius:0.5rem;word-break:break-all;margin:0.75rem 0">${key}</div>
+                   <p style="font-size:0.75rem;color:#94a3b8">Save this key – you can use it on other browsers.</p>`,
+            icon: 'success',
+            background: '#0f172a',
+            color: '#f8fafc',
+            confirmButtonColor: '#2dd4bf'
+        });
+        // Reload to refresh the subscription status
+        location.reload();
     }
 
     // ───── INIT ─────
     _injectCSS();
-    console.log('[Paywall] Backend‑based paywall active.');
+    console.log('[Paywall] Backend paywall ready.');
 })();
 </script>
 </body>
