@@ -11864,7 +11864,7 @@ function validateHTML(html) {
     </script>
 <script>
 // ================================================================
-// ONBOARDING WIZARD + QUIZ HIJACKING MODULE
+// ONBOARDING WIZARD + QUIZ HIJACKING MODULE – FIXED
 // ================================================================
 (function() {
     'use strict';
@@ -11884,10 +11884,13 @@ function validateHTML(html) {
 
     // ─── CHECK IF ONBOARDING IS NEEDED ────────────────────────────
     function isOnboardingNeeded() {
-        return localStorage.getItem(ONBOARDING_KEY) !== 'true';
+        const flag = localStorage.getItem(ONBOARDING_KEY) === 'true';
+        // If the Brain node doesn't exist, we ALWAYS need onboarding
+        const hasBrain = window.State?.nodes?.some(n => n.id === BRAIN_NODE_ID);
+        return !flag || !hasBrain;
     }
 
-    // ─── CREATE BRAIN NODE ─────────────────────────────────────────
+    // ─── CREATE BRAIN NODE (SAFE – DOES NOT DELETE root) ──────────
     function ensureBrainNode() {
         let brain = State.nodes.find(n => n.id === BRAIN_NODE_ID);
         if (!brain) {
@@ -11896,7 +11899,7 @@ function validateHTML(html) {
                 id: newId,
                 name: 'Brain',
                 type: 'category',
-                parentIds: [],
+                parentIds: ['root'],          // ✅ attached to existing root
                 size: 3000,
                 understanding: 0,
                 content: '',
@@ -11904,47 +11907,19 @@ function validateHTML(html) {
                 _isBrain: true
             });
             brain = State.nodes[State.nodes.length - 1];
-            // Make it the new root by re-parenting all root nodes
-            const rootNodes = State.nodes.filter(n => n.parentIds.includes('root'));
-            for (let n of rootNodes) {
-                const idx = n.parentIds.indexOf('root');
-                if (idx !== -1) {
-                    n.parentIds.splice(idx, 1);
-                    if (!n.parentIds.includes(newId)) n.parentIds.push(newId);
-                }
-            }
-            // Remove the old root node if it exists
-            const oldRoot = State.nodes.find(n => n.id === 'root');
-            if (oldRoot) {
-                State.nodes = State.nodes.filter(n => n.id !== 'root');
-            }
-            // Set focus to brain
+            // Set focus to Brain, keep root in path
             State.focusId = newId;
-            State.path = [{ id: newId, name: 'Brain' }];
+            State.path = [{ id: 'root', name: 'Knowledge Universe' }, { id: newId, name: 'Brain' }];
             DB.save(false);
             Core.refresh();
             Graph3D.buildFromState();
             Graph3D.fitToScreen(true);
         } else {
-            // If brain exists but is not the root, reparent
-            const rootNodes = State.nodes.filter(n => n.parentIds.includes('root'));
-            for (let n of rootNodes) {
-                const idx = n.parentIds.indexOf('root');
-                if (idx !== -1) {
-                    n.parentIds.splice(idx, 1);
-                    if (!n.parentIds.includes(BRAIN_NODE_ID)) n.parentIds.push(BRAIN_NODE_ID);
-                }
+            // Ensure Brain is under root
+            if (!brain.parentIds.includes('root')) {
+                brain.parentIds.push('root');
+                DB.save(false);
             }
-            const oldRoot = State.nodes.find(n => n.id === 'root');
-            if (oldRoot) {
-                State.nodes = State.nodes.filter(n => n.id !== 'root');
-            }
-            State.focusId = BRAIN_NODE_ID;
-            State.path = [{ id: BRAIN_NODE_ID, name: 'Brain' }];
-            DB.save(false);
-            Core.refresh();
-            Graph3D.buildFromState();
-            Graph3D.fitToScreen(true);
         }
         return brain;
     }
@@ -11971,7 +11946,6 @@ function validateHTML(html) {
         if (arrowShown) return;
         arrowShown = true;
 
-        // Remove any existing arrow
         const oldArrow = document.getElementById('onboarding-arrow');
         if (oldArrow) oldArrow.remove();
 
@@ -11981,23 +11955,19 @@ function validateHTML(html) {
         const rect = target.getBoundingClientRect();
         const arrow = document.createElement('div');
         arrow.id = 'onboarding-arrow';
-        arrow.style.cssText = `
-            position: fixed;
-            z-index: 99999;
-            pointer-events: none;
-            font-size: 2.5rem;
-            color: #2dd4bf;
-            filter: drop-shadow(0 0 12px rgba(45,212,191,0.6));
-            animation: arrowPulse 1.2s ease-in-out infinite;
-            transition: opacity 0.5s;
-        `;
-
-        // Position above the target
         arrow.innerHTML = '👇';
-        arrow.style.left = (rect.left + rect.width / 2 - 20) + 'px';
-        arrow.style.top = (rect.top - 50) + 'px';
+        Object.assign(arrow.style, {
+            position: 'fixed',
+            zIndex: '99999',
+            pointerEvents: 'none',
+            fontSize: '2.5rem',
+            color: '#2dd4bf',
+            filter: 'drop-shadow(0 0 12px rgba(45,212,191,0.6))',
+            animation: 'arrowPulse 1.2s ease-in-out infinite',
+            left: (rect.left + rect.width / 2 - 20) + 'px',
+            top: (rect.top - 50) + 'px'
+        });
 
-        // Add pulse keyframes if not already present
         if (!document.getElementById('onboarding-arrow-style')) {
             const style = document.createElement('style');
             style.id = 'onboarding-arrow-style';
@@ -12012,298 +11982,209 @@ function validateHTML(html) {
             `;
             document.head.appendChild(style);
         }
-
         document.body.appendChild(arrow);
 
-        // Add message below arrow
         const msg = document.createElement('div');
         msg.id = 'onboarding-arrow-msg';
-        msg.style.cssText = `
-            position: fixed;
-            z-index: 99999;
-            pointer-events: none;
-            color: #f8fafc;
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-align: center;
-            background: rgba(0,0,0,0.75);
-            backdrop-filter: blur(12px);
-            padding: 8px 16px;
-            border-radius: 40px;
-            border: 1px solid rgba(45,212,191,0.3);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            transition: opacity 0.5s;
-            max-width: 260px;
-        `;
         msg.textContent = message || 'Click the ☰ menu to start exploring';
-        msg.style.left = (rect.left + rect.width / 2 - 130) + 'px';
-        msg.style.top = (rect.top - 90) + 'px';
+        Object.assign(msg.style, {
+            position: 'fixed',
+            zIndex: '99999',
+            pointerEvents: 'none',
+            color: '#f8fafc',
+            fontSize: '0.9rem',
+            fontWeight: '600',
+            textAlign: 'center',
+            background: 'rgba(0,0,0,0.75)',
+            backdropFilter: 'blur(12px)',
+            padding: '8px 16px',
+            borderRadius: '40px',
+            border: '1px solid rgba(45,212,191,0.3)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+            maxWidth: '260px',
+            left: (rect.left + rect.width / 2 - 130) + 'px',
+            top: (rect.top - 90) + 'px'
+        });
         document.body.appendChild(msg);
 
-        // Auto-dismiss after duration or on click of target
         let dismissed = false;
         function dismissArrow() {
             if (dismissed) return;
             dismissed = true;
             arrow.style.animation = 'arrowFadeOut 0.4s forwards';
             msg.style.opacity = '0';
-            setTimeout(() => {
-                arrow.remove();
-                msg.remove();
-            }, 500);
+            setTimeout(() => { arrow.remove(); msg.remove(); }, 500);
         }
-
-        // Dismiss when user clicks the target
         target.addEventListener('click', dismissArrow, { once: true });
-
-        // Also dismiss after duration
         setTimeout(dismissArrow, duration);
-
-        // Store the dismiss function globally so we can call it from elsewhere
         window._dismissOnboardingArrow = dismissArrow;
     }
 
     // ─── SHOW ONBOARDING WIZARD ────────────────────────────────────
     async function runOnboarding() {
-        if (!isOnboardingNeeded()) return;
+        console.log('[Onboarding] Starting wizard...');
+        if (!isOnboardingNeeded()) {
+            console.log('[Onboarding] Not needed (Brain exists & flag set).');
+            return;
+        }
 
-        // Ensure UI is ready
         await sleep(300);
-
-        // Create the wizard modal
         const modal = document.createElement('div');
         modal.id = 'onboarding-wizard-modal';
         modal.className = 'modal-bg';
-        modal.style.cssText = `
-            display: flex;
-            z-index: 100000;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            background: rgba(0,0,0,0.75);
-        `;
+        Object.assign(modal.style, {
+            display: 'flex',
+            zIndex: '100000',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            background: 'rgba(0,0,0,0.75)'
+        });
 
         const container = document.createElement('div');
         container.className = 'modal-medium liquid-glass';
-        container.style.cssText = `
-            max-width: 620px;
-            width: 90vw;
-            padding: 32px 28px;
-            border-radius: 32px;
-            background: rgba(0,0,0,0.85) !important;
-            backdrop-filter: blur(24px) saturate(180%) !important;
-            border: 1px solid rgba(255,255,255,0.15) !important;
-            box-shadow: 0 16px 64px rgba(0,0,0,0.6) !important;
-            color: #e2e8f0;
-            position: relative;
-            transition: all 0.3s ease;
-        `;
+        Object.assign(container.style, {
+            maxWidth: '620px',
+            width: '90vw',
+            padding: '32px 28px',
+            borderRadius: '32px',
+            background: 'rgba(0,0,0,0.85) !important',
+            backdropFilter: 'blur(24px) saturate(180%) !important',
+            border: '1px solid rgba(255,255,255,0.15) !important',
+            boxShadow: '0 16px 64px rgba(0,0,0,0.6) !important',
+            color: '#e2e8f0',
+            position: 'relative'
+        });
 
-        // Progress indicators
+        // Progress dots
         const progress = document.createElement('div');
-        progress.style.cssText = `
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            margin-bottom: 24px;
-        `;
-
-        const totalSteps = 6;
-        for (let i = 1; i <= totalSteps; i++) {
+        Object.assign(progress.style, {
+            display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '24px'
+        });
+        for (let i = 1; i <= 6; i++) {
             const dot = document.createElement('span');
             dot.dataset.step = i;
-            dot.style.cssText = `
-                width: 10px;
-                height: 10px;
-                border-radius: 50%;
-                background: rgba(255,255,255,0.15);
-                transition: all 0.3s;
-                display: inline-block;
-            `;
-            if (i === 1) dot.style.background = '#2dd4bf';
+            Object.assign(dot.style, {
+                width: '10px', height: '10px', borderRadius: '50%',
+                background: i === 1 ? '#2dd4bf' : 'rgba(255,255,255,0.15)',
+                transition: 'all 0.3s', display: 'inline-block'
+            });
             progress.appendChild(dot);
         }
-
         container.appendChild(progress);
 
-        // Content area
         const content = document.createElement('div');
         content.id = 'onboarding-content';
-        content.style.cssText = `
-            min-height: 200px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        `;
+        Object.assign(content.style, { minHeight: '200px', display: 'flex', flexDirection: 'column', gap: '16px' });
         container.appendChild(content);
 
-        // Footer with navigation
+        // Footer
         const footer = document.createElement('div');
-        footer.style.cssText = `
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 24px;
-            gap: 12px;
-        `;
+        Object.assign(footer.style, {
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            marginTop: '24px', gap: '12px'
+        });
 
         const skipBtn = document.createElement('button');
         skipBtn.className = 'btn-secondary';
         skipBtn.textContent = 'Skip →';
-        skipBtn.style.cssText = `
-            background: rgba(255,255,255,0.06) !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
-            color: #94a3b8 !important;
-            padding: 8px 20px;
-            border-radius: 40px;
-            cursor: pointer;
-            transition: 0.15s;
-            font-size: 0.85rem;
-        `;
+        Object.assign(skipBtn.style, {
+            background: 'rgba(255,255,255,0.06) !important',
+            border: '1px solid rgba(255,255,255,0.1) !important',
+            color: '#94a3b8 !important', padding: '8px 20px',
+            borderRadius: '40px', cursor: 'pointer', fontSize: '0.85rem'
+        });
         skipBtn.addEventListener('click', () => {
             localStorage.setItem(ONBOARDING_KEY, 'true');
             modal.remove();
-            // Ensure brain node exists
             ensureBrainNode();
-            // Show arrow pointing to menu
-            setTimeout(() => {
-                showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring');
-            }, 500);
+            setTimeout(() => showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring'), 500);
         });
         footer.appendChild(skipBtn);
 
         const navRight = document.createElement('div');
-        navRight.style.cssText = `
-            display: flex;
-            gap: 8px;
-        `;
+        navRight.style.cssText = 'display: flex; gap: 8px;';
 
         const backBtn = document.createElement('button');
         backBtn.className = 'btn-secondary';
         backBtn.textContent = '← Back';
-        backBtn.style.cssText = `
-            background: rgba(255,255,255,0.06) !important;
-            border: 1px solid rgba(255,255,255,0.1) !important;
-            color: #e2e8f0 !important;
-            padding: 8px 20px;
-            border-radius: 40px;
-            cursor: pointer;
-            transition: 0.15s;
-            font-size: 0.85rem;
-            display: none;
-        `;
+        Object.assign(backBtn.style, {
+            background: 'rgba(255,255,255,0.06) !important',
+            border: '1px solid rgba(255,255,255,0.1) !important',
+            color: '#e2e8f0 !important', padding: '8px 20px',
+            borderRadius: '40px', cursor: 'pointer', fontSize: '0.85rem', display: 'none'
+        });
         backBtn.addEventListener('click', () => {
-            if (onboardingStep > 1) {
-                onboardingStep--;
-                renderStep(onboardingStep);
-            }
+            if (onboardingStep > 1) { onboardingStep--; renderStep(onboardingStep); }
         });
         navRight.appendChild(backBtn);
 
         const nextBtn = document.createElement('button');
         nextBtn.className = 'btn-primary';
-        nextBtn.textContent = 'Next →';
-        nextBtn.style.cssText = `
-            background: rgba(45,212,191,0.15) !important;
-            border-color: #2dd4bf !important;
-            color: #2dd4bf !important;
-            padding: 8px 24px;
-            border-radius: 40px;
-            cursor: pointer;
-            transition: 0.15s;
-            font-size: 0.85rem;
-            font-weight: 600;
-            opacity: 0.5;
-            pointer-events: none;
-        `;
         nextBtn.id = 'onboarding-next-btn';
+        nextBtn.textContent = 'Next →';
+        Object.assign(nextBtn.style, {
+            background: 'rgba(45,212,191,0.15) !important',
+            borderColor: '#2dd4bf !important', color: '#2dd4bf !important',
+            padding: '8px 24px', borderRadius: '40px', cursor: 'pointer',
+            fontSize: '0.85rem', fontWeight: '600', opacity: '0.5', pointerEvents: 'none'
+        });
         navRight.appendChild(nextBtn);
-
         footer.appendChild(navRight);
         container.appendChild(footer);
 
-        // Close button (X) in top-right
+        // Close X button
         const closeBtn = document.createElement('button');
-        closeBtn.style.cssText = `
-            position: absolute;
-            top: 16px;
-            right: 20px;
-            background: transparent;
-            border: none;
-            color: #94a3b8;
-            font-size: 1.4rem;
-            cursor: pointer;
-            transition: 0.15s;
-            padding: 4px 8px;
-            border-radius: 8px;
-        `;
         closeBtn.textContent = '✕';
-        closeBtn.addEventListener('mouseenter', () => closeBtn.style.color = '#f8fafc');
-        closeBtn.addEventListener('mouseleave', () => closeBtn.style.color = '#94a3b8');
+        Object.assign(closeBtn.style, {
+            position: 'absolute', top: '16px', right: '20px',
+            background: 'transparent', border: 'none', color: '#94a3b8',
+            fontSize: '1.4rem', cursor: 'pointer', padding: '4px 8px'
+        });
         closeBtn.addEventListener('click', () => {
             localStorage.setItem(ONBOARDING_KEY, 'true');
             modal.remove();
             ensureBrainNode();
-            setTimeout(() => {
-                showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring');
-            }, 500);
+            setTimeout(() => showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring'), 500);
         });
         container.appendChild(closeBtn);
 
         modal.appendChild(container);
         document.body.appendChild(modal);
 
-        // ─── STEP RENDER FUNCTION ──────────────────────────────────
+        // ─── STEP RENDER ────────────────────────────────────────────
         function renderStep(step) {
             content.innerHTML = '';
             const stepData = getStepData(step);
             if (!stepData) return;
 
-            // Title
             const title = document.createElement('h3');
-            title.style.cssText = `
-                font-size: 1.2rem;
-                font-weight: 700;
-                color: #f8fafc;
-                margin: 0 0 4px 0;
-                letter-spacing: -0.01em;
-            `;
+            Object.assign(title.style, {
+                fontSize: '1.2rem', fontWeight: '700', color: '#f8fafc', margin: '0 0 4px 0'
+            });
             title.textContent = stepData.title;
             content.appendChild(title);
 
-            // Subtitle / description
             const desc = document.createElement('p');
-            desc.style.cssText = `
-                font-size: 0.95rem;
-                color: #94a3b8;
-                line-height: 1.6;
-                margin: 0 0 8px 0;
-            `;
+            Object.assign(desc.style, {
+                fontSize: '0.95rem', color: '#94a3b8', lineHeight: '1.6', margin: '0 0 8px 0'
+            });
             desc.innerHTML = stepData.description;
             content.appendChild(desc);
 
-            // Step-specific content
             if (stepData.render) stepData.render(content);
 
-            // Update progress dots
             progress.querySelectorAll('span').forEach(dot => {
                 const num = parseInt(dot.dataset.step);
-                if (num === step) dot.style.background = '#2dd4bf';
-                else if (num < step) dot.style.background = 'rgba(45,212,191,0.3)';
-                else dot.style.background = 'rgba(255,255,255,0.15)';
+                dot.style.background = num === step ? '#2dd4bf' : (num < step ? 'rgba(45,212,191,0.3)' : 'rgba(255,255,255,0.15)');
             });
 
-            // Update buttons
             backBtn.style.display = step === 1 ? 'none' : 'inline-flex';
-            nextBtn.textContent = step === totalSteps ? '✨ Finish' : 'Next →';
+            nextBtn.textContent = step === 6 ? '✨ Finish' : 'Next →';
             nextBtn.style.opacity = '0.5';
             nextBtn.style.pointerEvents = 'none';
             nextBtn.dataset.ready = 'false';
-
-            // If step has a validation function, call it
-            if (stepData.validate) stepData.validate(nextBtn);
         }
 
-        // ─── STEP DATA ──────────────────────────────────────────────
         function getStepData(step) {
             const steps = {
                 1: {
@@ -12314,58 +12195,36 @@ function validateHTML(html) {
                         input.id = 'onboarding-subject-input';
                         input.type = 'text';
                         input.placeholder = 'e.g. Organic Chemistry, MCAT, JavaScript, History...';
-                        input.style.cssText = `
-                            width: 100%;
-                            padding: 14px 18px;
-                            border-radius: 40px;
-                            background: rgba(0,0,0,0.4);
-                            border: 1px solid rgba(255,255,255,0.12);
-                            color: #f8fafc;
-                            font-size: 1rem;
-                            transition: 0.2s;
-                            outline: none;
-                            margin-top: 4px;
-                        `;
+                        Object.assign(input.style, {
+                            width: '100%', padding: '14px 18px', borderRadius: '40px',
+                            background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)',
+                            color: '#f8fafc', fontSize: '1rem', outline: 'none', marginTop: '4px'
+                        });
                         input.addEventListener('input', () => {
                             const val = input.value.trim();
-                            const nextBtn = document.getElementById('onboarding-next-btn');
+                            const btn = document.getElementById('onboarding-next-btn');
                             if (val.length >= 2) {
-                                nextBtn.style.opacity = '1';
-                                nextBtn.style.pointerEvents = 'auto';
-                                nextBtn.dataset.ready = 'true';
+                                btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; btn.dataset.ready = 'true';
                                 onboardingSubject = val;
                             } else {
-                                nextBtn.style.opacity = '0.5';
-                                nextBtn.style.pointerEvents = 'none';
-                                nextBtn.dataset.ready = 'false';
+                                btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; btn.dataset.ready = 'false';
                             }
                         });
                         container.appendChild(input);
-                        // Focus the input
                         setTimeout(() => input.focus(), 100);
-                    },
-                    validate: (btn) => {
-                        // Already handled by input event
                     }
                 },
                 2: {
                     title: '📝 Prepare your study material',
-                    description: 'To study effectively, you need a <strong>note or document</strong> that contains the content you want to learn.<br><br>This can be anything: class notes, a textbook chapter, a summary you wrote, or even a list of key concepts.<br><br>When you have your material ready, type the phrase below to confirm.',
+                    description: 'To study effectively, you need a <strong>note or document</strong> that contains the content you want to learn.<br><br>When you have your material ready, type the phrase below to confirm.',
                     render: (container) => {
                         const wrapper = document.createElement('div');
-                        wrapper.style.cssText = `
-                            background: rgba(0,0,0,0.3);
-                            border-radius: 16px;
-                            padding: 16px 20px;
-                            border: 1px solid rgba(255,255,255,0.06);
-                            margin-top: 4px;
-                        `;
+                        Object.assign(wrapper.style, {
+                            background: 'rgba(0,0,0,0.3)', borderRadius: '16px',
+                            padding: '16px 20px', border: '1px solid rgba(255,255,255,0.06)', marginTop: '4px'
+                        });
                         const label = document.createElement('p');
-                        label.style.cssText = `
-                            font-size: 0.85rem;
-                            color: #94a3b8;
-                            margin: 0 0 8px 0;
-                        `;
+                        Object.assign(label.style, { fontSize: '0.85rem', color: '#94a3b8', margin: '0 0 8px 0' });
                         label.textContent = 'Type exactly: "I have my files ready"';
                         wrapper.appendChild(label);
 
@@ -12373,91 +12232,60 @@ function validateHTML(html) {
                         input.id = 'onboarding-ready-input';
                         input.type = 'text';
                         input.placeholder = 'I have my files ready';
-                        input.style.cssText = `
-                            width: 100%;
-                            padding: 12px 16px;
-                            border-radius: 40px;
-                            background: rgba(0,0,0,0.4);
-                            border: 1px solid rgba(255,255,255,0.12);
-                            color: #f8fafc;
-                            font-size: 0.95rem;
-                            transition: 0.2s;
-                            outline: none;
-                        `;
+                        Object.assign(input.style, {
+                            width: '100%', padding: '12px 16px', borderRadius: '40px',
+                            background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)',
+                            color: '#f8fafc', fontSize: '0.95rem', outline: 'none'
+                        });
                         input.addEventListener('input', () => {
                             const val = input.value.trim().toLowerCase();
-                            const nextBtn = document.getElementById('onboarding-next-btn');
+                            const btn = document.getElementById('onboarding-next-btn');
                             if (val === 'i have my files ready') {
-                                nextBtn.style.opacity = '1';
-                                nextBtn.style.pointerEvents = 'auto';
-                                nextBtn.dataset.ready = 'true';
+                                btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; btn.dataset.ready = 'true';
                             } else {
-                                nextBtn.style.opacity = '0.5';
-                                nextBtn.style.pointerEvents = 'none';
-                                nextBtn.dataset.ready = 'false';
+                                btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; btn.dataset.ready = 'false';
                             }
                         });
                         wrapper.appendChild(input);
                         container.appendChild(wrapper);
                         setTimeout(() => input.focus(), 100);
-                    },
-                    validate: (btn) => {
-                        // Already handled by input event
                     }
                 },
                 3: {
                     title: '📋 Get your categories file',
-                    description: 'Now we need to organize your study material into a <strong>categories file</strong>. This is a JSON file that the AI will generate for you.<br><br>Click the button below to copy a <strong>special prompt</strong>. Then go to your favorite AI website (ChatGPT, Claude, DeepSeek, etc.), paste the prompt, and upload your study notes. The AI will give you a JSON file in return.',
+                    description: 'Click the button below to copy a <strong>special prompt</strong>. Then go to your favorite AI website (ChatGPT, Claude, DeepSeek, etc.), paste the prompt, and upload your study notes. The AI will give you a JSON file.',
                     render: (container) => {
                         const btnWrapper = document.createElement('div');
-                        btnWrapper.style.cssText = `
-                            display: flex;
-                            flex-direction: column;
-                            gap: 12px;
-                            margin-top: 8px;
-                        `;
+                        btnWrapper.style.cssText = 'display: flex; flex-direction: column; gap: 12px; margin-top: 8px;';
 
                         const copyBtn = document.createElement('button');
                         copyBtn.className = 'btn-primary';
                         copyBtn.id = 'onboarding-copy-prompt-btn';
                         copyBtn.innerHTML = '📋 Copy AI Prompt';
-                        copyBtn.style.cssText = `
-                            background: rgba(45,212,191,0.15) !important;
-                            border-color: #2dd4bf !important;
-                            color: #2dd4bf !important;
-                            padding: 14px 24px;
-                            border-radius: 40px;
-                            font-weight: 600;
-                            font-size: 1rem;
-                            cursor: pointer;
-                            transition: 0.15s;
-                            width: 100%;
-                        `;
+                        Object.assign(copyBtn.style, {
+                            background: 'rgba(45,212,191,0.15) !important',
+                            borderColor: '#2dd4bf !important', color: '#2dd4bf !important',
+                            padding: '14px 24px', borderRadius: '40px', fontWeight: '600',
+                            fontSize: '1rem', cursor: 'pointer', width: '100%'
+                        });
                         copyBtn.addEventListener('click', async () => {
                             const prompt = getCategoriesPrompt();
                             try {
                                 await navigator.clipboard.writeText(prompt);
-                                // Show success state
                                 copyBtn.innerHTML = '✅ Copied! Good job!';
                                 copyBtn.style.background = 'rgba(74,222,128,0.15) !important';
                                 copyBtn.style.borderColor = '#4ade80 !important';
                                 copyBtn.style.color = '#4ade80 !important';
 
-                                // Show explanation
                                 const explain = document.createElement('div');
-                                explain.style.cssText = `
-                                    background: rgba(0,0,0,0.3);
-                                    border-radius: 16px;
-                                    padding: 14px 18px;
-                                    border-left: 3px solid #2dd4bf;
-                                    margin-top: 8px;
-                                    font-size: 0.9rem;
-                                    color: #cbd5e1;
-                                    line-height: 1.6;
-                                `;
+                                Object.assign(explain.style, {
+                                    background: 'rgba(0,0,0,0.3)', borderRadius: '16px',
+                                    padding: '14px 18px', borderLeft: '3px solid #2dd4bf',
+                                    marginTop: '8px', fontSize: '0.9rem', color: '#cbd5e1', lineHeight: '1.6'
+                                });
                                 explain.innerHTML = `
                                     <strong>📌 What to do next:</strong><br>
-                                    1. Go to <strong>ChatGPT, Claude, DeepSeek, or any AI</strong> of your choice.<br>
+                                    1. Go to <strong>ChatGPT, Claude, DeepSeek, or any AI</strong>.<br>
                                     2. Paste the prompt and upload your study notes.<br>
                                     3. The AI will give you a <strong>JSON file</strong> with your categories.<br>
                                     4. Save that file to your computer.<br><br>
@@ -12465,12 +12293,8 @@ function validateHTML(html) {
                                 `;
                                 btnWrapper.appendChild(explain);
 
-                                // Enable next button
                                 const nextBtn = document.getElementById('onboarding-next-btn');
-                                nextBtn.style.opacity = '1';
-                                nextBtn.style.pointerEvents = 'auto';
-                                nextBtn.dataset.ready = 'true';
-
+                                nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto'; nextBtn.dataset.ready = 'true';
                             } catch (err) {
                                 copyBtn.textContent = '❌ Copy failed - try again';
                                 setTimeout(() => {
@@ -12483,79 +12307,47 @@ function validateHTML(html) {
                         });
                         btnWrapper.appendChild(copyBtn);
 
-                        // Also show the prompt text in a collapsed area
                         const promptPreview = document.createElement('details');
-                        promptPreview.style.cssText = `
-                            background: rgba(0,0,0,0.2);
-                            border-radius: 12px;
-                            padding: 8px 12px;
-                            font-size: 0.8rem;
-                            color: #94a3b8;
-                        `;
+                        Object.assign(promptPreview.style, {
+                            background: 'rgba(0,0,0,0.2)', borderRadius: '12px',
+                            padding: '8px 12px', fontSize: '0.8rem', color: '#94a3b8'
+                        });
                         const summary = document.createElement('summary');
                         summary.textContent = '📄 Preview the prompt (optional)';
-                        summary.style.cssText = `
-                            cursor: pointer;
-                            font-weight: 500;
-                            color: #cbd5e1;
-                        `;
+                        summary.style.cssText = 'cursor: pointer; font-weight: 500; color: #cbd5e1;';
                         promptPreview.appendChild(summary);
                         const pre = document.createElement('pre');
-                        pre.style.cssText = `
-                            white-space: pre-wrap;
-                            word-break: break-word;
-                            font-family: monospace;
-                            font-size: 0.75rem;
-                            color: #94a3b8;
-                            margin-top: 8px;
-                            max-height: 180px;
-                            overflow-y: auto;
-                            padding: 8px;
-                            background: rgba(0,0,0,0.3);
-                            border-radius: 8px;
-                        `;
+                        Object.assign(pre.style, {
+                            whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                            fontFamily: 'monospace', fontSize: '0.75rem', color: '#94a3b8',
+                            marginTop: '8px', maxHeight: '180px', overflowY: 'auto',
+                            padding: '8px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px'
+                        });
                         pre.textContent = getCategoriesPrompt();
                         promptPreview.appendChild(pre);
                         btnWrapper.appendChild(promptPreview);
-
                         container.appendChild(btnWrapper);
-                    },
-                    validate: (btn) => {
-                        // Enable is handled by the copy button
                     }
                 },
                 4: {
                     title: '📁 Do you have the file ready?',
-                    description: 'Have you pasted the prompt into an AI and received your <strong>categories JSON file</strong>?<br><br>If yes, click the button below to proceed. If not, go back to the previous step and complete the process.',
+                    description: 'Have you pasted the prompt into an AI and received your <strong>categories JSON file</strong>?',
                     render: (container) => {
                         const btnWrapper = document.createElement('div');
-                        btnWrapper.style.cssText = `
-                            display: flex;
-                            flex-direction: column;
-                            gap: 12px;
-                            margin-top: 8px;
-                        `;
+                        btnWrapper.style.cssText = 'display: flex; flex-direction: column; gap: 12px; margin-top: 8px;';
 
                         const yesBtn = document.createElement('button');
                         yesBtn.className = 'btn-primary';
                         yesBtn.textContent = '✅ Yes, I have the file!';
-                        yesBtn.style.cssText = `
-                            background: rgba(45,212,191,0.15) !important;
-                            border-color: #2dd4bf !important;
-                            color: #2dd4bf !important;
-                            padding: 14px 24px;
-                            border-radius: 40px;
-                            font-weight: 600;
-                            font-size: 1rem;
-                            cursor: pointer;
-                            transition: 0.15s;
-                            width: 100%;
-                        `;
+                        Object.assign(yesBtn.style, {
+                            background: 'rgba(45,212,191,0.15) !important',
+                            borderColor: '#2dd4bf !important', color: '#2dd4bf !important',
+                            padding: '14px 24px', borderRadius: '40px', fontWeight: '600',
+                            fontSize: '1rem', cursor: 'pointer', width: '100%'
+                        });
                         yesBtn.addEventListener('click', () => {
                             const nextBtn = document.getElementById('onboarding-next-btn');
-                            nextBtn.style.opacity = '1';
-                            nextBtn.style.pointerEvents = 'auto';
-                            nextBtn.dataset.ready = 'true';
+                            nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto'; nextBtn.dataset.ready = 'true';
                             yesBtn.textContent = '✅ Great! Click Next →';
                             yesBtn.style.background = 'rgba(74,222,128,0.15) !important';
                             yesBtn.style.borderColor = '#4ade80 !important';
@@ -12567,64 +12359,39 @@ function validateHTML(html) {
                         const noBtn = document.createElement('button');
                         noBtn.className = 'btn-secondary';
                         noBtn.textContent = '← Not yet, take me back';
-                        noBtn.style.cssText = `
-                            background: rgba(255,255,255,0.06) !important;
-                            border: 1px solid rgba(255,255,255,0.1) !important;
-                            color: #94a3b8 !important;
-                            padding: 10px 20px;
-                            border-radius: 40px;
-                            cursor: pointer;
-                            transition: 0.15s;
-                            font-size: 0.85rem;
-                        `;
-                        noBtn.addEventListener('click', () => {
-                            onboardingStep = 3;
-                            renderStep(3);
+                        Object.assign(noBtn.style, {
+                            background: 'rgba(255,255,255,0.06) !important',
+                            border: '1px solid rgba(255,255,255,0.1) !important',
+                            color: '#94a3b8 !important', padding: '10px 20px',
+                            borderRadius: '40px', cursor: 'pointer', fontSize: '0.85rem'
                         });
+                        noBtn.addEventListener('click', () => { onboardingStep = 3; renderStep(3); });
                         btnWrapper.appendChild(noBtn);
-
                         container.appendChild(btnWrapper);
-                    },
-                    validate: (btn) => {
-                        // Handled by the yes button
                     }
                 },
                 5: {
                     title: '📤 Upload your categories file',
-                    description: 'Now paste or upload the <strong>JSON file</strong> that the AI generated for you.<br><br>This will build your knowledge map — the <strong>brain</strong>. Each category will become a node in your 3D brain.',
+                    description: 'Now paste or upload the <strong>JSON file</strong> that the AI generated for you.<br><br>This will build your knowledge map — the <strong>brain</strong>.',
                     render: (container) => {
                         const zone = document.createElement('div');
-                        zone.style.cssText = `
-                            border: 2px dashed rgba(45,212,191,0.3);
-                            border-radius: 20px;
-                            padding: 30px 20px;
-                            text-align: center;
-                            cursor: pointer;
-                            transition: 0.2s;
-                            background: rgba(0,0,0,0.2);
-                            margin-top: 4px;
-                        `;
+                        Object.assign(zone.style, {
+                            border: '2px dashed rgba(45,212,191,0.3)', borderRadius: '20px',
+                            padding: '30px 20px', textAlign: 'center', cursor: 'pointer',
+                            transition: '0.2s', background: 'rgba(0,0,0,0.2)', marginTop: '4px'
+                        });
                         zone.innerHTML = `
                             <div style="font-size: 2.5rem; margin-bottom: 8px;">📄</div>
                             <div style="font-weight: 600; color: #cbd5e1;">Drag & drop your JSON file here</div>
                             <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 4px;">or click to browse</div>
                         `;
-
                         const fileInput = document.createElement('input');
                         fileInput.type = 'file';
                         fileInput.accept = '.json';
                         fileInput.style.display = 'none';
-
                         zone.addEventListener('click', () => fileInput.click());
-                        zone.addEventListener('dragover', (e) => {
-                            e.preventDefault();
-                            zone.style.borderColor = '#2dd4bf';
-                            zone.style.background = 'rgba(45,212,191,0.05)';
-                        });
-                        zone.addEventListener('dragleave', () => {
-                            zone.style.borderColor = 'rgba(45,212,191,0.3)';
-                            zone.style.background = 'rgba(0,0,0,0.2)';
-                        });
+                        zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.style.borderColor = '#2dd4bf'; zone.style.background = 'rgba(45,212,191,0.05)'; });
+                        zone.addEventListener('dragleave', () => { zone.style.borderColor = 'rgba(45,212,191,0.3)'; zone.style.background = 'rgba(0,0,0,0.2)'; });
                         zone.addEventListener('drop', (e) => {
                             e.preventDefault();
                             zone.style.borderColor = 'rgba(45,212,191,0.3)';
@@ -12632,142 +12399,70 @@ function validateHTML(html) {
                             const files = e.dataTransfer.files;
                             if (files.length > 0) handleOnboardingFile(files[0], zone);
                         });
-
                         fileInput.addEventListener('change', (e) => {
                             if (e.target.files.length > 0) handleOnboardingFile(e.target.files[0], zone);
                         });
-
                         container.appendChild(zone);
                         container.appendChild(fileInput);
 
-                        // Also add a paste area
                         const pasteArea = document.createElement('div');
-                        pasteArea.style.cssText = `
-                            margin-top: 12px;
-                            display: flex;
-                            gap: 8px;
-                            align-items: center;
-                        `;
+                        pasteArea.style.cssText = 'margin-top: 12px; display: flex; gap: 8px; align-items: center;';
                         const pasteInput = document.createElement('textarea');
                         pasteInput.placeholder = 'Or paste the JSON text here...';
-                        pasteInput.style.cssText = `
-                            flex: 1;
-                            padding: 12px 16px;
-                            border-radius: 16px;
-                            background: rgba(0,0,0,0.4);
-                            border: 1px solid rgba(255,255,255,0.12);
-                            color: #f8fafc;
-                            font-family: monospace;
-                            font-size: 0.8rem;
-                            resize: vertical;
-                            min-height: 60px;
-                            outline: none;
-                            transition: 0.2s;
-                        `;
+                        Object.assign(pasteInput.style, {
+                            flex: '1', padding: '12px 16px', borderRadius: '16px',
+                            background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)',
+                            color: '#f8fafc', fontFamily: 'monospace', fontSize: '0.8rem',
+                            resize: 'vertical', minHeight: '60px', outline: 'none'
+                        });
                         pasteInput.addEventListener('input', () => {
                             const val = pasteInput.value.trim();
                             if (val) {
-                                try {
-                                    JSON.parse(val);
-                                    // Valid JSON
-                                    pasteInput.style.borderColor = '#4ade80';
-                                    const nextBtn = document.getElementById('onboarding-next-btn');
-                                    nextBtn.style.opacity = '1';
-                                    nextBtn.style.pointerEvents = 'auto';
-                                    nextBtn.dataset.ready = 'true';
-                                    // Store the JSON
-                                    pasteInput.dataset.json = val;
-                                } catch (e) {
-                                    pasteInput.style.borderColor = '#f43f5e';
-                                    const nextBtn = document.getElementById('onboarding-next-btn');
-                                    nextBtn.style.opacity = '0.5';
-                                    nextBtn.style.pointerEvents = 'none';
-                                    nextBtn.dataset.ready = 'false';
-                                }
+                                try { JSON.parse(val); pasteInput.style.borderColor = '#4ade80'; const nextBtn = document.getElementById('onboarding-next-btn'); nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto'; nextBtn.dataset.ready = 'true'; pasteInput.dataset.json = val; }
+                                catch (e) { pasteInput.style.borderColor = '#f43f5e'; const nextBtn = document.getElementById('onboarding-next-btn'); nextBtn.style.opacity = '0.5'; nextBtn.style.pointerEvents = 'none'; nextBtn.dataset.ready = 'false'; }
                             } else {
                                 pasteInput.style.borderColor = 'rgba(255,255,255,0.12)';
                                 const nextBtn = document.getElementById('onboarding-next-btn');
-                                nextBtn.style.opacity = '0.5';
-                                nextBtn.style.pointerEvents = 'none';
-                                nextBtn.dataset.ready = 'false';
+                                nextBtn.style.opacity = '0.5'; nextBtn.style.pointerEvents = 'none'; nextBtn.dataset.ready = 'false';
                             }
                         });
                         const pasteBtn = document.createElement('button');
                         pasteBtn.className = 'btn-secondary';
                         pasteBtn.textContent = '📋 Paste';
-                        pasteBtn.style.cssText = `
-                            padding: 10px 16px;
-                            border-radius: 40px;
-                            background: rgba(255,255,255,0.06) !important;
-                            border: 1px solid rgba(255,255,255,0.1) !important;
-                            color: #e2e8f0 !important;
-                            cursor: pointer;
-                            white-space: nowrap;
-                        `;
+                        Object.assign(pasteBtn.style, {
+                            padding: '10px 16px', borderRadius: '40px',
+                            background: 'rgba(255,255,255,0.06) !important',
+                            border: '1px solid rgba(255,255,255,0.1) !important',
+                            color: '#e2e8f0 !important', cursor: 'pointer', whiteSpace: 'nowrap'
+                        });
                         pasteBtn.addEventListener('click', async () => {
-                            try {
-                                const text = await navigator.clipboard.readText();
-                                pasteInput.value = text;
-                                pasteInput.dispatchEvent(new Event('input'));
-                            } catch (err) {
-                                // Fallback
-                                pasteInput.focus();
-                                document.execCommand('paste');
-                            }
+                            try { const text = await navigator.clipboard.readText(); pasteInput.value = text; pasteInput.dispatchEvent(new Event('input')); }
+                            catch (err) { pasteInput.focus(); document.execCommand('paste'); }
                         });
                         pasteArea.appendChild(pasteInput);
                         pasteArea.appendChild(pasteBtn);
                         container.appendChild(pasteArea);
 
-                        // Hidden file input for the actual upload
-                        const hiddenUpload = document.createElement('input');
-                        hiddenUpload.type = 'file';
-                        hiddenUpload.accept = '.json';
-                        hiddenUpload.style.display = 'none';
-                        hiddenUpload.id = 'onboarding-hidden-upload';
-                        container.appendChild(hiddenUpload);
-
                         async function handleOnboardingFile(file, zoneEl) {
                             try {
                                 const text = await file.text();
                                 const data = JSON.parse(text);
-                                // Validate it's a categories file
                                 if (!data.items && !data.type) {
                                     zoneEl.style.borderColor = '#f43f5e';
-                                    zoneEl.innerHTML = `
-                                        <div style="font-size: 2rem; margin-bottom: 8px;">❌</div>
-                                        <div style="font-weight: 600; color: #f43f5e;">Invalid categories file</div>
-                                        <div style="font-size: 0.85rem; color: #94a3b8;">Expected a "categories" JSON with an "items" array.</div>
-                                    `;
+                                    zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">❌</div><div style="font-weight: 600; color: #f43f5e;">Invalid categories file</div>`;
                                     return;
                                 }
-                                // It's valid!
                                 zoneEl.style.borderColor = '#4ade80';
                                 zoneEl.style.background = 'rgba(74,222,128,0.05)';
-                                zoneEl.innerHTML = `
-                                    <div style="font-size: 2rem; margin-bottom: 8px;">✅</div>
-                                    <div style="font-weight: 600; color: #4ade80;">File loaded successfully!</div>
-                                    <div style="font-size: 0.85rem; color: #94a3b8;">${file.name} (${(file.size/1024).toFixed(1)} KB)</div>
-                                    <div style="font-size: 0.8rem; color: #2dd4bf; margin-top: 4px;">Click Next to build your brain.</div>
-                                `;
-                                // Store the data for the next step
+                                zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">✅</div><div style="font-weight: 600; color: #4ade80;">File loaded successfully!</div><div style="font-size: 0.85rem; color: #94a3b8;">${file.name}</div><div style="font-size: 0.8rem; color: #2dd4bf; margin-top: 4px;">Click Next to build your brain.</div>`;
                                 zoneEl.dataset.jsonData = JSON.stringify(data);
                                 const nextBtn = document.getElementById('onboarding-next-btn');
-                                nextBtn.style.opacity = '1';
-                                nextBtn.style.pointerEvents = 'auto';
-                                nextBtn.dataset.ready = 'true';
+                                nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto'; nextBtn.dataset.ready = 'true';
                             } catch (err) {
                                 zoneEl.style.borderColor = '#f43f5e';
-                                zoneEl.innerHTML = `
-                                    <div style="font-size: 2rem; margin-bottom: 8px;">❌</div>
-                                    <div style="font-weight: 600; color: #f43f5e;">Error reading file</div>
-                                    <div style="font-size: 0.85rem; color: #94a3b8;">${err.message}</div>
-                                `;
+                                zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">❌</div><div style="font-weight: 600; color: #f43f5e;">Error reading file</div><div style="font-size: 0.85rem; color: #94a3b8;">${err.message}</div>`;
                             }
                         }
-                    },
-                    validate: (btn) => {
-                        // Handled by the input/file events
                     }
                 },
                 6: {
@@ -12775,67 +12470,42 @@ function validateHTML(html) {
                     description: '',
                     render: (container) => {
                         const msg = document.createElement('div');
-                        msg.style.cssText = `
-                            text-align: center;
-                            padding: 8px 0;
-                        `;
-
+                        msg.style.cssText = 'text-align: center; padding: 8px 0;';
                         const brainIcon = document.createElement('div');
-                        brainIcon.style.cssText = `
-                            font-size: 4rem;
-                            margin-bottom: 8px;
-                        `;
+                        brainIcon.style.cssText = 'font-size: 4rem; margin-bottom: 8px;';
                         brainIcon.textContent = '🧠';
                         msg.appendChild(brainIcon);
 
                         const typewriterContainer = document.createElement('div');
                         typewriterContainer.id = 'onboarding-typewriter';
-                        typewriterContainer.style.cssText = `
-                            font-family: 'Fira Code', monospace;
-                            font-size: 1.1rem;
-                            line-height: 1.8;
-                            color: #e2e8f0;
-                            min-height: 80px;
-                            padding: 12px 16px;
-                            background: rgba(0,0,0,0.3);
-                            border-radius: 16px;
-                            border-left: 3px solid #2dd4bf;
-                            text-align: left;
-                            margin: 8px 0;
-                            white-space: pre-wrap;
-                        `;
+                        Object.assign(typewriterContainer.style, {
+                            fontFamily: "'Fira Code', monospace", fontSize: '1.1rem',
+                            lineHeight: '1.8', color: '#e2e8f0', minHeight: '80px',
+                            padding: '12px 16px', background: 'rgba(0,0,0,0.3)',
+                            borderRadius: '16px', borderLeft: '3px solid #2dd4bf',
+                            textAlign: 'left', margin: '8px 0', whiteSpace: 'pre-wrap'
+                        });
                         msg.appendChild(typewriterContainer);
 
-                        // The message to type
                         const subject = onboardingSubject || 'your subject';
                         const typeText = `This is the brain.\nImprove its color by studying "${subject}".\nEach section turns from red to green through rigorous quizzes.`;
-
                         container.appendChild(msg);
 
-                        // Start typewriter after a short delay
                         setTimeout(() => {
                             typewriterEffect(typewriterContainer, typeText, 25, () => {
-                                // After typing, show the arrow pointing to menu
                                 setTimeout(() => {
-                                    // Enable the finish button
                                     const nextBtn = document.getElementById('onboarding-next-btn');
-                                    nextBtn.style.opacity = '1';
-                                    nextBtn.style.pointerEvents = 'auto';
-                                    nextBtn.dataset.ready = 'true';
+                                    nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto'; nextBtn.dataset.ready = 'true';
                                     nextBtn.textContent = '✨ Start Exploring';
                                 }, 400);
                             });
                         }, 300);
-                    },
-                    validate: (btn) => {
-                        // Enabled after typewriter finishes
                     }
                 }
             };
             return steps[step];
         }
 
-        // ─── GET CATEGORIES PROMPT ──────────────────────────────────
         function getCategoriesPrompt() {
             const subject = onboardingSubject || 'your subject';
             return `Act as an expert in hierarchical categorization. Based on the study material I will provide, extract the complete hierarchical structure of topics.
@@ -12855,25 +12525,14 @@ The study material is about: ${subject}
 Now, analyze the following content and generate the categories JSON:`;
         }
 
-        // ─── PROCESS THE CATEGORIES DATA ───────────────────────────
         async function processOnboardingCategories(jsonText) {
             try {
                 const data = JSON.parse(jsonText);
-                // Ensure we have a categories format
                 let items = data.items || (data.type === 'categories' ? data.items : null);
-                if (!items && Array.isArray(data)) {
-                    // Maybe it's a flat array of items
-                    items = data;
-                }
-                if (!items) {
-                    UI.toast('❌ Invalid categories format. Expected an "items" array.');
-                    return false;
-                }
+                if (!items && Array.isArray(data)) items = data;
+                if (!items) { UI.toast('❌ Invalid categories format. Expected an "items" array.'); return false; }
 
-                // Create the brain node first
                 ensureBrainNode();
-
-                // Add categories under the brain node
                 const addCategory = (cat, parentId) => {
                     let existing = State.nodes.find(n => n.name === cat.name && n.parentIds.includes(parentId));
                     if (existing) {
@@ -12883,14 +12542,9 @@ Now, analyze the following content and generate the categories JSON:`;
                     } else {
                         const newId = 'c_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
                         State.nodes.push({
-                            id: newId,
-                            name: cat.name,
-                            type: 'category',
-                            parentIds: [parentId],
-                            size: (cat.content?.length || 500) + 300,
-                            understanding: cat.understanding || 0,
-                            content: cat.content || '',
-                            date: Date.now()
+                            id: newId, name: cat.name, type: 'category', parentIds: [parentId],
+                            size: (cat.content?.length || 500) + 300, understanding: cat.understanding || 0,
+                            content: cat.content || '', date: Date.now()
                         });
                         existing = State.nodes[State.nodes.length - 1];
                     }
@@ -12898,11 +12552,7 @@ Now, analyze the following content and generate the categories JSON:`;
                         for (let child of cat.children) addCategory(child, existing.id);
                     }
                 };
-
-                for (let cat of items) {
-                    addCategory(cat, BRAIN_NODE_ID);
-                }
-
+                for (let cat of items) addCategory(cat, BRAIN_NODE_ID);
                 MathCore.cascadeAll();
                 await DB.save();
                 Core.refresh();
@@ -12920,64 +12570,32 @@ Now, analyze the following content and generate the categories JSON:`;
             if (nextBtn.dataset.ready !== 'true') return;
 
             if (onboardingStep === 5) {
-                // Step 5: process the uploaded/pasted JSON
                 const zone = content.querySelector('[data-json-data]');
                 const pasteInput = content.querySelector('textarea');
                 let jsonData = null;
-
-                if (zone && zone.dataset.jsonData) {
-                    jsonData = zone.dataset.jsonData;
-                } else if (pasteInput && pasteInput.dataset.json) {
-                    jsonData = pasteInput.dataset.json;
-                } else {
-                    // Try to find the file input
-                    const fileInput = document.getElementById('onboarding-hidden-upload');
-                    if (fileInput && fileInput.files.length > 0) {
-                        const file = fileInput.files[0];
-                        try {
-                            const text = await file.text();
-                            jsonData = text;
-                        } catch (err) {
-                            UI.toast('❌ Error reading file: ' + err.message);
-                            return;
-                        }
-                    }
-                }
-
-                if (!jsonData) {
-                    UI.toast('⚠️ Please upload or paste your categories JSON first.');
-                    return;
-                }
+                if (zone && zone.dataset.jsonData) jsonData = zone.dataset.jsonData;
+                else if (pasteInput && pasteInput.dataset.json) jsonData = pasteInput.dataset.json;
+                if (!jsonData) { UI.toast('⚠️ Please upload or paste your categories JSON first.'); return; }
 
                 const success = await processOnboardingCategories(jsonData);
                 if (!success) return;
-
-                // Proceed to step 6
                 onboardingStep = 6;
                 renderStep(6);
                 return;
             }
 
             if (onboardingStep === 6) {
-                // Finish onboarding
                 localStorage.setItem(ONBOARDING_KEY, 'true');
                 localStorage.setItem(SUBJECT_KEY, onboardingSubject);
                 modal.remove();
-
-                // Show the arrow pointing to the menu
-                setTimeout(() => {
-                    showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring your brain');
-                }, 500);
-
-                // Ensure brain is the focus
                 ensureBrainNode();
+                setTimeout(() => showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring your brain'), 500);
                 Core.refresh();
                 Graph3D.buildFromState();
                 Graph3D.fitToScreen(true);
                 return;
             }
 
-            // Normal step progression
             onboardingStep++;
             renderStep(onboardingStep);
         });
@@ -12988,104 +12606,37 @@ Now, analyze the following content and generate the categories JSON:`;
 
     // ─── QUIZ HIJACKING ─────────────────────────────────────────────
     function setupQuizHijacking() {
-        // We need to detect when a quiz is fully completed.
-        // This includes:
-        // 1. User completes all questions and sees the completion screen
-        // 2. User clicks "Finalize & Save" or "Close" after completion
-
-        // Hook into the quiz completion flow
         const originalRenderQuizQuestion = window.renderQuizQuestion;
         if (typeof originalRenderQuizQuestion === 'function') {
             window.renderQuizQuestion = function() {
                 originalRenderQuizQuestion.apply(this, arguments);
-
-                // After rendering, check if we're in a completed state
                 const container = document.getElementById('quiz-container');
                 if (!container) return;
-
-                // Check if the completion screen is shown
                 const hasCompletion = container.querySelector('#quiz-review-all') || container.querySelector('#quiz-finalize') || container.querySelector('#quiz-close-complete-btn');
-
                 if (hasCompletion) {
-                    // The quiz is complete! Hijack the "Finalize & Save" and "Close" buttons
                     const finalizeBtn = container.querySelector('#quiz-finalize');
                     const closeBtn = container.querySelector('#quiz-close-complete-btn');
-                    const reviewBtn = container.querySelector('#quiz-review-all');
-
                     if (finalizeBtn) {
-                        // Override the click handler
-                        const originalClick = finalizeBtn.onclick;
-                        finalizeBtn.onclick = async (e) => {
-                            // Call the original handler first
-                            if (originalClick) await originalClick.call(finalizeBtn, e);
-                            // Then do our hijacking
-                            afterQuizComplete();
-                        };
-                        // Also handle the case where the original handler is an event listener
-                        finalizeBtn.addEventListener('click', async () => {
-                            // Wait a bit for the original to process
-                            await sleep(300);
-                            afterQuizComplete();
-                        }, { once: true });
+                        finalizeBtn.addEventListener('click', async () => { await sleep(300); afterQuizComplete(); }, { once: true });
                     }
-
                     if (closeBtn) {
-                        closeBtn.addEventListener('click', async () => {
-                            await sleep(300);
-                            afterQuizComplete();
-                        }, { once: true });
-                    }
-
-                    if (reviewBtn) {
-                        reviewBtn.addEventListener('click', () => {
-                            // If they click review, we'll wait for them to finish reviewing
-                            // The review mode has its own completion flow
-                            const checkReviewDone = setInterval(() => {
-                                const reviewContainer = document.getElementById('quiz-container');
-                                if (!reviewContainer) {
-                                    clearInterval(checkReviewDone);
-                                    return;
-                                }
-                                // Check if review is done (back button or finalize)
-                                const backBtn = reviewContainer.querySelector('#review-back');
-                                const finalizeReviewBtn = reviewContainer.querySelector('#review-finalize');
-                                if (backBtn) {
-                                    backBtn.addEventListener('click', () => {
-                                        clearInterval(checkReviewDone);
-                                        // They went back to scores, but we'll wait for finalize
-                                    }, { once: true });
-                                }
-                                if (finalizeReviewBtn) {
-                                    finalizeReviewBtn.addEventListener('click', async () => {
-                                        clearInterval(checkReviewDone);
-                                        await sleep(300);
-                                        afterQuizComplete();
-                                    }, { once: true });
-                                }
-                            }, 500);
-                        }, { once: true });
+                        closeBtn.addEventListener('click', async () => { await sleep(300); afterQuizComplete(); }, { once: true });
                     }
                 }
             };
         }
 
-        // Also hook into the closeQuizOverlay function
         const originalCloseQuiz = window.closeQuizOverlay;
         if (typeof originalCloseQuiz === 'function') {
             window.closeQuizOverlay = function() {
-                // Check if the quiz was completed (all questions answered)
                 const q = window.State?.quiz;
                 if (q) {
                     const questions = q.visibleQuestions || [];
                     let allAnswered = true;
                     for (let i = 0; i < questions.length; i++) {
-                        if (q.userAnswersMap[i] === undefined || q.userAnswersMap[i] === -1) {
-                            allAnswered = false;
-                            break;
-                        }
+                        if (q.userAnswersMap[i] === undefined || q.userAnswersMap[i] === -1) { allAnswered = false; break; }
                     }
                     if (allAnswered && questions.length > 0) {
-                        // Quiz was completed! Hijack after closing
                         originalCloseQuiz.apply(this, arguments);
                         setTimeout(afterQuizComplete, 500);
                         return;
@@ -13098,97 +12649,56 @@ Now, analyze the following content and generate the categories JSON:`;
 
     // ─── AFTER QUIZ COMPLETE ───────────────────────────────────────
     async function afterQuizComplete() {
-        // Get the node that was studied
         const q = window.State?.quiz;
         if (!q) return;
-
         const studiedNodeId = q.currentNodeId;
         if (!studiedNodeId) return;
 
-        // Ensure brain node exists and is the root
         ensureBrainNode();
-
-        // Navigate to the brain node
         State.focusId = BRAIN_NODE_ID;
-        State.path = [{ id: BRAIN_NODE_ID, name: 'Brain' }];
+        State.path = [{ id: 'root', name: 'Knowledge Universe' }, { id: BRAIN_NODE_ID, name: 'Brain' }];
         await DB.save(false);
         Core.refresh();
         Graph3D.buildFromState();
         Graph3D.fitToScreen(true);
-
-        // Wait for the graph to settle
         await sleep(600);
 
-        // Find the studied node in the 3D scene
         const studiedNode = State.nodes.find(n => n.id === studiedNodeId);
         if (!studiedNode) return;
 
-        // Highlight the studied node with a pulsing arrow
-        // Find the sphere in the scene
         const sphere = Graph3D.spheres.get(studiedNodeId);
         if (sphere) {
-            // Get the position of the sphere in screen space
             const pos = new THREE.Vector3();
             sphere.getWorldPosition(pos);
-            pos.y += 1.5; // offset above the node
-
-            // Project to screen
+            pos.y += 1.5;
             const vector = pos.clone().project(Graph3D.camera);
             const x = (vector.x * 0.5 + 0.5) * Graph3D.renderer.domElement.clientWidth;
             const y = (-vector.y * 0.5 + 0.5) * Graph3D.renderer.domElement.clientHeight;
 
-            // Show a pulsing arrow pointing to the node
             const arrow = document.createElement('div');
-            arrow.style.cssText = `
-                position: fixed;
-                z-index: 99999;
-                pointer-events: none;
-                font-size: 2.5rem;
-                color: #facc15;
-                filter: drop-shadow(0 0 20px rgba(250,204,21,0.6));
-                animation: arrowPulse 1s ease-in-out infinite;
-                left: ${x - 20}px;
-                top: ${y - 50}px;
-                transition: opacity 0.5s;
-            `;
+            Object.assign(arrow.style, {
+                position: 'fixed', zIndex: '99999', pointerEvents: 'none',
+                fontSize: '2.5rem', color: '#facc15',
+                filter: 'drop-shadow(0 0 20px rgba(250,204,21,0.6))',
+                animation: 'arrowPulse 1s ease-in-out infinite',
+                left: (x - 20) + 'px', top: (y - 50) + 'px'
+            });
             arrow.textContent = '👇';
-
-            // Add message
             const msg = document.createElement('div');
-            msg.style.cssText = `
-                position: fixed;
-                z-index: 99999;
-                pointer-events: none;
-                color: #f8fafc;
-                font-size: 0.9rem;
-                font-weight: 600;
-                text-align: center;
-                background: rgba(0,0,0,0.75);
-                backdrop-filter: blur(12px);
-                padding: 8px 16px;
-                border-radius: 40px;
-                border: 1px solid rgba(250,204,21,0.3);
-                box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-                left: ${x - 150}px;
-                top: ${y - 90}px;
-                max-width: 300px;
-            `;
+            Object.assign(msg.style, {
+                position: 'fixed', zIndex: '99999', pointerEvents: 'none',
+                color: '#f8fafc', fontSize: '0.9rem', fontWeight: '600',
+                textAlign: 'center', background: 'rgba(0,0,0,0.75)',
+                backdropFilter: 'blur(12px)', padding: '8px 16px',
+                borderRadius: '40px', border: '1px solid rgba(250,204,21,0.3)',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+                left: (x - 150) + 'px', top: (y - 90) + 'px', maxWidth: '300px'
+            });
             msg.textContent = `✨ You just studied "${studiedNode.name}" — it's now more green!`;
-
             document.body.appendChild(arrow);
             document.body.appendChild(msg);
+            setTimeout(() => { arrow.style.opacity = '0'; msg.style.opacity = '0'; setTimeout(() => { arrow.remove(); msg.remove(); }, 500); }, 5000);
 
-            // Auto-dismiss after 5 seconds
-            setTimeout(() => {
-                arrow.style.opacity = '0';
-                msg.style.opacity = '0';
-                setTimeout(() => {
-                    arrow.remove();
-                    msg.remove();
-                }, 500);
-            }, 5000);
-
-            // Also bring the camera to focus on the studied node
             const targetPos = new THREE.Vector3(pos.x, pos.y, pos.z);
             const distance = 8;
             const angle = 30 * Math.PI / 180;
@@ -13198,13 +12708,10 @@ Now, analyze the following content and generate the categories JSON:`;
                 targetPos.y + Math.sin(angle) * distance,
                 targetPos.z + Math.sin(azimuth) * Math.cos(angle) * distance
             );
-
-            // Smoothly animate camera
             const startPos = Graph3D.camera.position.clone();
             const startTarget = Graph3D.controls.target.clone();
             const duration = 800;
             const startTime = performance.now();
-
             function animateCamera(now) {
                 const elapsed = now - startTime;
                 const t = Math.min(1, elapsed / duration);
@@ -13212,9 +12719,7 @@ Now, analyze the following content and generate the categories JSON:`;
                 Graph3D.camera.position.lerpVectors(startPos, camPos, ease);
                 Graph3D.controls.target.lerpVectors(startTarget, targetPos, ease);
                 Graph3D.controls.update();
-                if (t < 1) {
-                    requestAnimationFrame(animateCamera);
-                }
+                if (t < 1) requestAnimationFrame(animateCamera);
             }
             requestAnimationFrame(animateCamera);
         }
@@ -13222,27 +12727,27 @@ Now, analyze the following content and generate the categories JSON:`;
 
     // ─── INIT ──────────────────────────────────────────────────────
     function init() {
-        // Wait for the app to be fully loaded
+        console.log('[Onboarding] Init running...');
         const checkReady = setInterval(() => {
             if (window.State && window.Core && window.Graph3D && window.UI) {
                 clearInterval(checkReady);
-
-                // Run onboarding if needed
+                console.log('[Onboarding] App ready. Onboarding needed?', isOnboardingNeeded());
                 if (isOnboardingNeeded()) {
-                    // Delay to let the app render first
                     setTimeout(runOnboarding, 800);
                 } else {
-                    // Ensure brain node exists
                     ensureBrainNode();
                 }
-
-                // Set up quiz hijacking
                 setupQuizHijacking();
             }
         }, 200);
     }
 
-    // Start when DOM is ready
+    // ─── MANUAL TRIGGER ────────────────────────────────────────────
+    window.restartOnboarding = function() {
+        localStorage.removeItem(ONBOARDING_KEY);
+        location.reload();
+    };
+
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
