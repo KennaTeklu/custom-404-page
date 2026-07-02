@@ -11864,7 +11864,7 @@ function validateHTML(html) {
     </script>
 <script>
 // ================================================================
-// ONBOARDING WIZARD + QUIZ HIJACKING MODULE – FIXED
+// ONBOARDING WIZARD + QUIZ HIJACKING – FINAL FIXED VERSION
 // ================================================================
 (function() {
     'use strict';
@@ -11884,13 +11884,16 @@ function validateHTML(html) {
 
     // ─── CHECK IF ONBOARDING IS NEEDED ────────────────────────────
     function isOnboardingNeeded() {
+        // Only run if the flag is NOT set AND there are no nodes besides 'root'
         const flag = localStorage.getItem(ONBOARDING_KEY) === 'true';
-        // If the Brain node doesn't exist, we ALWAYS need onboarding
-        const hasBrain = window.State?.nodes?.some(n => n.id === BRAIN_NODE_ID);
-        return !flag || !hasBrain;
+        if (flag) return false;
+
+        // Count nodes that are NOT 'root'
+        const nonRootNodes = window.State?.nodes?.filter(n => n.id !== 'root') || [];
+        return nonRootNodes.length === 0;
     }
 
-    // ─── CREATE BRAIN NODE (SAFE – DOES NOT DELETE root) ──────────
+    // ─── CREATE BRAIN NODE (SAFE – does NOT delete root) ──────────
     function ensureBrainNode() {
         let brain = State.nodes.find(n => n.id === BRAIN_NODE_ID);
         if (!brain) {
@@ -11899,7 +11902,7 @@ function validateHTML(html) {
                 id: newId,
                 name: 'Brain',
                 type: 'category',
-                parentIds: ['root'],          // ✅ attached to existing root
+                parentIds: ['root'],
                 size: 3000,
                 understanding: 0,
                 content: '',
@@ -12024,7 +12027,7 @@ function validateHTML(html) {
     async function runOnboarding() {
         console.log('[Onboarding] Starting wizard...');
         if (!isOnboardingNeeded()) {
-            console.log('[Onboarding] Not needed (Brain exists & flag set).');
+            console.log('[Onboarding] Not needed (map already has content).');
             return;
         }
 
@@ -12426,21 +12429,8 @@ function validateHTML(html) {
                                 nextBtn.style.opacity = '0.5'; nextBtn.style.pointerEvents = 'none'; nextBtn.dataset.ready = 'false';
                             }
                         });
-                        const pasteBtn = document.createElement('button');
-                        pasteBtn.className = 'btn-secondary';
-                        pasteBtn.textContent = '📋 Paste';
-                        Object.assign(pasteBtn.style, {
-                            padding: '10px 16px', borderRadius: '40px',
-                            background: 'rgba(255,255,255,0.06) !important',
-                            border: '1px solid rgba(255,255,255,0.1) !important',
-                            color: '#e2e8f0 !important', cursor: 'pointer', whiteSpace: 'nowrap'
-                        });
-                        pasteBtn.addEventListener('click', async () => {
-                            try { const text = await navigator.clipboard.readText(); pasteInput.value = text; pasteInput.dispatchEvent(new Event('input')); }
-                            catch (err) { pasteInput.focus(); document.execCommand('paste'); }
-                        });
+                        // No separate paste button – the "Next" button handles validation and processing.
                         pasteArea.appendChild(pasteInput);
-                        pasteArea.appendChild(pasteBtn);
                         container.appendChild(pasteArea);
 
                         async function handleOnboardingFile(file, zoneEl) {
@@ -12570,6 +12560,7 @@ Now, analyze the following content and generate the categories JSON:`;
             if (nextBtn.dataset.ready !== 'true') return;
 
             if (onboardingStep === 5) {
+                // Step 5: process the uploaded/pasted JSON and build the brain
                 const zone = content.querySelector('[data-json-data]');
                 const pasteInput = content.querySelector('textarea');
                 let jsonData = null;
