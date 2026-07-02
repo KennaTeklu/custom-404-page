@@ -11864,37 +11864,40 @@ function validateHTML(html) {
     </script>
 <script>
 // ================================================================
-// ONBOARDING WIZARD + QUIZ HIJACKING – FINAL FIXED VERSION
+// ONBOARDING WIZARD + QUIZ HIJACKING – FINAL ROBUST VERSION
 // ================================================================
 (function() {
     'use strict';
 
-    // ─── CONFIG ─────────────────────────────────────────────────────
     const ONBOARDING_KEY = 'onboarding_complete_v2';
     const BRAIN_NODE_ID = 'brain_root';
     const SUBJECT_KEY = 'onboarding_subject';
 
-    // ─── UTILITIES ──────────────────────────────────────────────────
     function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-    // ─── STATE ──────────────────────────────────────────────────────
     let onboardingSubject = '';
     let onboardingStep = 1;
     let arrowShown = false;
 
-    // ─── CHECK IF ONBOARDING IS NEEDED ────────────────────────────
+    // --- SMART CHECK: shows wizard only on truly empty map ---
     function isOnboardingNeeded() {
-        // Only run if the flag is NOT set AND there are no nodes besides 'root'
         const flag = localStorage.getItem(ONBOARDING_KEY) === 'true';
         if (flag) return false;
 
-        // Count nodes that are NOT 'root'
         const nonRootNodes = window.State?.nodes?.filter(n => n.id !== 'root') || [];
-        return nonRootNodes.length === 0;
+        // Completely empty map
+        if (nonRootNodes.length === 0) return true;
+        // Map has only the Brain node, but Brain has no children (partial failure)
+        if (nonRootNodes.length === 1 && nonRootNodes[0].id === BRAIN_NODE_ID) {
+            const brain = nonRootNodes[0];
+            const hasChildren = State.nodes.some(n => n.parentIds.includes(brain.id));
+            if (!hasChildren) return true;
+        }
+        return false;
     }
 
-    // ─── CREATE BRAIN NODE (SAFE – does NOT delete root) ──────────
-    function ensureBrainNode() {
+    // --- Creates Brain node in State (no UI refresh) ---
+    function createOrGetBrainNode() {
         let brain = State.nodes.find(n => n.id === BRAIN_NODE_ID);
         if (!brain) {
             const newId = BRAIN_NODE_ID;
@@ -11910,24 +11913,15 @@ function validateHTML(html) {
                 _isBrain: true
             });
             brain = State.nodes[State.nodes.length - 1];
-            // Set focus to Brain, keep root in path
             State.focusId = newId;
             State.path = [{ id: 'root', name: 'Knowledge Universe' }, { id: newId, name: 'Brain' }];
-            DB.save(false);
-            Core.refresh();
-            Graph3D.buildFromState();
-            Graph3D.fitToScreen(true);
         } else {
-            // Ensure Brain is under root
-            if (!brain.parentIds.includes('root')) {
-                brain.parentIds.push('root');
-                DB.save(false);
-            }
+            if (!brain.parentIds.includes('root')) brain.parentIds.push('root');
         }
         return brain;
     }
 
-    // ─── TYPEWRITER EFFECT ──────────────────────────────────────────
+    // --- Typewriter ---
     function typewriterEffect(element, text, speed = 30, callback) {
         element.textContent = '';
         let i = 0;
@@ -11944,7 +11938,7 @@ function validateHTML(html) {
         type();
     }
 
-    // ─── FLOATING ARROW ─────────────────────────────────────────────
+    // --- Floating Arrow ---
     function showFloatingArrow(targetSelector, message, duration = 8000) {
         if (arrowShown) return;
         arrowShown = true;
@@ -11960,11 +11954,8 @@ function validateHTML(html) {
         arrow.id = 'onboarding-arrow';
         arrow.innerHTML = '👇';
         Object.assign(arrow.style, {
-            position: 'fixed',
-            zIndex: '99999',
-            pointerEvents: 'none',
-            fontSize: '2.5rem',
-            color: '#2dd4bf',
+            position: 'fixed', zIndex: '99999', pointerEvents: 'none',
+            fontSize: '2.5rem', color: '#2dd4bf',
             filter: 'drop-shadow(0 0 12px rgba(45,212,191,0.6))',
             animation: 'arrowPulse 1.2s ease-in-out infinite',
             left: (rect.left + rect.width / 2 - 20) + 'px',
@@ -11991,18 +11982,11 @@ function validateHTML(html) {
         msg.id = 'onboarding-arrow-msg';
         msg.textContent = message || 'Click the ☰ menu to start exploring';
         Object.assign(msg.style, {
-            position: 'fixed',
-            zIndex: '99999',
-            pointerEvents: 'none',
-            color: '#f8fafc',
-            fontSize: '0.9rem',
-            fontWeight: '600',
-            textAlign: 'center',
-            background: 'rgba(0,0,0,0.75)',
-            backdropFilter: 'blur(12px)',
-            padding: '8px 16px',
-            borderRadius: '40px',
-            border: '1px solid rgba(45,212,191,0.3)',
+            position: 'fixed', zIndex: '99999', pointerEvents: 'none',
+            color: '#f8fafc', fontSize: '0.9rem', fontWeight: '600',
+            textAlign: 'center', background: 'rgba(0,0,0,0.75)',
+            backdropFilter: 'blur(12px)', padding: '8px 16px',
+            borderRadius: '40px', border: '1px solid rgba(45,212,191,0.3)',
             boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
             maxWidth: '260px',
             left: (rect.left + rect.width / 2 - 130) + 'px',
@@ -12023,11 +12007,17 @@ function validateHTML(html) {
         window._dismissOnboardingArrow = dismissArrow;
     }
 
-    // ─── SHOW ONBOARDING WIZARD ────────────────────────────────────
+    // --- Main Wizard ---
     async function runOnboarding() {
         console.log('[Onboarding] Starting wizard...');
         if (!isOnboardingNeeded()) {
             console.log('[Onboarding] Not needed (map already has content).');
+            // Ensure Brain is ready if it exists
+            if (State.nodes.some(n => n.id === BRAIN_NODE_ID)) {
+                createOrGetBrainNode();
+                await Core.refresh();
+                Graph3D.fitToScreen(true);
+            }
             return;
         }
 
@@ -12036,8 +12026,7 @@ function validateHTML(html) {
         modal.id = 'onboarding-wizard-modal';
         modal.className = 'modal-bg';
         Object.assign(modal.style, {
-            display: 'flex',
-            zIndex: '100000',
+            display: 'flex', zIndex: '100000',
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
             background: 'rgba(0,0,0,0.75)'
@@ -12046,16 +12035,13 @@ function validateHTML(html) {
         const container = document.createElement('div');
         container.className = 'modal-medium liquid-glass';
         Object.assign(container.style, {
-            maxWidth: '620px',
-            width: '90vw',
-            padding: '32px 28px',
+            maxWidth: '620px', width: '90vw', padding: '32px 28px',
             borderRadius: '32px',
             background: 'rgba(0,0,0,0.85) !important',
             backdropFilter: 'blur(24px) saturate(180%) !important',
             border: '1px solid rgba(255,255,255,0.15) !important',
             boxShadow: '0 16px 64px rgba(0,0,0,0.6) !important',
-            color: '#e2e8f0',
-            position: 'relative'
+            color: '#e2e8f0', position: 'relative'
         });
 
         // Progress dots
@@ -12099,8 +12085,11 @@ function validateHTML(html) {
         skipBtn.addEventListener('click', () => {
             localStorage.setItem(ONBOARDING_KEY, 'true');
             modal.remove();
-            ensureBrainNode();
-            setTimeout(() => showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring'), 500);
+            createOrGetBrainNode();
+            Core.refresh().then(() => {
+                Graph3D.fitToScreen(true);
+                setTimeout(() => showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring'), 500);
+            });
         });
         footer.appendChild(skipBtn);
 
@@ -12135,7 +12124,7 @@ function validateHTML(html) {
         footer.appendChild(navRight);
         container.appendChild(footer);
 
-        // Close X button
+        // Close X
         const closeBtn = document.createElement('button');
         closeBtn.textContent = '✕';
         Object.assign(closeBtn.style, {
@@ -12146,15 +12135,18 @@ function validateHTML(html) {
         closeBtn.addEventListener('click', () => {
             localStorage.setItem(ONBOARDING_KEY, 'true');
             modal.remove();
-            ensureBrainNode();
-            setTimeout(() => showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring'), 500);
+            createOrGetBrainNode();
+            Core.refresh().then(() => {
+                Graph3D.fitToScreen(true);
+                setTimeout(() => showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring'), 500);
+            });
         });
         container.appendChild(closeBtn);
 
         modal.appendChild(container);
         document.body.appendChild(modal);
 
-        // ─── STEP RENDER ────────────────────────────────────────────
+        // --- Steps ---
         function renderStep(step) {
             content.innerHTML = '';
             const stepData = getStepData(step);
@@ -12421,15 +12413,31 @@ function validateHTML(html) {
                         pasteInput.addEventListener('input', () => {
                             const val = pasteInput.value.trim();
                             if (val) {
-                                try { JSON.parse(val); pasteInput.style.borderColor = '#4ade80'; const nextBtn = document.getElementById('onboarding-next-btn'); nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto'; nextBtn.dataset.ready = 'true'; pasteInput.dataset.json = val; }
-                                catch (e) { pasteInput.style.borderColor = '#f43f5e'; const nextBtn = document.getElementById('onboarding-next-btn'); nextBtn.style.opacity = '0.5'; nextBtn.style.pointerEvents = 'none'; nextBtn.dataset.ready = 'false'; }
+                                try {
+                                    const parsed = JSON.parse(val);
+                                    // Ensure we have an items array
+                                    const items = parsed.items || (parsed.type === 'categories' ? parsed.items : null);
+                                    if (items && Array.isArray(items) && items.length > 0) {
+                                        pasteInput.style.borderColor = '#4ade80';
+                                        pasteInput.dataset.json = val;
+                                        const nextBtn = document.getElementById('onboarding-next-btn');
+                                        nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto'; nextBtn.dataset.ready = 'true';
+                                    } else {
+                                        pasteInput.style.borderColor = '#f43f5e';
+                                        const nextBtn = document.getElementById('onboarding-next-btn');
+                                        nextBtn.style.opacity = '0.5'; nextBtn.style.pointerEvents = 'none'; nextBtn.dataset.ready = 'false';
+                                    }
+                                } catch (e) {
+                                    pasteInput.style.borderColor = '#f43f5e';
+                                    const nextBtn = document.getElementById('onboarding-next-btn');
+                                    nextBtn.style.opacity = '0.5'; nextBtn.style.pointerEvents = 'none'; nextBtn.dataset.ready = 'false';
+                                }
                             } else {
                                 pasteInput.style.borderColor = 'rgba(255,255,255,0.12)';
                                 const nextBtn = document.getElementById('onboarding-next-btn');
                                 nextBtn.style.opacity = '0.5'; nextBtn.style.pointerEvents = 'none'; nextBtn.dataset.ready = 'false';
                             }
                         });
-                        // No separate paste button – the "Next" button handles validation and processing.
                         pasteArea.appendChild(pasteInput);
                         container.appendChild(pasteArea);
 
@@ -12515,14 +12523,21 @@ The study material is about: ${subject}
 Now, analyze the following content and generate the categories JSON:`;
         }
 
+        // --- ROBUST CATEGORY PROCESSING (Fixed `await` & Redundancy) ---
         async function processOnboardingCategories(jsonText) {
             try {
+                console.log('[Onboarding] Processing JSON...');
                 const data = JSON.parse(jsonText);
                 let items = data.items || (data.type === 'categories' ? data.items : null);
                 if (!items && Array.isArray(data)) items = data;
-                if (!items) { UI.toast('❌ Invalid categories format. Expected an "items" array.'); return false; }
+                if (!items) {
+                    UI.toast('❌ Invalid categories format. Expected an "items" array.');
+                    return false;
+                }
 
-                ensureBrainNode();
+                // Create Brain node (just state, no refresh yet)
+                createOrGetBrainNode();
+
                 const addCategory = (cat, parentId) => {
                     let existing = State.nodes.find(n => n.name === cat.name && n.parentIds.includes(parentId));
                     if (existing) {
@@ -12543,33 +12558,44 @@ Now, analyze the following content and generate the categories JSON:`;
                     }
                 };
                 for (let cat of items) addCategory(cat, BRAIN_NODE_ID);
+
                 MathCore.cascadeAll();
                 await DB.save();
-                Core.refresh();
-                Graph3D.buildFromState();
+
+                // 🔥 CRITICAL FIX: Properly await Core.refresh() which builds the graph
+                await Core.refresh();
                 Graph3D.fitToScreen(true);
+
                 return true;
             } catch (err) {
+                console.error('[Onboarding] Error in processing:', err);
                 UI.toast('❌ Error processing categories: ' + err.message);
                 return false;
             }
         }
 
-        // ─── NEXT BUTTON HANDLER ────────────────────────────────────
+        // --- NEXT BUTTON HANDLER WITH DEBUG LOGS ---
         nextBtn.addEventListener('click', async () => {
+            console.log('[Onboarding] Next clicked. Step=', onboardingStep, 'Ready=', nextBtn.dataset.ready);
             if (nextBtn.dataset.ready !== 'true') return;
 
             if (onboardingStep === 5) {
-                // Step 5: process the uploaded/pasted JSON and build the brain
                 const zone = content.querySelector('[data-json-data]');
                 const pasteInput = content.querySelector('textarea');
                 let jsonData = null;
                 if (zone && zone.dataset.jsonData) jsonData = zone.dataset.jsonData;
                 else if (pasteInput && pasteInput.dataset.json) jsonData = pasteInput.dataset.json;
-                if (!jsonData) { UI.toast('⚠️ Please upload or paste your categories JSON first.'); return; }
+
+                if (!jsonData) {
+                    UI.toast('⚠️ Please upload or paste your categories JSON first.');
+                    return;
+                }
 
                 const success = await processOnboardingCategories(jsonData);
-                if (!success) return;
+                if (!success) {
+                    console.log('[Onboarding] Processing failed, staying on step 5.');
+                    return;
+                }
                 onboardingStep = 6;
                 renderStep(6);
                 return;
@@ -12579,11 +12605,11 @@ Now, analyze the following content and generate the categories JSON:`;
                 localStorage.setItem(ONBOARDING_KEY, 'true');
                 localStorage.setItem(SUBJECT_KEY, onboardingSubject);
                 modal.remove();
-                ensureBrainNode();
-                setTimeout(() => showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring your brain'), 500);
-                Core.refresh();
-                Graph3D.buildFromState();
+                // Make sure Brain is ready and focused
+                createOrGetBrainNode();
+                await Core.refresh();
                 Graph3D.fitToScreen(true);
+                setTimeout(() => showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring your brain'), 500);
                 return;
             }
 
@@ -12591,11 +12617,10 @@ Now, analyze the following content and generate the categories JSON:`;
             renderStep(onboardingStep);
         });
 
-        // ─── START ──────────────────────────────────────────────────
         renderStep(1);
     }
 
-    // ─── QUIZ HIJACKING ─────────────────────────────────────────────
+    // --- QUIZ HIJACKING (unchanged, but safe) ---
     function setupQuizHijacking() {
         const originalRenderQuizQuestion = window.renderQuizQuestion;
         if (typeof originalRenderQuizQuestion === 'function') {
@@ -12638,19 +12663,17 @@ Now, analyze the following content and generate the categories JSON:`;
         }
     }
 
-    // ─── AFTER QUIZ COMPLETE ───────────────────────────────────────
     async function afterQuizComplete() {
         const q = window.State?.quiz;
         if (!q) return;
         const studiedNodeId = q.currentNodeId;
         if (!studiedNodeId) return;
 
-        ensureBrainNode();
+        createOrGetBrainNode();
         State.focusId = BRAIN_NODE_ID;
         State.path = [{ id: 'root', name: 'Knowledge Universe' }, { id: BRAIN_NODE_ID, name: 'Brain' }];
         await DB.save(false);
-        Core.refresh();
-        Graph3D.buildFromState();
+        await Core.refresh();
         Graph3D.fitToScreen(true);
         await sleep(600);
 
@@ -12716,7 +12739,7 @@ Now, analyze the following content and generate the categories JSON:`;
         }
     }
 
-    // ─── INIT ──────────────────────────────────────────────────────
+    // --- INIT ---
     function init() {
         console.log('[Onboarding] Init running...');
         const checkReady = setInterval(() => {
@@ -12726,14 +12749,17 @@ Now, analyze the following content and generate the categories JSON:`;
                 if (isOnboardingNeeded()) {
                     setTimeout(runOnboarding, 800);
                 } else {
-                    ensureBrainNode();
+                    // Ensure Brain exists (e.g., from a previous successful run)
+                    if (State.nodes.some(n => n.id === BRAIN_NODE_ID)) {
+                        createOrGetBrainNode();
+                        // No refresh needed since it's already built
+                    }
                 }
                 setupQuizHijacking();
             }
         }, 200);
     }
 
-    // ─── MANUAL TRIGGER ────────────────────────────────────────────
     window.restartOnboarding = function() {
         localStorage.removeItem(ONBOARDING_KEY);
         location.reload();
