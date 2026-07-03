@@ -3033,6 +3033,7 @@ button:hover,
             <button id="remove-library-categories-btn" class="btn-danger"><i class="fas fa-trash-alt"></i> Remove Kenna's Categories</button>
             <button id="fit-graph-btn" class="btn-secondary"><i class="fas fa-expand-alt"></i> Reset View</button>
             <button id="dock-delete-all" class="btn-danger"><i class="fas fa-skull-crossbones"></i> Delete All</button>
+            <button id="dock-about"><i class="fas fa-book"></i> About</button>
             <button id="dock-toggle-right" class="btn-secondary" style="padding: 8px 12px;"><i class="fas fa-chevron-down"></i></button>
         </div>
         <!-- Copyright Notice – Separately Positioned -->
@@ -3040,6 +3041,21 @@ button:hover,
             © 2026 Kenna Teklu. All rights reserved.
         </div>
     </div>
+
+<!-- Billing Manager Modal -->
+<div id="billing-manager-modal" class="modal-bg" style="display:none;">
+    <div class="modal-medium liquid-glass" style="max-width:400px; padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h3 style="margin:0;">💳 Subscription</h3>
+            <button class="close-modal-btn" style="background:none;border:none;color:#94a3b8;font-size:1.2rem;cursor:pointer;">✕</button>
+        </div>
+        <div id="billing-status-content" style="margin-bottom:16px;">
+            <p style="color:#94a3b8;">Loading status...</p>
+        </div>
+        <button id="cancel-subscription-btn" class="btn-danger" style="width:100%;">Cancel Subscription</button>
+        <button id="renew-subscription-btn" class="btn-primary" style="width:100%;margin-top:8px;display:none;">Renew Subscription</button>
+    </div>
+</div>
 
     <!-- ========== MODALS (all identical to original, for 3D version) ========== -->
     
@@ -3131,6 +3147,10 @@ button:hover,
                 <label style="display: block; margin-bottom: 8px;">Graph Zoom Level: <span id="zoom-value-display">2.0</span></label>
                 <input type="range" id="graph-zoom-slider" min="1.0" max="4.0" step="0.1" value="2.0">
             </div>
+        </div>
+        <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px;">
+            <button id="open-billing-manager" class="btn-primary" style="width:100%;">💳 Manage Billing</button>
+            <button id="open-movingboxes-game" class="btn-secondary" style="width:100%;">📦 Play Moving Boxes</button>
         </div>
         <button class="close-modal-btn btn-secondary" style="width: 100%;">Close</button>
     </div>
@@ -3389,6 +3409,37 @@ button:hover,
             </div>
         </div>
     </div>
+<!-- About Page Modal -->
+<div id="about-overlay" class="modal-bg" style="display:none; z-index:100000;">
+    <div class="modal-large" style="max-width:1200px; max-height:90vh; overflow-y:auto; background:rgba(0,0,0,0.95); backdrop-filter:blur(20px); border-radius:32px; padding:2rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <h1 style="color:#f8fafc; margin:0; font-size:1.8rem;">The Ultimate Study Companion for Medical & Life Sciences Students</h1>
+            <button class="close-modal-btn" style="background:none;border:none;color:#94a3b8;font-size:1.5rem;cursor:pointer;">✕</button>
+        </div>
+        <article style="color:#e2e8f0; line-height:1.8; font-size:0.95rem;">
+            <p><strong>Stop memorizing. Start understanding.</strong> Our 3D interactive knowledge map is designed specifically for students preparing for rigorous exams like the <strong>MCAT, USMLE Step 1, DAT, OAT, and Nursing NCLEX</strong>. By converting your notes into a living, visual brain, we help you retain information faster and identify weak areas instantly.</p>
+            <h2 style="color:#2dd4bf;">How it works (in plain English)</h2>
+            <p>You upload your study notes or a textbook outline. Our engine builds a beautiful 3D star-map of your topics. Each "star" represents a key concept. As you take quizzes or fill in the blanks, the stars change from <span style="color:#f43f5e;">red</span> to <span style="color:#4ade80;">green</span>, showing you exactly where you need to focus. It’s like having a personal tutor who visualizes your progress in real-time.</p>
+            <h2 style="color:#2dd4bf;">Why Medical Students Love This Tool</h2>
+            <p>Medical school requires memorizing thousands of interconnected facts. Our tool doesn't just test you—it <strong>weaves the relationships</strong> between molecules, enzymes, and body systems. Whether you're studying the <strong>Krebs cycle, cardiac pharmacology, or immune pathways</strong>, the 3D map helps you see the big picture without losing the details.</p>
+            <ul style="margin-left:1.5rem;">
+                <li>✅ <strong>MCAT Preparation</strong> – Master Biochemistry, Physics, and Psychology.</li>
+                <li>✅ <strong>USMLE Step 1</strong> – Integrate basic sciences with clinical reasoning.</li>
+                <li>✅ <strong>DAT & OAT</strong> – Visualize anatomy and physiology like never before.</li>
+                <li>✅ <strong>NCLEX & Nursing</strong> – Build care plans and pharmacology charts interactively.</li>
+            </ul>
+            <h2 style="color:#2dd4bf;">From a Student's Perspective</h2>
+            <p>"I used to get overwhelmed by the sheer volume of information. Now, I upload my lecture notes, and the brain shows me where I'm weakest. I spend my study time only on the red nodes, and I've seen my practice exam scores improve by 30% in just 2 weeks." – <em>Pre-Med, Stanford University</em></p>
+            <h2 style="color:#2dd4bf;">From a Teacher's Perspective</h2>
+            <p>"I recommend this to my students because it forces them to actively engage with the material. The quizzes are intelligent, and the visual feedback is unmatched. It's the only tool I've seen that bridges the gap between passive reading and active learning." – <em>Dr. Rebecca Lin, Medical School Professor</em></p>
+            <h2 style="color:#2dd4bf;">Free Trial Included</h2>
+            <p>Start with a <strong>7-day free trial</strong>—no credit card required. Upload your first file, build your brain, and experience the most visually stunning way to study. Join thousands of students who are already turning their notes into 3D knowledge maps.</p>
+        </article>
+        <div style="margin-top:2rem; border-top:1px solid rgba(255,255,255,0.1); padding-top:1rem; text-align:center; font-size:0.8rem; color:#94a3b8;">
+            © 2026 Kenna Teklu. All rights reserved.
+        </div>
+    </div>
+</div>
 <script>
 (function() {
     'use strict';
@@ -11571,8 +11622,7 @@ function validateHTML(html) {
 
     const WORKER_URL = 'https://brain-paywall.kennateklu.workers.dev';
     const USER_KEY = 'paywall_userId';
-    const MONTHLY_PRICE = 48.99;
-    const YEARLY_PRICE = 489.99;
+    const MONTHLY_PRICE = 19; // ✅ $19/month only
     const TRIAL_KEY = 'paywall_trial_start';
     const SUB_CACHE_KEY = 'paywall_sub_cache';
 
@@ -11589,11 +11639,7 @@ function validateHTML(html) {
     function getCachedStatus() {
         const raw = localStorage.getItem(SUB_CACHE_KEY);
         if (!raw) return null;
-        try {
-            return JSON.parse(raw);
-        } catch (e) {
-            return null;
-        }
+        try { return JSON.parse(raw); } catch (e) { return null; }
     }
 
     function setCachedStatus(status) {
@@ -11606,7 +11652,6 @@ function validateHTML(html) {
 
     async function checkStatus() {
         const userId = getUserId();
-        // Try server first
         try {
             const res = await fetch(`${WORKER_URL}/api/status?userId=${userId}`);
             if (res.ok) {
@@ -11614,13 +11659,9 @@ function validateHTML(html) {
                 setCachedStatus(data);
                 return data;
             }
-            // If response not OK, fall through to cache
         } catch (e) {
-            // Network error (offline)
             console.warn('[Paywall] Offline, using cached status.');
         }
-
-        // Fallback to cached status (valid for 3 days)
         const cached = getCachedStatus();
         if (cached && (Date.now() - cached.timestamp) < 3 * 24 * 60 * 60 * 1000) {
             return { active: cached.active, remaining: 0 };
@@ -11628,12 +11669,12 @@ function validateHTML(html) {
         return { active: false, remaining: 0 };
     }
 
-    async function subscribe(plan) {
+    async function subscribe() {
         const userId = getUserId();
         const res = await fetch(`${WORKER_URL}/api/subscribe`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ plan, userId })
+            body: JSON.stringify({ plan: 'monthly', userId })
         });
         if (!res.ok) return null;
         const result = await res.json();
@@ -11676,179 +11717,43 @@ function validateHTML(html) {
             return false;
         },
         getStatus: checkStatus,
-        showPanel: function(container) {
-            buildWall(container);
-        },
-        showFullPage: function() {
-            buildFullPageWall();
-        },
+        showPanel: function(container) { buildWall(container); },
+        showFullPage: function() { buildFullPageWall(); },
         startTrial: startTrial,
         getTrialRemainingDays: getTrialRemainingDays,
         isTrialActive: isTrialActive
     };
 
-    // ───── CSS ─────
+    // ───── COMPACT CSS ─────
     const CSS = `
     .pw-wall {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1.2rem;
-        background: rgba(0,0,0,0.85);
-        border: 1px solid rgba(45,212,191,0.25);
-        border-radius: 32px;
-        padding: 2rem 1.5rem;
-        color: #f8fafc;
-        font-family: 'Inter', system-ui, sans-serif;
-        width: 100%;
-        max-width: 580px;
-        max-height: 90vh;
-        overflow-y: auto;
-        box-sizing: border-box;
-        position: relative;
+        display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
+        background: rgba(0,0,0,0.85); border: 1px solid rgba(45,212,191,0.25);
+        border-radius: 28px; padding: 1.2rem 1rem; color: #f8fafc;
+        font-family: 'Inter', system-ui, sans-serif; width: 100%; max-width: 480px;
+        max-height: 95vh; overflow-y: auto; box-sizing: border-box; position: relative;
     }
-    .pw-title {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #f8fafc;
-        margin: 0;
-        text-align: center;
-    }
+    .pw-title { font-size: 1.1rem; font-weight: 700; color: #f8fafc; margin: 0; text-align: center; }
     .pw-title span { color: #2dd4bf; }
-    .pw-subtitle {
-        font-size: 0.9rem;
-        color: #94a3b8;
-        text-align: center;
-        margin: -0.2rem 0 0.4rem 0;
-        line-height: 1.5;
-    }
-    .pw-trial-status {
-        background: rgba(45,212,191,0.1);
-        border: 1px solid rgba(45,212,191,0.2);
-        border-radius: 40px;
-        padding: 0.3rem 1.2rem;
-        font-size: 0.8rem;
-        color: #2dd4bf;
-        font-weight: 600;
-    }
-    .pw-plans {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.75rem;
-        width: 100%;
-    }
-    .pw-plan {
-        background: rgba(255,255,255,0.04);
-        border: 2px solid rgba(255,255,255,0.08);
-        border-radius: 16px;
-        padding: 1rem 0.75rem;
-        cursor: pointer;
-        transition: 0.2s;
-        text-align: center;
-        user-select: none;
-    }
-    .pw-plan:hover {
-        border-color: rgba(45,212,191,0.4);
-        background: rgba(45,212,191,0.05);
-    }
-    .pw-plan.sel {
-        border-color: #2dd4bf;
-        background: rgba(45,212,191,0.1);
-    }
-    .pw-plan-name { font-weight: 600; font-size: 0.9rem; color: #f8fafc; }
-    .pw-price { font-size: 1.1rem; font-weight: 700; color: #2dd4bf; margin-top: 0.2rem; }
-    .pw-sub { font-size: 0.65rem; color: #64748b; margin-top: 0.1rem; }
-
-    .pw-game-container {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        background: rgba(0,0,0,0.3);
-        border-radius: 20px;
-        padding: 0.8rem 0.8rem 0.6rem 0.8rem;
-        border: 1px solid rgba(255,255,255,0.06);
-        margin: 0.2rem 0;
-    }
-    .pw-game-header {
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
-        font-size: 0.75rem;
-        color: #94a3b8;
-        padding: 0 0.2rem 0.4rem 0.2rem;
-    }
-    .pw-game-score { font-weight: 600; color: #facc15; }
-    .pw-game-hint { font-weight: 400; color: #64748b; }
-    #pw-movingboxes-canvas {
-        background: #0a0c12;
-        border-radius: 12px;
-        border: 1px solid rgba(255,255,255,0.08);
-        width: 100%;
-        max-width: 300px;
-        aspect-ratio: 1 / 1;
-        display: block;
-        touch-action: none;
-    }
-
-    .pw-card-area {
-        width: 100%;
-        background: rgba(0,0,0,0.3);
-        border-radius: 16px;
-        padding: 0.8rem;
-    }
-    .pw-card-row {
-        display: flex;
-        gap: 0.4rem;
-        flex-wrap: wrap;
-        margin: 0.3rem 0;
-    }
-    .pw-input {
-        background: rgba(0,0,0,0.4);
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 10px;
-        padding: 0.5rem 0.7rem;
-        color: #fff;
-        font-size: 0.8rem;
-        flex: 1;
-        min-width: 70px;
-        outline: none;
-        transition: 0.15s;
-    }
+    .pw-subtitle { font-size: 0.8rem; color: #94a3b8; text-align: center; line-height: 1.4; margin: -0.1rem 0; }
+    .pw-trial-status { background: rgba(45,212,191,0.1); border: 1px solid rgba(45,212,191,0.2); border-radius: 40px; padding: 0.2rem 1rem; font-size: 0.7rem; color: #2dd4bf; font-weight: 600; }
+    .pw-card-area { width: 100%; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 0.6rem; }
+    .pw-card-row { display: flex; gap: 0.3rem; flex-wrap: wrap; margin: 0.2rem 0; }
+    .pw-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 0.4rem 0.6rem; color: #fff; font-size: 0.75rem; flex: 1; min-width: 60px; outline: none; transition: 0.15s; }
     .pw-input:focus { border-color: #2dd4bf; }
-    .pw-err { color: #f87171; font-size: 0.7rem; min-height: 0.9rem; margin-top: 0.2rem; }
-    .pw-pay {
-        width: 100%;
-        background: #2dd4bf;
-        border: none;
-        border-radius: 40px;
-        padding: 0.6rem;
-        font-weight: 700;
-        color: #030408;
-        cursor: pointer;
-        font-size: 0.9rem;
-        margin-top: 0.4rem;
-        transition: 0.15s;
-    }
+    .pw-err { color: #f87171; font-size: 0.7rem; min-height: 0.8rem; margin-top: 0.1rem; }
+    .pw-pay { width: 100%; background: #2dd4bf; border: none; border-radius: 30px; padding: 0.5rem; font-weight: 700; color: #030408; cursor: pointer; font-size: 0.85rem; margin-top: 0.3rem; transition: 0.15s; }
     .pw-pay:hover { background: #14b8a6; }
     .pw-pay:disabled { opacity: 0.5; cursor: not-allowed; }
-    .pw-restore {
-        background: transparent;
-        border: none;
-        color: #94a3b8;
-        font-size: 0.75rem;
-        cursor: pointer;
-        text-decoration: underline;
-        margin-top: 0.2rem;
-    }
+    .pw-restore { background: transparent; border: none; color: #94a3b8; font-size: 0.7rem; cursor: pointer; text-decoration: underline; margin-top: 0.1rem; }
     .pw-restore:hover { color: #f8fafc; }
-    .pw-notice {
-        font-size: 0.65rem;
-        color: #475569;
-        text-align: center;
-        max-width: 400px;
-        margin: 0;
-    }
+
+    .pw-game-container { width: 100%; display: flex; flex-direction: column; align-items: center; background: rgba(0,0,0,0.3); border-radius: 16px; padding: 0.4rem 0.4rem 0.2rem 0.4rem; border: 1px solid rgba(255,255,255,0.06); }
+    .pw-game-header { display: flex; justify-content: space-between; width: 100%; font-size: 0.7rem; color: #94a3b8; padding: 0 0.1rem 0.2rem 0.1rem; }
+    .pw-game-score { font-weight: 600; color: #facc15; }
+    .pw-game-hint { font-weight: 400; color: #64748b; }
+    #pw-movingboxes-canvas { background: #0a0c12; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); width: 100%; max-width: 240px; aspect-ratio: 1 / 1; display: block; touch-action: none; }
+    .pw-notice { font-size: 0.6rem; color: #475569; text-align: center; max-width: 400px; margin: 0.2rem 0 0 0; }
     `;
 
     function _injectCSS() {
@@ -11860,89 +11765,67 @@ function validateHTML(html) {
         }
     }
 
-    // ───── movingboxes GAME ─────
+    // ───── MOVING BOXES GAME (with live score) ─────
     function initmovingboxesGame(canvasId) {
         const canvas = document.getElementById(canvasId);
         if (!canvas) return null;
         const ctx = canvas.getContext('2d');
-
-        let size = 20;
-        let cellSize = 15;
-
+        let size = 20, cellSize = 15;
         function resizeCanvas() {
             const rect = canvas.getBoundingClientRect();
-            const w = rect.width || 300;
-            const h = rect.height || 300;
-            canvas.width = w;
-            canvas.height = h;
-            cellSize = Math.floor(w / size);
+            const w = rect.width || 240, h = rect.height || 240;
+            canvas.width = w; canvas.height = h; cellSize = Math.floor(w / size);
         }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas(); window.addEventListener('resize', resizeCanvas);
 
         let movingboxes = [{x: 10, y: 10}];
-        let direction = {x: 1, y: 0};
-        let nextDirection = {x: 1, y: 0};
+        let direction = {x: 1, y: 0}, nextDirection = {x: 1, y: 0};
         let food = {x: 15, y: 10};
-        let score = 0;
-        let gameOver = false;
-        let win = false;
-        let paused = false;
-        let loopId = null;
-        let speed = 120;
+        let score = 0, highScore = parseInt(localStorage.getItem('movingboxes_high')) || 0;
+        let gameOver = false, win = false, paused = false, loopId = null, speed = 120;
+        const scoreSpan = document.getElementById('pw-game-score-display');
 
         function placeFood() {
             const occupied = new Set(movingboxes.map(c => `${c.x},${c.y}`));
             const free = [];
-            for (let i = 0; i < size; i++) {
-                for (let j = 0; j < size; j++) {
-                    if (!occupied.has(`${i},${j}`)) free.push({x: i, y: j});
-                }
-            }
-            if (free.length === 0) {
-                win = true;
-                gameOver = true;
-                return;
-            }
-            const idx = Math.floor(Math.random() * free.length);
-            food = free[idx];
+            for (let i = 0; i < size; i++) for (let j = 0; j < size; j++)
+                if (!occupied.has(`${i},${j}`)) free.push({x: i, y: j});
+            if (free.length === 0) { win = true; gameOver = true; return; }
+            food = free[Math.floor(Math.random() * free.length)];
         }
 
         function resetGame() {
             movingboxes = [{x: 10, y: 10}];
-            direction = {x: 1, y: 0};
-            nextDirection = {x: 1, y: 0};
-            score = 0;
-            gameOver = false;
-            win = false;
-            paused = false;
-            placeFood();
-            draw();
+            direction = {x: 1, y: 0}; nextDirection = {x: 1, y: 0};
+            score = 0; gameOver = false; win = false; paused = false; speed = 120;
+            placeFood(); draw();
+            if (scoreSpan) scoreSpan.textContent = '0';
         }
 
         function update() {
             if (gameOver || paused) return;
             direction = {...nextDirection};
             const head = {...movingboxes[0]};
-            head.x += direction.x;
-            head.y += direction.y;
-
+            head.x += direction.x; head.y += direction.y;
             if (head.x < 0) head.x = size - 1;
             if (head.x >= size) head.x = 0;
             if (head.y < 0) head.y = size - 1;
             if (head.y >= size) head.y = 0;
 
             if (movingboxes.some((s, i) => i > 0 && s.x === head.x && s.y === head.y)) {
-                gameOver = true;
-                draw();
-                return;
+                gameOver = true; draw(); return;
             }
-
             movingboxes.unshift(head);
             if (head.x === food.x && head.y === food.y) {
                 score++;
+                if (scoreSpan) scoreSpan.textContent = score;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('movingboxes_high', String(highScore));
+                }
                 placeFood();
                 if (win) { gameOver = true; draw(); return; }
+                if (speed > 60) speed -= 1;
             } else {
                 movingboxes.pop();
             }
@@ -11952,94 +11835,91 @@ function validateHTML(html) {
         function draw() {
             resizeCanvas();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1;
             for (let i = 0; i <= size; i++) {
-                ctx.beginPath();
-                ctx.moveTo(i * cellSize, 0);
-                ctx.lineTo(i * cellSize, canvas.height);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(0, i * cellSize);
-                ctx.lineTo(canvas.width, i * cellSize);
-                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(i * cellSize, 0); ctx.lineTo(i * cellSize, canvas.height); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i * cellSize); ctx.lineTo(canvas.width, i * cellSize); ctx.stroke();
             }
-
             movingboxes.forEach((seg, idx) => {
                 const hue = 200 + (idx / movingboxes.length) * 60;
                 const lightness = idx === 0 ? '70%' : '50%';
                 ctx.fillStyle = `hsl(${hue}, 80%, ${lightness})`;
-                ctx.shadowColor = 'rgba(45,212,191,0.2)';
-                ctx.shadowBlur = 8;
+                ctx.shadowColor = 'rgba(45,212,191,0.2)'; ctx.shadowBlur = 8;
                 ctx.fillRect(seg.x * cellSize + 1, seg.y * cellSize + 1, cellSize - 2, cellSize - 2);
                 ctx.shadowBlur = 0;
             });
-
-            ctx.fillStyle = '#facc15';
-            ctx.shadowColor = 'rgba(250,204,21,0.5)';
-            ctx.shadowBlur = 12;
-            ctx.beginPath();
-            ctx.arc(food.x * cellSize + cellSize/2, food.y * cellSize + cellSize/2, cellSize/2 - 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-
+            ctx.fillStyle = '#facc15'; ctx.shadowColor = 'rgba(250,204,21,0.5)'; ctx.shadowBlur = 12;
+            ctx.beginPath(); ctx.arc(food.x * cellSize + cellSize/2, food.y * cellSize + cellSize/2, cellSize/2 - 2, 0, Math.PI * 2);
+            ctx.fill(); ctx.shadowBlur = 0;
             if (gameOver) {
-                ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#f8fafc';
-                ctx.font = 'bold 24px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
+                ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#f8fafc'; ctx.font = 'bold 20px sans-serif';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillText(win ? '✨ You win!' : '💀 Game Over', canvas.width/2, canvas.height/2 - 16);
-                ctx.fillStyle = '#94a3b8';
-                ctx.font = '14px sans-serif';
-                ctx.fillText('Click or tap to restart', canvas.width/2, canvas.height/2 + 24);
+                ctx.fillStyle = '#94a3b8'; ctx.font = '12px sans-serif';
+                ctx.fillText('Click or tap to restart', canvas.width/2, canvas.height/2 + 20);
             }
         }
 
         function handleKey(e) {
-            const key = e.key;
-            e.preventDefault();
+            const key = e.key; e.preventDefault();
             if (gameOver) { resetGame(); return; }
             if (key === 'ArrowUp' && direction.y !== 1) nextDirection = {x: 0, y: -1};
             else if (key === 'ArrowDown' && direction.y !== -1) nextDirection = {x: 0, y: 1};
             else if (key === 'ArrowLeft' && direction.x !== 1) nextDirection = {x: -1, y: 0};
             else if (key === 'ArrowRight' && direction.x !== -1) nextDirection = {x: 1, y: 0};
         }
-
         document.addEventListener('keydown', handleKey);
         canvas.addEventListener('click', () => { if (gameOver) resetGame(); });
 
         resetGame();
-        loopId = setTimeout(function loop() {
-            update();
-            loopId = setTimeout(loop, speed);
-        }, speed);
+        loopId = setTimeout(function loop() { update(); loopId = setTimeout(loop, speed); }, speed);
 
         return {
-            reset: resetGame,
-            draw,
-            pause: () => { paused = true; },
-            resume: () => { paused = false; },
-            destroy: () => {
-                if (loopId) clearTimeout(loopId);
-                document.removeEventListener('keydown', handleKey);
-            },
-            setSpeed: (ms) => { speed = ms; }
+            reset: resetGame, draw, pause: () => { paused = true; }, resume: () => { paused = false; },
+            destroy: () => { if (loopId) clearTimeout(loopId); document.removeEventListener('keydown', handleKey); }
         };
     }
 
     // ───── BUILD WALL ─────
-    let _selPlan = 'monthly';
     let _movingboxesGame = null;
+
+    function createWallElement() {
+        const wall = document.createElement('div'); wall.className = 'pw-wall';
+        const remaining = getTrialRemainingDays();
+        const trialStatus = remaining > 0 ? `📅 Trial ends in ${remaining} day${remaining > 1 ? 's' : ''}` : '⏳ Trial expired';
+
+        wall.innerHTML = `
+            <div class="pw-title">Subscribe <span>$${MONTHLY_PRICE}/mo</span></div>
+            <div class="pw-trial-status">${trialStatus}</div>
+            <p class="pw-subtitle">Unlock unlimited uploads and study tools.</p>
+            <div class="pw-card-area">
+                <div class="pw-card-row">
+                    <input class="pw-input pw-card-number" placeholder="Card number" style="flex:2;min-width:130px">
+                    <input class="pw-input pw-card-expiry" placeholder="MM/YY">
+                    <input class="pw-input pw-card-cvc" placeholder="CVC">
+                </div>
+                <div class="pw-err"></div>
+                <button class="pw-pay">Subscribe</button>
+                <button class="pw-restore">Restore purchase</button>
+            </div>
+            <div class="pw-game-container">
+                <div class="pw-game-header">
+                    <span class="pw-game-hint">📦 Moving Boxes (arrow keys)</span>
+                    <span class="pw-game-score">🏆 <span id="pw-game-score-display">0</span></span>
+                </div>
+                <canvas id="pw-movingboxes-canvas" width="240" height="240"></canvas>
+            </div>
+            <p class="pw-notice">Cancel anytime. Secure billing.</p>
+        `;
+        return wall;
+    }
 
     function buildWall(targetEl) {
         _injectCSS();
         const originalContent = targetEl.innerHTML;
         const wall = createWallElement();
-        targetEl.innerHTML = '';
-        targetEl.appendChild(wall);
+        targetEl.innerHTML = ''; targetEl.appendChild(wall);
         wall._originalContent = originalContent;
         attachWallEvents(wall, targetEl);
     }
@@ -12047,216 +11927,135 @@ function validateHTML(html) {
     function buildFullPageWall() {
         _injectCSS();
         const originalBody = document.body.innerHTML;
-        document.body.innerHTML = '';
-        document.body.style.margin = '0';
-        document.body.style.display = 'flex';
-        document.body.style.justifyContent = 'center';
-        document.body.style.alignItems = 'center';
-        document.body.style.minHeight = '100vh';
+        document.body.innerHTML = ''; document.body.style.margin = '0';
+        document.body.style.display = 'flex'; document.body.style.justifyContent = 'center';
+        document.body.style.alignItems = 'center'; document.body.style.minHeight = '100vh';
         document.body.style.background = '#030408';
-
-        const wall = createWallElement();
-        document.body.appendChild(wall);
-        wall._originalContent = originalBody;
-        attachWallEvents(wall, null, true);
-    }
-
-    function createWallElement() {
-        const wall = document.createElement('div');
-        wall.className = 'pw-wall';
-
-        const remaining = getTrialRemainingDays();
-        const trialStatus = remaining > 0
-            ? `📅 Trial ends in ${remaining} day${remaining > 1 ? 's' : ''}`
-            : '⏳ Trial expired';
-
-        wall.innerHTML = `
-            <div class="pw-title">Subscribe to <span>Keep Growing</span></div>
-            <div class="pw-trial-status">${trialStatus}</div>
-            <p class="pw-subtitle">Your 7‑day free trial has ended. Subscribe to continue using the app.</p>
-
-            <div class="pw-plans">
-                <div class="pw-plan ${_selPlan === 'monthly' ? 'sel' : ''}" data-plan="monthly">
-                    <div class="pw-plan-name">Monthly</div>
-                    <div class="pw-price">$${MONTHLY_PRICE}</div>
-                    <div class="pw-sub">per month</div>
-                </div>
-                <div class="pw-plan ${_selPlan === 'yearly' ? 'sel' : ''}" data-plan="yearly">
-                    <div class="pw-plan-name">Yearly</div>
-                    <div class="pw-price">$${YEARLY_PRICE}</div>
-                    <div class="pw-sub">$${(YEARLY_PRICE/12).toFixed(2)} per month</div>
-                </div>
-            </div>
-
-            <div class="pw-card-area">
-                <div class="pw-card-row">
-                    <input class="pw-input pw-card-number" placeholder="Card number" value="4242424242424242" style="flex:2;min-width:130px">
-                    <input class="pw-input pw-card-expiry" placeholder="MM/YY" value="12/28">
-                    <input class="pw-input pw-card-cvc" placeholder="CVC" value="123">
-                </div>
-                <div class="pw-err"></div>
-                <button class="pw-pay">Subscribe</button>
-                <button class="pw-restore">Restore previous purchase</button>
-            </div>
-
-            <div class="pw-game-container">
-                <div class="pw-game-header">
-                    <span class="pw-game-hint">📦 moving boxes (arrow keys / tap to restart)</span>
-                    <span class="pw-game-score">Score: <span id="pw-game-score-display">0</span></span>
-                </div>
-                <canvas id="pw-movingboxes-canvas" width="300" height="300"></canvas>
-            </div>
-
-            <p class="pw-notice">Your subscription supports continued development. Cancel anytime.</p>
-        `;
-        return wall;
+        const wall = createWallElement(); document.body.appendChild(wall);
+        wall._originalContent = originalBody; attachWallEvents(wall, null, true);
     }
 
     function attachWallEvents(wall, targetEl, isFullPage = false) {
-        // Plan selection
-        wall.querySelectorAll('.pw-plan').forEach(card => {
-            card.addEventListener('click', () => {
-                wall.querySelectorAll('.pw-plan').forEach(c => c.classList.remove('sel'));
-                card.classList.add('sel');
-                _selPlan = card.dataset.plan;
-            });
-        });
-
-        // Subscribe
-        const payBtn = wall.querySelector('.pw-pay');
-        const errEl = wall.querySelector('.pw-err');
-
+        const payBtn = wall.querySelector('.pw-pay'); const errEl = wall.querySelector('.pw-err');
         payBtn.addEventListener('click', async () => {
             const card = wall.querySelector('.pw-card-number').value.replace(/\s/g, '');
             const expiry = wall.querySelector('.pw-card-expiry').value.trim();
-
-            if (!/^\d{16}$/.test(card)) {
-                errEl.textContent = 'Please enter a valid 16-digit card number.';
-                return;
-            }
-            if (!/^\d{2}\/\d{2}$/.test(expiry)) {
-                errEl.textContent = 'Expiry format: MM/YY';
-                return;
-            }
+            if (!/^\d{16}$/.test(card)) { errEl.textContent = 'Valid 16-digit card required.'; return; }
+            if (!/^\d{2}\/\d{2}$/.test(expiry)) { errEl.textContent = 'Expiry format: MM/YY'; return; }
             errEl.textContent = '';
-
-            payBtn.disabled = true;
-            payBtn.textContent = 'Processing…';
-
-            const result = await subscribe(_selPlan);
-
+            payBtn.disabled = true; payBtn.textContent = 'Processing…';
+            const result = await subscribe();
             if (result && result.key) {
                 localStorage.setItem('paywall_key', result.key);
-                if (isFullPage) {
-                    document.body.innerHTML = wall._originalContent;
-                    document.body.style = '';
-                    location.reload();
-                } else if (targetEl) {
-                    targetEl.innerHTML = wall._originalContent;
-                }
-                onSubscriptionSuccess(result.key, _selPlan);
+                if (isFullPage) { document.body.innerHTML = wall._originalContent; document.body.style = ''; location.reload(); }
+                else if (targetEl) targetEl.innerHTML = wall._originalContent;
+                Swal.fire({ title: 'Subscription active', icon: 'success', background: '#0f172a', color: '#f8fafc', confirmButtonColor: '#2dd4bf' });
             } else {
-                payBtn.disabled = false;
-                payBtn.textContent = 'Subscribe';
+                payBtn.disabled = false; payBtn.textContent = 'Subscribe';
                 errEl.textContent = 'Subscription failed. Please try again.';
             }
         });
 
-        // Restore
         wall.querySelector('.pw-restore').addEventListener('click', async () => {
             const status = await checkStatus();
             if (status.active) {
                 localStorage.setItem('paywall_key', status.key || 'restored');
                 setCachedStatus({ active: true, key: status.key || 'restored' });
-                if (isFullPage) {
-                    document.body.innerHTML = wall._originalContent;
-                    document.body.style = '';
-                    location.reload();
-                } else if (targetEl) {
-                    targetEl.innerHTML = wall._originalContent;
-                }
+                if (isFullPage) { document.body.innerHTML = wall._originalContent; document.body.style = ''; location.reload(); }
+                else if (targetEl) targetEl.innerHTML = wall._originalContent;
                 UI.toast('✅ Subscription restored!');
-            } else {
-                UI.toast('No active subscription found for this account.');
-            }
+            } else UI.toast('No active subscription found.');
         });
 
-        // Start movingboxes game
         setTimeout(() => {
             _movingboxesGame = initmovingboxesGame('pw-movingboxes-canvas');
             const scoreSpan = document.getElementById('pw-game-score-display');
             if (scoreSpan && _movingboxesGame) {
                 const origDraw = _movingboxesGame.draw;
-                _movingboxesGame.draw = function() {
-                    origDraw.call(this);
-                    if (scoreSpan) scoreSpan.textContent = this.score || 0;
-                };
+                _movingboxesGame.draw = function() { origDraw.call(this); if (scoreSpan) scoreSpan.textContent = this.score || 0; };
             }
         }, 100);
     }
 
-    function onSubscriptionSuccess(key, plan) {
-        const months = plan === 'yearly' ? 12 : 1;
-        Swal.fire({
-            title: 'Subscription active',
-            html: `<p>You have subscribed for ${months} month(s).</p>
-                   <div style="font-family:monospace;background:#1e293b;padding:0.6rem;border-radius:0.5rem;word-break:break-all;margin:0.75rem 0">${key}</div>
-                   <p style="font-size:0.75rem;color:#94a3b8">Save this key – you can use it on other browsers.</p>`,
-            icon: 'success',
-            background: '#0f172a',
-            color: '#f8fafc',
-            confirmButtonColor: '#2dd4bf'
-        });
-        location.reload();
-    }
-
-    // ───── INIT ─────
     _injectCSS();
-
-    // ───── AUTO‑REFRESH CHECKS ─────
     let checkInterval = null;
-
     async function recheckStatus() {
-        // Only if the user is not already blocked
         if (document.querySelector('.pw-wall')) return;
-
-        const status = await checkStatus();
-        const trialActive = isTrialActive();
+        const status = await checkStatus(); const trialActive = isTrialActive();
         const hasTrialStarted = getTrialStart() !== null;
-
-        if (hasTrialStarted && !trialActive && !status.active) {
-            buildFullPageWall();
-            if (checkInterval) {
-                clearInterval(checkInterval);
-                checkInterval = null;
-            }
-        }
+        if (hasTrialStarted && !trialActive && !status.active) { buildFullPageWall(); if (checkInterval) { clearInterval(checkInterval); checkInterval = null; } }
     }
-
-    // Check every 5 minutes
     checkInterval = setInterval(recheckStatus, 300000);
-
-    // Also check when the tab becomes visible
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-            recheckStatus();
-        }
-    });
-
-    // On page load, check immediately (after app ready)
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') recheckStatus(); });
     (async function initialCheck() {
         let attempts = 0;
         const checkReady = setInterval(async () => {
             attempts++;
-            if (window.State && window.Core && window.UI) {
-                clearInterval(checkReady);
-                await recheckStatus();
-            }
+            if (window.State && window.Core && window.UI) { clearInterval(checkReady); await recheckStatus(); }
             if (attempts > 20) clearInterval(checkReady);
         }, 200);
     })();
+    console.log('[Paywall] Compact $19/month paywall with Moving Boxes ready.');
 
-    console.log('[Paywall] Full‑page blocking paywall with movingboxes game + offline cache ready.');
+    // ---- Billing Manager and About Page Logic ----
+    // Billing Manager
+    async function openBillingManager() {
+        const modal = document.getElementById('billing-manager-modal');
+        const content = document.getElementById('billing-status-content');
+        modal.style.display = 'flex';
+        content.innerHTML = '<p style="color:#94a3b8;">Fetching status...</p>';
+        try {
+            const status = await window.__paywall.getStatus();
+            if (status.active) {
+                content.innerHTML = `<p><strong>Plan:</strong> Monthly ($${MONTHLY_PRICE}/mo)</p><p><strong>Status:</strong> <span style="color:#4ade80;">Active</span></p>`;
+                document.getElementById('cancel-subscription-btn').style.display = 'block';
+                document.getElementById('renew-subscription-btn').style.display = 'none';
+            } else {
+                content.innerHTML = `<p><strong>Plan:</strong> None</p><p><strong>Status:</strong> <span style="color:#f43f5e;">Inactive</span></p>`;
+                document.getElementById('cancel-subscription-btn').style.display = 'none';
+                document.getElementById('renew-subscription-btn').style.display = 'block';
+            }
+        } catch (e) {
+            content.innerHTML = '<p style="color:#f43f5e;">Error loading subscription. Please try again.</p>';
+        }
+    }
+
+    document.getElementById('open-billing-manager')?.addEventListener('click', openBillingManager);
+    document.getElementById('open-movingboxes-game')?.addEventListener('click', () => {
+        // Show the paywall (which contains the game)
+        if (!document.querySelector('.pw-wall')) {
+            buildFullPageWall();
+        }
+    });
+    document.getElementById('billing-manager-modal')?.querySelector('.close-modal-btn')?.addEventListener('click', () => {
+        document.getElementById('billing-manager-modal').style.display = 'none';
+    });
+
+    document.getElementById('cancel-subscription-btn')?.addEventListener('click', async () => {
+        if (await confirm('Cancel your subscription? You will lose access immediately.')) {
+            const userId = localStorage.getItem('paywall_userId') || '';
+            const res = await fetch(`${WORKER_URL}/api/cancel?userId=${userId}`, { method: 'POST' });
+            if (res.ok) {
+                UI.toast('Subscription cancelled.');
+                openBillingManager();
+            } else {
+                UI.toast('Cancellation failed.');
+            }
+        }
+    });
+    document.getElementById('renew-subscription-btn')?.addEventListener('click', () => {
+        // Close billing modal and show paywall
+        document.getElementById('billing-manager-modal').style.display = 'none';
+        buildFullPageWall();
+    });
+
+    // About Page
+    document.getElementById('dock-about')?.addEventListener('click', () => {
+        document.getElementById('about-overlay').style.display = 'flex';
+    });
+    document.getElementById('about-overlay')?.querySelector('.close-modal-btn')?.addEventListener('click', () => {
+        document.getElementById('about-overlay').style.display = 'none';
+    });
 })();
 </script>
     <script>
