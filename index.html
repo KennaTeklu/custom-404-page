@@ -11800,7 +11800,6 @@ function validateHTML(html) {
             const free = [];
             for (let i = 0; i < size; i++) for (let j = 0; j < size; j++)
                 if (!occupied.has(`${i},${j}`)) free.push({x: i, y: j});
-            if (free.length === 0) { win = true; gameOver = true; return; }
             food = free[Math.floor(Math.random() * free.length)];
         }
 
@@ -11813,6 +11812,8 @@ function validateHTML(html) {
             const highSpan = document.getElementById('pw-game-high-display');
             if (highSpan) highSpan.textContent = localStorage.getItem('movingboxes_high') || 0;
         }
+
+        const MAX_LENGTH = 200; // Half the board – plenty of space to maneuver
 
         function update() {
             if (gameOver || paused) return;
@@ -11831,19 +11832,21 @@ function validateHTML(html) {
             if (head.x === food.x && head.y === food.y) {
                 score++;
                 if (scoreSpan) scoreSpan.textContent = score;
-				const highSpan = document.getElementById('pw-game-high-display');
-				if (highSpan) highSpan.textContent = localStorage.getItem('movingboxes_high') || 0;
+                const highSpan = document.getElementById('pw-game-high-display');
+                if (highSpan) highSpan.textContent = localStorage.getItem('movingboxes_high') || 0;
                 if (score > highScore) {
                     highScore = score;
                     localStorage.setItem('movingboxes_high', String(highScore));
                 }
+                // Pop tail to keep length at MAX_LENGTH, leaving plenty of empty cells
+                if (movingboxes.length > MAX_LENGTH) {
+                    movingboxes.pop();
+                }
                 placeFood();
-                if (win) { gameOver = true; draw(); return; }
                 if (speed > 60) speed -= 1;
             } else {
                 movingboxes.pop();
             }
-            draw();
         }
 
         function draw() {
@@ -11871,7 +11874,7 @@ function validateHTML(html) {
                 ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
                 ctx.fillStyle = '#f8fafc'; ctx.font = 'bold 20px sans-serif';
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-                ctx.fillText(win ? '✨ You win!' : '💀 Game Over', canvas.width/2, canvas.height/2 - 16);
+                ctx.fillText('💀 Game Over (get back to study)', canvas.width/2, canvas.height/2 - 16);
                 ctx.fillStyle = '#94a3b8'; ctx.font = '12px sans-serif';
                 ctx.fillText('Click or tap to restart', canvas.width/2, canvas.height/2 + 20);
             }
