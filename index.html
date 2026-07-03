@@ -4129,64 +4129,65 @@ const DB = {
     init: async () => {
         await dexieDB.open();
     },
-save: async (recordHistory = true) => {
-    await dexieDB.nodes.bulkPut(State.nodes);
-    if (recordHistory) History.push();
-    UI.toast("💾 Workspace Saved");
-    UI.checkBackupNag();
-}
-load: async () => {
-    State.nodes = await dexieDB.nodes.toArray();
-    
-    // One‑time migration: add new decay fields to existing nodes
-    let needsSave = false;
-    for (let node of State.nodes) {
-        if (node.studyCount === undefined) {
-            node.studyCount = 0;
-            needsSave = true;
+    save: async (recordHistory = true) => {
+        // Use bulkPut to upsert all nodes efficiently (no clear + bulkAdd)
+        await dexieDB.nodes.bulkPut(State.nodes);
+        if (recordHistory) History.push();
+        UI.toast("💾 Workspace Saved");
+        UI.checkBackupNag();
+    },
+    load: async () => {
+        State.nodes = await dexieDB.nodes.toArray();
+
+        // One‑time migration: add new decay fields to existing nodes
+        let needsSave = false;
+        for (let node of State.nodes) {
+            if (node.studyCount === undefined) {
+                node.studyCount = 0;
+                needsSave = true;
+            }
+            if (node.lastAccessDate === undefined) {
+                node.lastAccessDate = node.date ? new Date(node.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+                needsSave = true;
+            }
+            if (node.firstAccessDate === undefined) {
+                node.firstAccessDate = node.date ? new Date(node.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+                needsSave = true;
+            }
+            if (node.understandingHistory === undefined) {
+                node.understandingHistory = [{ date: node.lastAccessDate, value: node.understanding }];
+                needsSave = true;
+            }
+            if (node.quizAttempts === undefined) {
+                node.quizAttempts = 0;
+                needsSave = true;
+            }
+            if (node.quizBank === undefined) {
+                node.quizBank = [];
+                needsSave = true;
+            }
+            if (node.accessDates === undefined) {
+                node.accessDates = [node.lastAccessDate];
+                needsSave = true;
+            }
+            if (node.lastUnderstandingUpdate === undefined) {
+                node.lastUnderstandingUpdate = node.lastAccessDate;
+                needsSave = true;
+            }
+            if (node.renameCount === undefined) {
+                node.renameCount = 0;
+                needsSave = true;
+            }
+            if (node.flashCount === undefined) {
+                node.flashCount = 0;
+                needsSave = true;
+            }
         }
-        if (node.lastAccessDate === undefined) {
-            node.lastAccessDate = node.date ? new Date(node.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-            needsSave = true;
+        if (needsSave) {
+            await DB.save(false);
         }
-        if (node.firstAccessDate === undefined) {
-            node.firstAccessDate = node.date ? new Date(node.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
-            needsSave = true;
-        }
-        if (node.understandingHistory === undefined) {
-            node.understandingHistory = [{ date: node.lastAccessDate, value: node.understanding }];
-            needsSave = true;
-        }
-        if (node.quizAttempts === undefined) {
-            node.quizAttempts = 0;
-            needsSave = true;
-        }
-        if (node.quizBank === undefined) {
-            node.quizBank = [];
-            needsSave = true;
-        }
-        if (node.accessDates === undefined) {
-            node.accessDates = [node.lastAccessDate];
-            needsSave = true;
-        }
-        if (node.lastUnderstandingUpdate === undefined) {
-            node.lastUnderstandingUpdate = node.lastAccessDate;
-            needsSave = true;
-        }
-        if (node.renameCount === undefined) {
-            node.renameCount = 0;
-            needsSave = true;
-        }
-        if (node.flashCount === undefined) {
-            node.flashCount = 0;
-            needsSave = true;
-        }
+        History.push();
     }
-    if (needsSave) {
-        await DB.save(false);
-    }
-    History.push();
-}
 };
 
 // Optional: auto-save middleware (uncomment if needed)
