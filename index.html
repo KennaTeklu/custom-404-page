@@ -6112,7 +6112,7 @@ goUp: () => {
         State.path.pop();
         Core.focus(State.path[State.path.length-1].id, false);
         // Force UI to show folder list and hide action panel
-        document.getElementById('action-panel').style.display = 'none';
+        document.getElementById('action-panel')?.style.display = 'none';
         document.getElementById('folder-view-container').style.display = 'block';
         UI.renderFolders();
         UI.updateBackButton();
@@ -8105,7 +8105,7 @@ window.addEventListener('load', async () => {
             if (newSelected) newSelected.classList.add('selected');
         }
     } else {
-        document.getElementById('folder-view-container').classList.add('grid-view');
+        document.getElementById('folder-view-container')?.classList.add('grid-view');
         if (document.getElementById('selected-view-text')) document.getElementById('selected-view-text').innerText = '🔲 Grid View';
     }
     
