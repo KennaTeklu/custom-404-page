@@ -11719,6 +11719,16 @@ function validateHTML(html) {
         getStatus: checkStatus,
         showPanel: function(container) { buildWall(container); },
         showFullPage: function() { buildFullPageWall(); },
+        // NEW: Close the full‑page overlay
+        closeFullPage: function() {
+            const wall = document.querySelector('.pw-wall');
+            if (wall && wall._originalContent) {
+                document.body.innerHTML = wall._originalContent;
+                document.body.style = '';
+                // Optionally reload to re‑initialize app
+                // location.reload();
+            }
+        },
         startTrial: startTrial,
         getTrialRemainingDays: getTrialRemainingDays,
         isTrialActive: isTrialActive
@@ -11800,6 +11810,8 @@ function validateHTML(html) {
             score = 0; gameOver = false; win = false; paused = false; speed = 120;
             placeFood(); draw();
             if (scoreSpan) scoreSpan.textContent = '0';
+            const highSpan = document.getElementById('pw-game-high-display');
+            if (highSpan) highSpan.textContent = localStorage.getItem('movingboxes_high') || 0;
         }
 
         function update() {
@@ -11819,6 +11831,8 @@ function validateHTML(html) {
             if (head.x === food.x && head.y === food.y) {
                 score++;
                 if (scoreSpan) scoreSpan.textContent = score;
+				const highSpan = document.getElementById('pw-game-high-display');
+				if (highSpan) highSpan.textContent = localStorage.getItem('movingboxes_high') || 0;
                 if (score > highScore) {
                     highScore = score;
                     localStorage.setItem('movingboxes_high', String(highScore));
@@ -11834,6 +11848,8 @@ function validateHTML(html) {
 
         function draw() {
             resizeCanvas();
+            const highSpan = document.getElementById('pw-game-high-display');
+            if (highSpan) highSpan.textContent = localStorage.getItem('movingboxes_high') || 0;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1;
             for (let i = 0; i <= size; i++) {
@@ -11906,7 +11922,10 @@ function validateHTML(html) {
             <div class="pw-game-container">
                 <div class="pw-game-header">
                     <span class="pw-game-hint">📦 Moving Boxes (arrow keys)</span>
-                    <span class="pw-game-score">🏆 <span id="pw-game-score-display">0</span></span>
+                    <div style="display:flex; gap:12px;">
+                        <span class="pw-game-score">🏆 <span id="pw-game-score-display">0</span></span>
+                        <span class="pw-game-score">👑 <span id="pw-game-high-display">0</span></span>
+                    </div>
                 </div>
                 <canvas id="pw-movingboxes-canvas" width="240" height="240"></canvas>
             </div>
