@@ -11552,7 +11552,7 @@ function validateHTML(html) {
 </script>
 <script>
 // ══════════════════════════════════════════════════════════════════════════════
-// SUBSCRIPTION PAYWALL – Full‑Page Block + Snake Game + Offline Cache
+// SUBSCRIPTION PAYWALL – Full‑Page Block + movingboxes Game + Offline Cache
 // ══════════════════════════════════════════════════════════════════════════════
 (function() {
     'use strict';
@@ -11768,7 +11768,7 @@ function validateHTML(html) {
     }
     .pw-game-score { font-weight: 600; color: #facc15; }
     .pw-game-hint { font-weight: 400; color: #64748b; }
-    #pw-snake-canvas {
+    #pw-movingboxes-canvas {
         background: #0a0c12;
         border-radius: 12px;
         border: 1px solid rgba(255,255,255,0.08);
@@ -11848,8 +11848,8 @@ function validateHTML(html) {
         }
     }
 
-    // ───── SNAKE GAME ─────
-    function initSnakeGame(canvasId) {
+    // ───── movingboxes GAME ─────
+    function initmovingboxesGame(canvasId) {
         const canvas = document.getElementById(canvasId);
         if (!canvas) return null;
         const ctx = canvas.getContext('2d');
@@ -11868,7 +11868,7 @@ function validateHTML(html) {
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        let snake = [{x: 10, y: 10}];
+        let movingboxes = [{x: 10, y: 10}];
         let direction = {x: 1, y: 0};
         let nextDirection = {x: 1, y: 0};
         let food = {x: 15, y: 10};
@@ -11880,7 +11880,7 @@ function validateHTML(html) {
         let speed = 120;
 
         function placeFood() {
-            const occupied = new Set(snake.map(c => `${c.x},${c.y}`));
+            const occupied = new Set(movingboxes.map(c => `${c.x},${c.y}`));
             const free = [];
             for (let i = 0; i < size; i++) {
                 for (let j = 0; j < size; j++) {
@@ -11897,7 +11897,7 @@ function validateHTML(html) {
         }
 
         function resetGame() {
-            snake = [{x: 10, y: 10}];
+            movingboxes = [{x: 10, y: 10}];
             direction = {x: 1, y: 0};
             nextDirection = {x: 1, y: 0};
             score = 0;
@@ -11911,7 +11911,7 @@ function validateHTML(html) {
         function update() {
             if (gameOver || paused) return;
             direction = {...nextDirection};
-            const head = {...snake[0]};
+            const head = {...movingboxes[0]};
             head.x += direction.x;
             head.y += direction.y;
 
@@ -11920,19 +11920,19 @@ function validateHTML(html) {
             if (head.y < 0) head.y = size - 1;
             if (head.y >= size) head.y = 0;
 
-            if (snake.some((s, i) => i > 0 && s.x === head.x && s.y === head.y)) {
+            if (movingboxes.some((s, i) => i > 0 && s.x === head.x && s.y === head.y)) {
                 gameOver = true;
                 draw();
                 return;
             }
 
-            snake.unshift(head);
+            movingboxes.unshift(head);
             if (head.x === food.x && head.y === food.y) {
                 score++;
                 placeFood();
                 if (win) { gameOver = true; draw(); return; }
             } else {
-                snake.pop();
+                movingboxes.pop();
             }
             draw();
         }
@@ -11954,8 +11954,8 @@ function validateHTML(html) {
                 ctx.stroke();
             }
 
-            snake.forEach((seg, idx) => {
-                const hue = 200 + (idx / snake.length) * 60;
+            movingboxes.forEach((seg, idx) => {
+                const hue = 200 + (idx / movingboxes.length) * 60;
                 const lightness = idx === 0 ? '70%' : '50%';
                 ctx.fillStyle = `hsl(${hue}, 80%, ${lightness})`;
                 ctx.shadowColor = 'rgba(45,212,191,0.2)';
@@ -12020,7 +12020,7 @@ function validateHTML(html) {
 
     // ───── BUILD WALL ─────
     let _selPlan = 'monthly';
-    let _snakeGame = null;
+    let _movingboxesGame = null;
 
     function buildWall(targetEl) {
         _injectCSS();
@@ -12089,10 +12089,10 @@ function validateHTML(html) {
 
             <div class="pw-game-container">
                 <div class="pw-game-header">
-                    <span class="pw-game-hint">🐍 Snake (arrow keys / tap to restart)</span>
+                    <span class="pw-game-hint">🐍 movingboxes (arrow keys / tap to restart)</span>
                     <span class="pw-game-score">Score: <span id="pw-game-score-display">0</span></span>
                 </div>
-                <canvas id="pw-snake-canvas" width="300" height="300"></canvas>
+                <canvas id="pw-movingboxes-canvas" width="300" height="300"></canvas>
             </div>
 
             <p class="pw-notice">Your subscription supports continued development. Cancel anytime.</p>
@@ -12169,13 +12169,13 @@ function validateHTML(html) {
             }
         });
 
-        // Start Snake game
+        // Start movingboxes game
         setTimeout(() => {
-            _snakeGame = initSnakeGame('pw-snake-canvas');
+            _movingboxesGame = initmovingboxesGame('pw-movingboxes-canvas');
             const scoreSpan = document.getElementById('pw-game-score-display');
-            if (scoreSpan && _snakeGame) {
-                const origDraw = _snakeGame.draw;
-                _snakeGame.draw = function() {
+            if (scoreSpan && _movingboxesGame) {
+                const origDraw = _movingboxesGame.draw;
+                _movingboxesGame.draw = function() {
                     origDraw.call(this);
                     if (scoreSpan) scoreSpan.textContent = this.score || 0;
                 };
@@ -12244,7 +12244,7 @@ function validateHTML(html) {
         }, 200);
     })();
 
-    console.log('[Paywall] Full‑page blocking paywall with Snake game + offline cache ready.');
+    console.log('[Paywall] Full‑page blocking paywall with movingboxes game + offline cache ready.');
 })();
 </script>
     <script>
