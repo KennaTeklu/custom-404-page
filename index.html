@@ -3007,7 +3007,7 @@ button:hover,
                 <div id="action-panel" style="display: none;">
                     <div id="selected-folder-title"></div>
                     <div class="action-grid">
-                        <button id="btn-add-category-from-action" class="btn-primary" style="grid-column: span 2;">➕ Add Category / Book</button>
+                        <button id="btn-add-category-from-action" class="btn-primary" style="grid-column: span 2;">📁 Add Folder</button>
 						<button id="btn-quiz-mode" class="btn-primary" style="grid-column: span 1;">📝 Multiple Choice</button>
                         <button id="btn-fill-blank" class="btn-primary" style="grid-column: span 1;">📝 Fill in the Blank</button>
 						<button id="btn-adjust-understanding" class="btn-primary">📊 Set Understanding</button>
@@ -6210,17 +6210,6 @@ editContent: () => {
         a.download = `KnowledgeBackup_${new Date().toISOString().split('T')[0]}.json`; a.click();
         localStorage.setItem('last_backup', Date.now());
     },
-copyCatPrompt: () => {
-    const prompt = `Act as an Expert in hierarchical categories. Based only on the Table of Contents from the provided GMAT Official Guide document, extract the complete hierarchical structure. Use the exact headings as they appear in the document (including section numbers). For each heading, add a very short (few words) contextual summary inside brackets after the name, explaining what that section covers. Exclude sensitive topics. Output valid JSON inside a markdown code block \`\`\`json according to the schema: { "type": "categories", "items": [{"name": "...", "children": [{"name": "..."}] }] }`;
-    navigator.clipboard.writeText(prompt);
-    UI.toast("📋 Category Prompt Copied");
-},
-    copyBookPrompt: () => {
-        let cats = State.nodes.filter(n=>n.type==='category').map(n=>n.name).join(", ");
-        const prompt = `Extract book hierarchy. Output JSON in markdown code block. Schema: { "type": "book", "title": "...", "categories": [${cats || 'General Education'}], "children": [{"title": "...", "children": [...]}] } Exclude sensitive content.`;
-        navigator.clipboard.writeText(prompt);
-        UI.toast("📋 Book Prompt Copied");
-    },
     openScoresModal: () => {
         let id = document.getElementById('selected-folder-title').dataset.id;
         let node = State.nodes.find(n => n.id === id);
@@ -6714,10 +6703,9 @@ renderFolders: () => {
                 case 'details':
                     Core.showRichDetails(id);
                     break;
-                case 'add-child':
-                    window._uploadTargetParent = id;
-                    UI.showModal('upload-hub-modal');
-                    break;
+				case 'add-child':
+				    openManualFolderModal(id);
+				    break;
             }
         });
     });
@@ -8347,8 +8335,6 @@ document.getElementById('dock-restore').addEventListener('click', () => {
     input.click();
 });
 document.getElementById('dock-delete-all').addEventListener('click', Core.deleteAll);
-document.getElementById('copy-cat-prompt').addEventListener('click', Core.copyCatPrompt);
-document.getElementById('copy-book-prompt').addEventListener('click', Core.copyBookPrompt);
 document.getElementById('btn-quiz-mode').addEventListener('click', () => {
     let folderId = State.selectedFolderId || document.getElementById('selected-folder-title').dataset.id;
     if (!folderId) { UI.toast('Select a folder first.'); return; }
@@ -9780,13 +9766,6 @@ document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListene
 
 // Paste JSON modal
 let pendingPasteZone = null;
-document.querySelectorAll('.paste-json-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        pendingPasteZone = btn.dataset.zone;
-        document.getElementById('paste-json-textarea').value = '';
-        UI.showModal('paste-json-modal');
-    });
-});
 document.getElementById('paste-submit-btn').addEventListener('click', async () => {
     // Check subscription
     if (!(await window.__paywall.isAllowed())) {
@@ -13161,11 +13140,6 @@ window._onboardingEnterHandler = enterHandler; // optional, for cleanup
                 if (isOnboardingNeeded()) {
                     setTimeout(runOnboarding, 800);
                 } else {
-                    // Ensure Brain exists (e.g., from a previous successful run)
-                    if (State.nodes.some(n => n.id === BRAIN_NODE_ID)) {
-                        createOrGetBrainNode();
-                        // No refresh needed since it's already built
-                    }
                 }
                 setupQuizHijacking();
             }
@@ -13209,6 +13183,101 @@ window._onboardingEnterHandler = enterHandler; // optional, for cleanup
     }
 };
 
+// ---- MANUAL FOLDER CREATION ----
+let manualFolderCount = parseInt(localStorage.getItem('manualFolderCount') || '0');
+const MANUAL_LIMIT = 20;
+
+function updateManualFolderCount() {
+    localStorage.setItem('manualFolderCount', String(manualFolderCount));
+}
+
+function openManualFolderModal(parentId) {
+    const modal = document.getElementById('manual-folder-modal');
+    const nameInput = document.getElementById('manual-folder-name');
+    const parentSelect = document.getElementById('manual-parent-select');
+    
+    const categories = State.nodes.filter(n => n.type === 'category' || n.type === 'folder');
+    parentSelect.innerHTML = '<option value="root">Root</option>';
+    categories.forEach(n => {
+        const opt = document.createElement('option');
+        opt.value = n.id;
+        opt.textContent = n.name;
+        parentSelect.appendChild(opt);
+    });
+    if (parentId && categories.some(n => n.id === parentId)) {
+        parentSelect.value = parentId;
+    } else if (State.focusId !== 'root' && categories.some(n => n.id === State.focusId)) {
+        parentSelect.value = State.focusId;
+    }
+    
+    nameInput.value = '';
+    modal.style.display = 'flex';
+    setTimeout(() => nameInput.focus(), 100);
+}
+
+function createManualFolder() {
+    const nameInput = document.getElementById('manual-folder-name');
+    const parentSelect = document.getElementById('manual-parent-select');
+    const name = nameInput.value.trim();
+    if (!name) {
+        UI.toast('⚠️ Please enter a folder name.');
+        return;
+    }
+    const parentId = parentSelect.value;
+    const newId = 'manual_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+    State.nodes.push({
+        id: newId,
+        name: name,
+        type: 'category',
+        parentIds: [parentId],
+        size: 300,
+        understanding: 0,
+        content: '',
+        date: Date.now()
+    });
+    manualFolderCount++;
+    updateManualFolderCount();
+    DB.save(false);
+    Core.refresh();
+    Graph3D.fitToScreen(true);
+    UI.hideModal('manual-folder-modal');
+    UI.toast(`✅ Created "${name}"`);
+    
+    if (manualFolderCount >= MANUAL_LIMIT) {
+        setTimeout(() => {
+            Swal.fire({
+                title: '📦 You\'ve created many folders manually!',
+                text: `You've manually added ${manualFolderCount} folders. Consider using the JSON import to quickly build a structured brain. Would you like to start the onboarding now?`,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: '🔄 Start Onboarding',
+                cancelButtonText: 'Continue Manually',
+                background: 'rgba(15,18,28,0.95)',
+                backdrop: 'rgba(0,0,0,0.8)',
+                confirmButtonColor: '#2dd4bf',
+                cancelButtonColor: '#f43f5e'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.handleMakeBrain();
+                }
+            });
+        }, 500);
+    }
+}
+
+// ---- Event Listeners for Manual Modal ----
+document.addEventListener('DOMContentLoaded', function() {
+    const createBtn = document.getElementById('manual-folder-create');
+    const cancelBtn = document.getElementById('manual-folder-cancel');
+    const nameInput = document.getElementById('manual-folder-name');
+    
+    if (createBtn) createBtn.addEventListener('click', createManualFolder);
+    if (cancelBtn) cancelBtn.addEventListener('click', () => UI.hideModal('manual-folder-modal'));
+    if (nameInput) nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') createManualFolder();
+    });
+});
+	
 	function updateMakeBrainButton() {
 	    const btn = document.getElementById('dock-add');
 	    if (!btn) return;
