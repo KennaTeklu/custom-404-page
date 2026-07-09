@@ -12824,7 +12824,8 @@ function getStepData(step) {
                 msg.appendChild(typewriterContainer);
 
                 const subject = onboardingSubject || 'your subject';
-                const typeText = `This is the brain.\nImprove its color by studying "${subject}".\nEach section turns from red to green through rigorous quizzes.`;
+                // ✅ UPDATED: Boldly announce the 7‑day free trial
+                const typeText = `This is the brain.\nImprove its color by studying "${subject}".\nEach section turns from red to green through rigorous quizzes.\n\n🚀 Your 7‑day free trial starts now – enjoy exploring!`;
                 container.appendChild(msg);
 
                 setTimeout(() => {
@@ -12862,64 +12863,61 @@ The content and summaries must be in ${language}.
 Now, analyze the following content and generate the categories JSON:`;
 }
         // --- ROBUST CATEGORY PROCESSING (Fixed `await` & Redundancy) ---
-        async function processOnboardingCategories(jsonText) {
-            try {
-                console.log('[Onboarding] Processing JSON...');
-                const data = JSON.parse(jsonText);
-                let items = data.items || (data.type === 'categories' ? data.items : null);
-                if (!items && Array.isArray(data)) items = data;
-                if (!items) {
-                    UI.toast('❌ Invalid categories format. Expected an "items" array.');
-                    return false;
-                }
-
-                // Create Brain node (just state, no refresh yet)
-                createOrGetBrainNode();
-
-                const addCategory = (cat, parentId) => {
-                    let existing = State.nodes.find(n => n.name === cat.name && n.parentIds.includes(parentId));
-                    if (existing) {
-                        if (cat.content) existing.content = cat.content;
-                        if (cat.understanding) existing.understanding = cat.understanding;
-                        existing.date = Date.now();
-                    } else {
-                        const newId = 'c_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-                        State.nodes.push({
-                            id: newId, name: cat.name, type: 'category', parentIds: [parentId],
-                            size: (cat.content?.length || 500) + 300, understanding: cat.understanding || 0,
-                            content: cat.content || '', date: Date.now()
-                        });
-                        existing = State.nodes[State.nodes.length - 1];
-                    }
-                    if (cat.children && Array.isArray(cat.children)) {
-                        for (let child of cat.children) addCategory(child, existing.id);
-                    }
-                };
-                for (let cat of items) addCategory(cat, BRAIN_NODE_ID);
-
-                MathCore.cascadeAll();
-                await DB.save();
-
-                // 🔥 CRITICAL FIX: Properly await Core.refresh() which builds the graph
-                await Core.refresh();
-                Graph3D.fitToScreen(true);
-
-                // 🟢 START THE 7‑DAY FREE TRIAL
-                if (window.__paywall && typeof window.__paywall.startTrial === 'function') {
-                    window.__paywall.startTrial();
-                    setTimeout(() => {
-                        UI.toast("🧠 Your brain is ready! You're on a 7‑day free trial.");
-                    }, 1000);
-                }
-
-                return true;
-            } catch (err) {
-                console.error('[Onboarding] Error in processing:', err);
-                UI.toast('❌ Error processing categories: ' + err.message);
-                return false;
-            }
+async function processOnboardingCategories(jsonText) {
+    try {
+        console.log('[Onboarding] Processing JSON...');
+        const data = JSON.parse(jsonText);
+        let items = data.items || (data.type === 'categories' ? data.items : null);
+        if (!items && Array.isArray(data)) items = data;
+        if (!items) {
+            UI.toast('❌ Invalid categories format. Expected an "items" array.');
+            return false;
         }
 
+        // ✅ No Brain node – categories go directly under 'root'
+        const addCategory = (cat, parentId) => {
+            let existing = State.nodes.find(n => n.name === cat.name && n.parentIds.includes(parentId));
+            if (existing) {
+                if (cat.content) existing.content = cat.content;
+                if (cat.understanding) existing.understanding = cat.understanding;
+                existing.date = Date.now();
+            } else {
+                const newId = 'c_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                State.nodes.push({
+                    id: newId, name: cat.name, type: 'category', parentIds: [parentId],
+                    size: (cat.content?.length || 500) + 300, understanding: cat.understanding || 0,
+                    content: cat.content || '', date: Date.now()
+                });
+                existing = State.nodes[State.nodes.length - 1];
+            }
+            if (cat.children && Array.isArray(cat.children)) {
+                for (let child of cat.children) addCategory(child, existing.id);
+            }
+        };
+        for (let cat of items) addCategory(cat, 'root');  // <-- parent is 'root', not BRAIN_NODE_ID
+
+        MathCore.cascadeAll();
+        await DB.save();
+
+        // 🔥 CRITICAL FIX: Properly await Core.refresh() which builds the graph
+        await Core.refresh();
+        Graph3D.fitToScreen(true);
+
+        // 🟢 START THE 7‑DAY FREE TRIAL
+        if (window.__paywall && typeof window.__paywall.startTrial === 'function') {
+            window.__paywall.startTrial();
+            setTimeout(() => {
+                UI.toast("🧠 Your brain is ready! You're on a 7‑day free trial.");
+            }, 1000);
+        }
+
+        return true;
+    } catch (err) {
+        console.error('[Onboarding] Error in processing:', err);
+        UI.toast('❌ Error processing categories: ' + err.message);
+        return false;
+    }
+}
         // --- NEXT BUTTON HANDLER WITH DEBUG LOGS ---
         nextBtn.addEventListener('click', async () => {
             console.log('[Onboarding] Next clicked. Step=', onboardingStep, 'Ready=', nextBtn.dataset.ready);
@@ -12992,10 +12990,9 @@ Now, analyze the following content and generate the categories JSON:`;
         if (!q) return;
         const studiedNodeId = q.currentNodeId;
         if (!studiedNodeId) return;
-
-        createOrGetBrainNode();
-        State.focusId = BRAIN_NODE_ID;
-        State.path = [{ id: 'root', name: 'Knowledge Universe' }, { id: BRAIN_NODE_ID, name: 'Brain' }];
+		
+		State.focusId = 'root';
+		State.path = [{ id: 'root', name: 'Knowledge Universe' }];
         await DB.save(false);
         await Core.refresh();
         Graph3D.fitToScreen(true);
