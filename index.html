@@ -12796,16 +12796,21 @@ function getStepData(step) {
     title: '📤 Upload your categories file',
     description: 'Now paste or upload the <strong>JSON file</strong> that the AI generated for you.<br><br>This will build your knowledge map — the <strong>brain</strong>.',
     render: (container) => {
+        // ---- COMPACT DROP ZONE ----
         const zone = document.createElement('div');
         Object.assign(zone.style, {
-            border: '2px dashed rgba(45,212,191,0.3)', borderRadius: '20px',
-            padding: '30px 20px', textAlign: 'center', cursor: 'pointer',
-            transition: '0.2s', background: 'rgba(0,0,0,0.2)', marginTop: '4px'
+            border: '2px dashed rgba(45,212,191,0.3)',
+            borderRadius: '16px',
+            padding: '16px 12px',
+            textAlign: 'center',
+            cursor: 'pointer',
+            transition: '0.2s',
+            background: 'rgba(0,0,0,0.2)',
+            marginBottom: '8px'
         });
         zone.innerHTML = `
-            <div style="font-size: 2.5rem; margin-bottom: 8px;">📄</div>
-            <div style="font-weight: 600; color: #cbd5e1;">Drag & drop your JSON file here</div>
-            <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 4px;">or click to browse</div>
+            <div style="font-size: 2rem; margin-bottom: 0;">📄</div>
+            <div style="font-weight: 600; color: #cbd5e1; font-size: 0.9rem;">Drag & drop JSON or click to browse</div>
         `;
 
         const fileInput = document.createElement('input');
@@ -12825,17 +12830,25 @@ function getStepData(step) {
         container.appendChild(zone);
         container.appendChild(fileInput);
 
-        const pasteArea = document.createElement('div');
-        pasteArea.style.cssText = 'margin-top: 12px; display: flex; gap: 8px; align-items: center;';
+        // ---- PASTE ROW (textarea + build button side‑by‑side) ----
+        const pasteRow = document.createElement('div');
+        pasteRow.style.cssText = 'display: flex; gap: 8px; align-items: stretch; margin-top: 4px;';
+
         const pasteInput = document.createElement('textarea');
-        pasteInput.placeholder = 'Or paste the JSON text here...';
+        pasteInput.placeholder = 'Paste JSON text here...';
         pasteInput.style.cssText = `
-            flex: 1; padding: 12px 16px; border-radius: 16px;
+            flex: 1;
+            padding: 10px 12px;
+            border-radius: 12px;
             background: rgba(0,0,0,0.4);
             border: 2px solid rgba(255,255,255,0.8);
             box-shadow: inset 0 0 0 1px rgba(0,0,0,0.8);
-            color: #f8fafc; font-family: monospace; font-size: 0.8rem;
-            resize: vertical; min-height: 60px; outline: none;
+            color: #f8fafc;
+            font-family: monospace;
+            font-size: 0.8rem;
+            resize: vertical;
+            min-height: 44px;
+            outline: none;
         `;
         pasteInput.addEventListener('input', () => {
             const val = pasteInput.value.trim();
@@ -12860,33 +12873,34 @@ function getStepData(step) {
                 buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
             }
         });
-
-        // ---- ENTER KEY SUPPORT ----
         pasteInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && buildBtn.style.pointerEvents !== 'none') {
                 buildBtn.click();
             }
         });
 
-        pasteArea.appendChild(pasteInput);
-        container.appendChild(pasteArea);
-
-        // ===== BUILD BUTTON =====
         const buildBtn = document.createElement('button');
         buildBtn.className = 'btn-primary';
         buildBtn.id = 'onboarding-build-btn';
         const subject = onboardingSubject || 'Brain';
-        buildBtn.textContent = `🧠 Build My ${subject} Brain`;
+        buildBtn.textContent = `🧠 Build`;
         Object.assign(buildBtn.style, {
             background: 'rgba(45,212,191,0.15) !important',
-            borderColor: '#2dd4bf !important', color: '#2dd4bf !important',
-            padding: '14px 24px', borderRadius: '40px', fontWeight: '700',
-            fontSize: '1rem', cursor: 'pointer', width: '100%', marginTop: '16px',
-            opacity: '0.5', pointerEvents: 'none', transition: '0.2s'
+            borderColor: '#2dd4bf !important',
+            color: '#2dd4bf !important',
+            padding: '0 20px',
+            borderRadius: '40px',
+            fontWeight: '700',
+            fontSize: '0.95rem',
+            cursor: 'pointer',
+            opacity: '0.5',
+            pointerEvents: 'none',
+            transition: '0.2s',
+            whiteSpace: 'nowrap',
+            height: '44px'
         });
-
         buildBtn.addEventListener('click', async () => {
-            buildBtn.textContent = '⏳ Building...';
+            buildBtn.textContent = '⏳';
             buildBtn.style.opacity = '0.7'; buildBtn.style.pointerEvents = 'none';
 
             const zoneData = zone.dataset.jsonData;
@@ -12894,7 +12908,7 @@ function getStepData(step) {
             let jsonData = zoneData || pasteData;
             if (!jsonData) {
                 UI.toast('⚠️ Please upload or paste your categories JSON first.');
-                buildBtn.textContent = `🧠 Build My ${subject} Brain`;
+                buildBtn.textContent = `🧠 Build`;
                 buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
                 return;
             }
@@ -12902,7 +12916,7 @@ function getStepData(step) {
             const success = await processOnboardingCategories(jsonData);
             if (!success) {
                 UI.toast('❌ Build failed. Check console for errors.');
-                buildBtn.textContent = `🧠 Build My ${subject} Brain`;
+                buildBtn.textContent = `🧠 Build`;
                 buildBtn.style.opacity = '1'; buildBtn.style.pointerEvents = 'auto';
                 return;
             }
@@ -12911,16 +12925,18 @@ function getStepData(step) {
             renderStep(7);
         });
 
-        container.appendChild(buildBtn);
+        pasteRow.appendChild(pasteInput);
+        pasteRow.appendChild(buildBtn);
+        container.appendChild(pasteRow);
 
-        // ---- SUBTLE "NEED HELP?" LINK ----
+        // ---- SUBTLE HELP LINK ----
         const helpLink = document.createElement('a');
         helpLink.href = '#';
         helpLink.textContent = '❓ Need help?';
         Object.assign(helpLink.style, {
             display: 'inline-block',
-            marginTop: '12px',
-            fontSize: '0.8rem',
+            marginTop: '6px',
+            fontSize: '0.75rem',
             color: '#94a3b8',
             textDecoration: 'none',
             borderBottom: '1px dotted rgba(255,255,255,0.2)',
@@ -12950,16 +12966,16 @@ function getStepData(step) {
                 const data = JSON.parse(text);
                 if (!data.items && !data.type) {
                     zoneEl.style.borderColor = '#f43f5e';
-                    zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">❌</div><div style="font-weight: 600; color: #f43f5e;">Invalid categories file</div>`;
+                    zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 0;">❌</div><div style="font-weight: 600; color: #f43f5e; font-size: 0.9rem;">Invalid file</div>`;
                     return;
                 }
                 zoneEl.style.borderColor = '#4ade80'; zoneEl.style.background = 'rgba(74,222,128,0.05)';
-                zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">✅</div><div style="font-weight: 600; color: #4ade80;">File loaded successfully!</div><div style="font-size: 0.85rem; color: #94a3b8;">${file.name}</div>`;
+                zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 0;">✅</div><div style="font-weight: 600; color: #4ade80; font-size: 0.9rem;">File loaded!</div>`;
                 zoneEl.dataset.jsonData = JSON.stringify(data);
                 activateBuild();
             } catch (err) {
                 zoneEl.style.borderColor = '#f43f5e';
-                zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">❌</div><div style="font-weight: 600; color: #f43f5e;">Error reading file: ${err.message}</div>`;
+                zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 0;">❌</div><div style="font-weight: 600; color: #f43f5e; font-size: 0.9rem;">Error: ${err.message}</div>`;
             }
         }
     }
