@@ -6112,7 +6112,8 @@ goUp: () => {
         State.path.pop();
         Core.focus(State.path[State.path.length-1].id, false);
         // Force UI to show folder list and hide action panel
-        document.getElementById('action-panel')?.style.display = 'none';
+        const panel = document.getElementById('action-panel');
+		panel && (panel.style.display = 'none');
         document.getElementById('folder-view-container').style.display = 'block';
         UI.renderFolders();
         UI.updateBackButton();
