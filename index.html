@@ -11315,33 +11315,136 @@ function validateHTML(html) {
     if (typeof Core !== 'undefined') window.Core = Core;
 </script>
 <script>
-    (function() {
-        let fullscreenRequested = false;
-        
-        function requestFullscreen() {
-            if (fullscreenRequested) return;
-            const elem = document.documentElement;
-            const method = elem.requestFullscreen ||
-                           elem.webkitRequestFullscreen ||
-                           elem.msRequestFullscreen;
-            if (method) {
-                method.call(elem);
-                fullscreenRequested = true;
-            }
+(function() {
+    // ---- STATE ----
+    const state = {
+        enabled: false,
+        dismissedCount: 0,
+        lastDismissal: 0,
+        userPreference: localStorage.getItem('fullscreenPreference') || 'ask', // 'always', 'never', 'ask'
+        cooldownActive: false
+    };
+
+    // ---- HELPERS ----
+    function isFullscreen() {
+        return !!(document.fullscreenElement || document.webkitFullscreenElement);
+    }
+
+    function shouldRequest() {
+        // If already fullscreen or cooldown active, don't try
+        if (isFullscreen() || state.cooldownActive) return false;
+
+        // Respect user preference
+        if (state.userPreference === 'never') return false;
+        if (state.userPreference === 'always') return true;
+
+        // If user dismissed more than 2 times within 5 minutes, enter cooldown
+        if (state.dismissedCount > 2 && (Date.now() - state.lastDismissal < 300000)) {
+            state.cooldownActive = true;
+            setTimeout(() => {
+                state.cooldownActive = false;
+                state.dismissedCount = 0;
+            }, 300000); // 5 minutes cooldown
+            return false;
         }
-        
-        // Listen for fullscreen change to reset flag if user exits fullscreen
-        function onFullscreenChange() {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                fullscreenRequested = false;
-            }
+
+        // Only trigger on high‑intent actions – not on scroll, resize, or focus
+        // The actual trigger will be handled by specific events below
+        return true;
+    }
+
+    function requestFullscreen() {
+        if (!shouldRequest()) return;
+        const elem = document.documentElement;
+        const method = elem.requestFullscreen ||
+                       elem.webkitRequestFullscreen ||
+                       elem.msRequestFullscreen;
+        if (method) {
+            method.call(elem)
+                .then(() => {
+                    state.enabled = true;
+                })
+                .catch(() => {
+                    // If blocked, treat as a dismissal – increase count
+                    state.dismissedCount++;
+                    state.lastDismissal = Date.now();
+                });
         }
-        document.addEventListener('fullscreenchange', onFullscreenChange);
-        document.addEventListener('webkitfullscreenchange', onFullscreenChange);
-        
-        // Capture first click anywhere
-        document.addEventListener('click', requestFullscreen, { once: true });
-    })();
+    }
+
+    function exitFullscreen() {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        }
+    }
+
+    // ---- RESET ON EXIT ----
+    function onFullscreenChange() {
+        if (!isFullscreen()) {
+            state.enabled = false;
+            // User manually exited – count it
+            state.dismissedCount++;
+            state.lastDismissal = Date.now();
+        }
+    }
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+
+    // ---- HIGH‑INTENT TRIGGERS ----
+    // Only trigger on actions that clearly indicate the user wants to engage.
+
+    // 1. Click on interactive elements (buttons, links, folder items, quiz controls)
+    document.addEventListener('click', function(e) {
+        const target = e.target.closest('button, a, .folder-item, .quiz-card, .action-grid button, #dock button');
+        if (target && shouldRequest()) {
+            requestFullscreen();
+        }
+    });
+
+    // 2. Double‑click on the main content area (map-container) – a common fullscreen gesture
+    document.getElementById('map-container')?.addEventListener('dblclick', function() {
+        if (shouldRequest()) requestFullscreen();
+    });
+
+    // 3. Enter key on interactive elements (same as click)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.target.matches('button, a, .folder-item, .quiz-card, .action-grid button, #dock button')) {
+            if (shouldRequest()) requestFullscreen();
+        }
+    });
+
+    // ---- USER PREFERENCE PERSISTENCE ----
+    // Store preference when user changes it via settings (you can add a toggle in Settings modal)
+    window.__fullscreenPref = {
+        set: function(pref) {
+            state.userPreference = pref;
+            localStorage.setItem('fullscreenPreference', pref);
+            // If set to 'never', exit fullscreen if active
+            if (pref === 'never' && isFullscreen()) {
+                exitFullscreen();
+            }
+        },
+        get: function() { return state.userPreference; }
+    };
+
+    // ---- OPTIONAL: Manual toggle button (hidden but can be revealed) ----
+    // If you want a dedicated toggle, add it to your UI and call:
+    // window.__fullscreenPref.toggle = function() {
+    //     if (isFullscreen()) exitFullscreen();
+    //     else requestFullscreen();
+    // }
+
+    // ---- INITIAL CHECK ----
+    // If user preference is 'always', attempt fullscreen on load
+    if (state.userPreference === 'always' && !isFullscreen()) {
+        // Wait a moment for the app to settle
+        setTimeout(requestFullscreen, 1000);
+    }
+
+    console.log('[Fullscreen] Smart manager loaded. Preference:', state.userPreference);
+})();
 </script>
 <script>
 // ============================================================
@@ -12515,33 +12618,42 @@ function getStepData(step) {
     title: '📄 Do you have your study material ready?',
     description: 'You’ll need a note or document containing the content you want to learn.',
     render: (container) => {
-        const btnWrapper = document.createElement('div');
-        btnWrapper.style.cssText = 'display: flex; flex-direction: column; gap: 12px; margin-top: 8px;';
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display: flex; flex-direction: column; gap: 12px; margin-top: 8px;';
 
-        const yesBtn = document.createElement('button');
-        yesBtn.className = 'btn-primary';
-        yesBtn.textContent = '✅ Yes, I have my material ready';
-        Object.assign(yesBtn.style, {
-            background: 'rgba(45,212,191,0.15) !important',
-            borderColor: '#2dd4bf !important', color: '#2dd4bf !important',
-            padding: '14px 24px', borderRadius: '40px', fontWeight: '600',
-            fontSize: '1rem', cursor: 'pointer', width: '100%'
+        // ---- CHECKBOX ----
+        const checkboxLabel = document.createElement('label');
+        checkboxLabel.style.cssText = 'display: flex; align-items: center; gap: 10px; font-size: 0.95rem; cursor: pointer;';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = 'onboarding-material-ready';
+        checkbox.style.cssText = 'width: 20px; height: 20px; accent-color: #2dd4bf; cursor: pointer;';
+        const span = document.createElement('span');
+        span.textContent = 'I have my study material ready.';
+        checkboxLabel.appendChild(checkbox);
+        checkboxLabel.appendChild(span);
+        wrapper.appendChild(checkboxLabel);
+
+        // ---- NEXT BUTTON (enabled by checkbox) ----
+        const nextBtn = document.getElementById('onboarding-next-btn');
+        // Initially disabled
+        nextBtn.style.opacity = '0.5';
+        nextBtn.style.pointerEvents = 'none';
+        nextBtn.dataset.ready = 'false';
+
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+                nextBtn.style.opacity = '1';
+                nextBtn.style.pointerEvents = 'auto';
+                nextBtn.dataset.ready = 'true';
+            } else {
+                nextBtn.style.opacity = '0.5';
+                nextBtn.style.pointerEvents = 'none';
+                nextBtn.dataset.ready = 'false';
+            }
         });
 
-        yesBtn.addEventListener('click', () => {
-            const nextBtn = document.getElementById('onboarding-next-btn');
-            nextBtn.style.opacity = '1';
-            nextBtn.style.pointerEvents = 'auto';
-            nextBtn.dataset.ready = 'true';
-            yesBtn.textContent = '✅ Great! Continue →';
-            yesBtn.style.background = 'rgba(74,222,128,0.15) !important';
-            yesBtn.style.borderColor = '#4ade80 !important';
-            yesBtn.style.color = '#4ade80 !important';
-            yesBtn.disabled = true; // prevent double-click
-        });
-
-        btnWrapper.appendChild(yesBtn);
-        container.appendChild(btnWrapper);
+        container.appendChild(wrapper);
     }
 },
         // ---- YOUR EXISTING STEP 3 (now step 4) ----
@@ -12717,7 +12829,6 @@ function getStepData(step) {
         pasteArea.style.cssText = 'margin-top: 12px; display: flex; gap: 8px; align-items: center;';
         const pasteInput = document.createElement('textarea');
         pasteInput.placeholder = 'Or paste the JSON text here...';
-        // ---------- DUAL‑COLOR BORDER ----------
         pasteInput.style.cssText = `
             flex: 1; padding: 12px 16px; border-radius: 16px;
             background: rgba(0,0,0,0.4);
@@ -12796,29 +12907,40 @@ function getStepData(step) {
                 return;
             }
 
-            // ✅ Success! Move to step 7 (the final "Your brain is ready" step)
             onboardingStep = 7;
             renderStep(7);
         });
 
         container.appendChild(buildBtn);
 
-        // ---- "I DON'T UNDERSTAND" BUTTON ----
-        const helpBtn = document.createElement('button');
-        helpBtn.className = 'btn-secondary';
-        helpBtn.textContent = '❓ I don’t understand – take me back';
-        Object.assign(helpBtn.style, {
-            background: 'rgba(255,255,255,0.06) !important',
-            border: '1px solid rgba(255,255,255,0.1) !important',
-            color: '#94a3b8 !important', padding: '10px 20px',
-            borderRadius: '40px', cursor: 'pointer', fontSize: '0.85rem',
-            marginTop: '8px'
+        // ---- SUBTLE "NEED HELP?" LINK ----
+        const helpLink = document.createElement('a');
+        helpLink.href = '#';
+        helpLink.textContent = '❓ Need help?';
+        Object.assign(helpLink.style, {
+            display: 'inline-block',
+            marginTop: '12px',
+            fontSize: '0.8rem',
+            color: '#94a3b8',
+            textDecoration: 'none',
+            borderBottom: '1px dotted rgba(255,255,255,0.2)',
+            cursor: 'pointer',
+            transition: '0.2s'
         });
-        helpBtn.addEventListener('click', () => {
+        helpLink.addEventListener('mouseenter', () => {
+            helpLink.style.color = '#2dd4bf';
+            helpLink.style.borderBottomColor = '#2dd4bf';
+        });
+        helpLink.addEventListener('mouseleave', () => {
+            helpLink.style.color = '#94a3b8';
+            helpLink.style.borderBottomColor = 'rgba(255,255,255,0.2)';
+        });
+        helpLink.addEventListener('click', (e) => {
+            e.preventDefault();
             onboardingStep = 5;
             renderStep(5);
         });
-        container.appendChild(helpBtn);
+        container.appendChild(helpLink);
 
         const activateBuild = () => { buildBtn.style.opacity = '1'; buildBtn.style.pointerEvents = 'auto'; };
 
