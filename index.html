@@ -12282,73 +12282,86 @@ function validateHTML(html) {
     }
 
     // --- Floating Arrow ---
-    function showFloatingArrow(targetSelector, message, duration = 8000) {
-        if (arrowShown) return;
-        arrowShown = true;
+function showFloatingArrow(targetSelector, message, duration = 8000) {
+    if (arrowShown) return;
+    arrowShown = true;
 
-        const oldArrow = document.getElementById('onboarding-arrow');
-        if (oldArrow) oldArrow.remove();
+    const oldArrow = document.getElementById('onboarding-arrow');
+    if (oldArrow) oldArrow.remove();
 
-        const target = document.querySelector(targetSelector);
-        if (!target) return;
+    const target = document.querySelector(targetSelector);
+    if (!target) return;
 
-        const rect = target.getBoundingClientRect();
-        const arrow = document.createElement('div');
-        arrow.id = 'onboarding-arrow';
-        arrow.innerHTML = '👇';
-        Object.assign(arrow.style, {
-            position: 'fixed', zIndex: '99999', pointerEvents: 'none',
-            fontSize: '2.5rem', color: '#2dd4bf',
-            filter: 'drop-shadow(0 0 12px rgba(45,212,191,0.6))',
-            animation: 'arrowPulse 1.2s ease-in-out infinite',
-            left: (rect.left + rect.width / 2 - 20) + 'px',
-            top: (rect.top - 50) + 'px'
-        });
+    const rect = target.getBoundingClientRect();
 
-        if (!document.getElementById('onboarding-arrow-style')) {
-            const style = document.createElement('style');
-            style.id = 'onboarding-arrow-style';
-            style.textContent = `
-                @keyframes arrowPulse {
-                    0%, 100% { transform: translateY(0) scale(1); opacity: 0.8; }
-                    50% { transform: translateY(-12px) scale(1.15); opacity: 1; }
-                }
-                @keyframes arrowFadeOut {
-                    to { opacity: 0; transform: translateY(-30px); }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-        document.body.appendChild(arrow);
+    // Arrow positioned to the RIGHT of the target, pointing left
+    const arrow = document.createElement('div');
+    arrow.id = 'onboarding-arrow';
+    arrow.innerHTML = '👈'; // pointing left, towards the button
+    Object.assign(arrow.style, {
+        position: 'fixed',
+        zIndex: '99999',
+        pointerEvents: 'none',
+        fontSize: '2.5rem',
+        color: '#2dd4bf',
+        filter: 'drop-shadow(0 0 12px rgba(45,212,191,0.6))',
+        animation: 'arrowPulseRight 1.2s ease-in-out infinite',
+        left: (rect.right + 10) + 'px', // just to the right of the button
+        top: (rect.top + rect.height / 2 - 20) + 'px'
+    });
 
-        const msg = document.createElement('div');
-        msg.id = 'onboarding-arrow-msg';
-        msg.textContent = message || 'Click the ☰ menu to start exploring';
-        Object.assign(msg.style, {
-            position: 'fixed', zIndex: '99999', pointerEvents: 'none',
-            color: '#f8fafc', fontSize: '0.9rem', fontWeight: '600',
-            textAlign: 'center', background: 'rgba(0,0,0,0.75)',
-            backdropFilter: 'blur(12px)', padding: '8px 16px',
-            borderRadius: '40px', border: '1px solid rgba(45,212,191,0.3)',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
-            maxWidth: '260px',
-            left: (rect.left + rect.width / 2 - 130) + 'px',
-            top: (rect.top - 90) + 'px'
-        });
-        document.body.appendChild(msg);
-
-        let dismissed = false;
-        function dismissArrow() {
-            if (dismissed) return;
-            dismissed = true;
-            arrow.style.animation = 'arrowFadeOut 0.4s forwards';
-            msg.style.opacity = '0';
-            setTimeout(() => { arrow.remove(); msg.remove(); }, 500);
-        }
-        target.addEventListener('click', dismissArrow, { once: true });
-        setTimeout(dismissArrow, duration);
-        window._dismissOnboardingArrow = dismissArrow;
+    if (!document.getElementById('onboarding-arrow-style')) {
+        const style = document.createElement('style');
+        style.id = 'onboarding-arrow-style';
+        style.textContent = `
+            @keyframes arrowPulseRight {
+                0%, 100% { transform: translateX(0) scale(1); opacity: 0.8; }
+                50% { transform: translateX(10px) scale(1.15); opacity: 1; }
+            }
+            @keyframes arrowFadeOut {
+                to { opacity: 0; transform: translateX(30px); }
+            }
+        `;
+        document.head.appendChild(style);
     }
+    document.body.appendChild(arrow);
+
+    // Message positioned to the RIGHT of the arrow
+    const msg = document.createElement('div');
+    msg.id = 'onboarding-arrow-msg';
+    msg.textContent = message || 'Click the ☰ menu to start exploring';
+    Object.assign(msg.style, {
+        position: 'fixed',
+        zIndex: '99999',
+        pointerEvents: 'none',
+        color: '#f8fafc',
+        fontSize: '0.9rem',
+        fontWeight: '600',
+        textAlign: 'left',
+        background: 'rgba(0,0,0,0.75)',
+        backdropFilter: 'blur(12px)',
+        padding: '8px 16px',
+        borderRadius: '40px',
+        border: '1px solid rgba(45,212,191,0.3)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+        maxWidth: '260px',
+        left: (rect.right + 70) + 'px', // arrow (10px) + gap + message
+        top: (rect.top + rect.height / 2 - 20) + 'px'
+    });
+    document.body.appendChild(msg);
+
+    let dismissed = false;
+    function dismissArrow() {
+        if (dismissed) return;
+        dismissed = true;
+        arrow.style.animation = 'arrowFadeOut 0.4s forwards';
+        msg.style.opacity = '0';
+        setTimeout(() => { arrow.remove(); msg.remove(); }, 500);
+    }
+    target.addEventListener('click', dismissArrow, { once: true });
+    setTimeout(dismissArrow, duration);
+    window._dismissOnboardingArrow = dismissArrow;
+}
 
     // --- Main Wizard ---
     async function runOnboarding() {
