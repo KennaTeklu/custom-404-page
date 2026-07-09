@@ -12451,8 +12451,8 @@ function getStepData(step) {
         },
         // ---- NEW LANGUAGE STEP ----
         2: {
-            title: '🌐 Choose your language',
-            description: 'Select the language you want your content and quizzes to be in. You can type a language or pick from the list.',
+            title: '🌐 Content language',
+            description: 'Choose the language your study material is in. This sets the language for your content and quizzes.',
             render: (container) => {
                 const wrapper = document.createElement('div');
                 wrapper.style.cssText = 'display: flex; flex-direction: column; gap: 12px; margin-top: 8px;';
@@ -12511,43 +12511,39 @@ function getStepData(step) {
             }
         },
         // ---- YOUR EXISTING STEP 2 (now step 3) ----
-        3: {
-            title: '📝 Prepare your study material',
-            description: 'To study effectively, you need a <strong>note or document</strong> that contains the content you want to learn.<br><br>When you have your material ready, type the phrase below to confirm.',
-            render: (container) => {
-                const wrapper = document.createElement('div');
-                Object.assign(wrapper.style, {
-                    background: 'rgba(0,0,0,0.3)', borderRadius: '16px',
-                    padding: '16px 20px', border: '1px solid rgba(255,255,255,0.06)', marginTop: '4px'
-                });
-                const label = document.createElement('p');
-                Object.assign(label.style, { fontSize: '0.85rem', color: '#94a3b8', margin: '0 0 8px 0' });
-                label.textContent = 'Type exactly: "I have my files ready"';
-                wrapper.appendChild(label);
+3: {
+    title: '📄 Do you have your study material ready?',
+    description: 'You’ll need a note or document containing the content you want to learn.',
+    render: (container) => {
+        const btnWrapper = document.createElement('div');
+        btnWrapper.style.cssText = 'display: flex; flex-direction: column; gap: 12px; margin-top: 8px;';
 
-                const input = document.createElement('input');
-                input.id = 'onboarding-ready-input';
-                input.type = 'text';
-                input.placeholder = 'I have my files ready';
-                Object.assign(input.style, {
-                    width: '100%', padding: '12px 16px', borderRadius: '40px',
-                    background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)',
-                    color: '#f8fafc', fontSize: '0.95rem', outline: 'none'
-                });
-                input.addEventListener('input', () => {
-                    const val = input.value.trim().toLowerCase();
-                    const btn = document.getElementById('onboarding-next-btn');
-                    if (val === 'i have my files ready') {
-                        btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; btn.dataset.ready = 'true';
-                    } else {
-                        btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; btn.dataset.ready = 'false';
-                    }
-                });
-                wrapper.appendChild(input);
-                container.appendChild(wrapper);
-                setTimeout(() => input.focus(), 100);
-            }
-        },
+        const yesBtn = document.createElement('button');
+        yesBtn.className = 'btn-primary';
+        yesBtn.textContent = '✅ Yes, I have my material ready';
+        Object.assign(yesBtn.style, {
+            background: 'rgba(45,212,191,0.15) !important',
+            borderColor: '#2dd4bf !important', color: '#2dd4bf !important',
+            padding: '14px 24px', borderRadius: '40px', fontWeight: '600',
+            fontSize: '1rem', cursor: 'pointer', width: '100%'
+        });
+
+        yesBtn.addEventListener('click', () => {
+            const nextBtn = document.getElementById('onboarding-next-btn');
+            nextBtn.style.opacity = '1';
+            nextBtn.style.pointerEvents = 'auto';
+            nextBtn.dataset.ready = 'true';
+            yesBtn.textContent = '✅ Great! Continue →';
+            yesBtn.style.background = 'rgba(74,222,128,0.15) !important';
+            yesBtn.style.borderColor = '#4ade80 !important';
+            yesBtn.style.color = '#4ade80 !important';
+            yesBtn.disabled = true; // prevent double-click
+        });
+
+        btnWrapper.appendChild(yesBtn);
+        container.appendChild(btnWrapper);
+    }
+},
         // ---- YOUR EXISTING STEP 3 (now step 4) ----
         4: {
             title: '📋 Get your categories file',
@@ -12629,46 +12625,43 @@ function getStepData(step) {
         },
         // ---- YOUR EXISTING STEP 4 (now step 5) ----
 5: {
-    title: '📁 Do you have the file ready?',
-    description: 'Have you pasted the prompt into an AI and received your <strong>categories JSON file</strong>?',
+    title: '📁 Do you have the JSON file ready?',
+    description: 'Have you pasted the AI prompt and received your <strong>categories JSON file</strong>?',
     render: (container) => {
-        const btnWrapper = document.createElement('div');
-        btnWrapper.style.cssText = 'display: flex; flex-direction: column; gap: 12px; margin-top: 8px;';
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display: flex; flex-direction: column; gap: 12px; margin-top: 8px;';
 
-        // ---- MAIN YES / NEXT BUTTON ----
-        const yesBtn = document.createElement('button');
-        yesBtn.className = 'btn-primary';
-        yesBtn.textContent = '✅ Yes, I have the file!';
-        yesBtn.dataset.confirmed = 'false';
-        Object.assign(yesBtn.style, {
-            background: 'rgba(45,212,191,0.15) !important',
-            borderColor: '#2dd4bf !important', color: '#2dd4bf !important',
-            padding: '14px 24px', borderRadius: '40px', fontWeight: '600',
-            fontSize: '1rem', cursor: 'pointer', width: '100%'
-        });
+        // ---- CHECKBOX ----
+        const checkboxLabel = document.createElement('label');
+        checkboxLabel.style.cssText = 'display: flex; align-items: center; gap: 10px; font-size: 0.95rem; cursor: pointer;';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = 'onboarding-file-ready';
+        checkbox.style.cssText = 'width: 20px; height: 20px; accent-color: #2dd4bf; cursor: pointer;';
+        const span = document.createElement('span');
+        span.textContent = 'I have the categories JSON file ready.';
+        checkboxLabel.appendChild(checkbox);
+        checkboxLabel.appendChild(span);
+        wrapper.appendChild(checkboxLabel);
 
-        yesBtn.addEventListener('click', function(e) {
-            if (this.dataset.confirmed === 'true') {
-                // Already confirmed → trigger the real Next button
-                const nextBtn = document.getElementById('onboarding-next-btn');
-                if (nextBtn && nextBtn.dataset.ready === 'true') {
-                    nextBtn.click();
-                }
-            } else {
-                // First click: confirm and enable
-                this.dataset.confirmed = 'true';
-                const nextBtn = document.getElementById('onboarding-next-btn');
+        // ---- NEXT BUTTON (enabled by checkbox) ----
+        const nextBtn = document.getElementById('onboarding-next-btn');
+        // Initially disabled
+        nextBtn.style.opacity = '0.5';
+        nextBtn.style.pointerEvents = 'none';
+        nextBtn.dataset.ready = 'false';
+
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
                 nextBtn.style.opacity = '1';
                 nextBtn.style.pointerEvents = 'auto';
                 nextBtn.dataset.ready = 'true';
-                this.textContent = '✅ Great! Click Next →';
-                this.style.background = 'rgba(74,222,128,0.15) !important';
-                this.style.borderColor = '#4ade80 !important';
-                this.style.color = '#4ade80 !important';
-                // Keep this button enabled so it can be clicked again
+            } else {
+                nextBtn.style.opacity = '0.5';
+                nextBtn.style.pointerEvents = 'none';
+                nextBtn.dataset.ready = 'false';
             }
         });
-        btnWrapper.appendChild(yesBtn);
 
         // ---- BACK BUTTON ----
         const noBtn = document.createElement('button');
@@ -12681,191 +12674,218 @@ function getStepData(step) {
             borderRadius: '40px', cursor: 'pointer', fontSize: '0.85rem'
         });
         noBtn.addEventListener('click', () => { onboardingStep = 3; renderStep(3); });
-        btnWrapper.appendChild(noBtn);
+        wrapper.appendChild(noBtn);
 
-        container.appendChild(btnWrapper);
+        container.appendChild(wrapper);
     }
 },
         // ---- YOUR EXISTING STEP 5 (now step 6) ----
-        6: {
-            title: '📤 Upload your categories file',
-            description: 'Now paste or upload the <strong>JSON file</strong> that the AI generated for you.<br><br>This will build your knowledge map — the <strong>brain</strong>.',
-            render: (container) => {
-                const zone = document.createElement('div');
-                Object.assign(zone.style, {
-                    border: '2px dashed rgba(45,212,191,0.3)', borderRadius: '20px',
-                    padding: '30px 20px', textAlign: 'center', cursor: 'pointer',
-                    transition: '0.2s', background: 'rgba(0,0,0,0.2)', marginTop: '4px'
-                });
-                zone.innerHTML = `
-                    <div style="font-size: 2.5rem; margin-bottom: 8px;">📄</div>
-                    <div style="font-weight: 600; color: #cbd5e1;">Drag & drop your JSON file here</div>
-                    <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 4px;">or click to browse</div>
-                `;
+6: {
+    title: '📤 Upload your categories file',
+    description: 'Now paste or upload the <strong>JSON file</strong> that the AI generated for you.<br><br>This will build your knowledge map — the <strong>brain</strong>.',
+    render: (container) => {
+        const zone = document.createElement('div');
+        Object.assign(zone.style, {
+            border: '2px dashed rgba(45,212,191,0.3)', borderRadius: '20px',
+            padding: '30px 20px', textAlign: 'center', cursor: 'pointer',
+            transition: '0.2s', background: 'rgba(0,0,0,0.2)', marginTop: '4px'
+        });
+        zone.innerHTML = `
+            <div style="font-size: 2.5rem; margin-bottom: 8px;">📄</div>
+            <div style="font-weight: 600; color: #cbd5e1;">Drag & drop your JSON file here</div>
+            <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 4px;">or click to browse</div>
+        `;
 
-                const fileInput = document.createElement('input');
-                fileInput.type = 'file'; fileInput.accept = '.json'; fileInput.style.display = 'none';
-                zone.addEventListener('click', () => fileInput.click());
-                zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.style.borderColor = '#2dd4bf'; zone.style.background = 'rgba(45,212,191,0.05)'; });
-                zone.addEventListener('dragleave', () => { zone.style.borderColor = 'rgba(45,212,191,0.3)'; zone.style.background = 'rgba(0,0,0,0.2)'; });
-                zone.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    zone.style.borderColor = 'rgba(45,212,191,0.3)'; zone.style.background = 'rgba(0,0,0,0.2)';
-                    const files = e.dataTransfer.files;
-                    if (files.length > 0) handleOnboardingFile(files[0], zone);
-                });
-                fileInput.addEventListener('change', (e) => {
-                    if (e.target.files.length > 0) handleOnboardingFile(e.target.files[0], zone);
-                });
-                container.appendChild(zone);
-                container.appendChild(fileInput);
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file'; fileInput.accept = '.json'; fileInput.style.display = 'none';
+        zone.addEventListener('click', () => fileInput.click());
+        zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.style.borderColor = '#2dd4bf'; zone.style.background = 'rgba(45,212,191,0.05)'; });
+        zone.addEventListener('dragleave', () => { zone.style.borderColor = 'rgba(45,212,191,0.3)'; zone.style.background = 'rgba(0,0,0,0.2)'; });
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            zone.style.borderColor = 'rgba(45,212,191,0.3)'; zone.style.background = 'rgba(0,0,0,0.2)';
+            const files = e.dataTransfer.files;
+            if (files.length > 0) handleOnboardingFile(files[0], zone);
+        });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) handleOnboardingFile(e.target.files[0], zone);
+        });
+        container.appendChild(zone);
+        container.appendChild(fileInput);
 
-                const pasteArea = document.createElement('div');
-                pasteArea.style.cssText = 'margin-top: 12px; display: flex; gap: 8px; align-items: center;';
-                const pasteInput = document.createElement('textarea');
-                pasteInput.placeholder = 'Or paste the JSON text here...';
-                // ---------- DUAL‑COLOR BORDER ----------
-                pasteInput.style.cssText = `
-                    flex: 1; padding: 12px 16px; border-radius: 16px;
-                    background: rgba(0,0,0,0.4);
-                    border: 2px solid rgba(255,255,255,0.8);
-                    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.8);
-                    color: #f8fafc; font-family: monospace; font-size: 0.8rem;
-                    resize: vertical; min-height: 60px; outline: none;
-                `;
-                pasteInput.addEventListener('input', () => {
-                    const val = pasteInput.value.trim();
-                    if (val) {
-                        try {
-                            const parsed = JSON.parse(val);
-                            const items = parsed.items || (parsed.type === 'categories' ? parsed.items : null);
-                            if (items && Array.isArray(items) && items.length > 0) {
-                                pasteInput.style.borderColor = '#4ade80';
-                                pasteInput.dataset.json = val;
-                                buildBtn.style.opacity = '1'; buildBtn.style.pointerEvents = 'auto';
-                            } else {
-                                pasteInput.style.borderColor = '#f43f5e';
-                                buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
-                            }
-                        } catch (e) {
-                            pasteInput.style.borderColor = '#f43f5e';
-                            buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
-                        }
-                    } else {
-                        pasteInput.style.borderColor = 'rgba(255,255,255,0.8)';
-                        buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
-                    }
-                });
-                pasteArea.appendChild(pasteInput);
-                container.appendChild(pasteArea);
-
-                // ===== BUILD BUTTON =====
-                const buildBtn = document.createElement('button');
-                buildBtn.className = 'btn-primary';
-                buildBtn.id = 'onboarding-build-btn';
-                const subject = onboardingSubject || 'Brain';
-                buildBtn.textContent = `🧠 Build My ${subject} Brain`;
-                Object.assign(buildBtn.style, {
-                    background: 'rgba(45,212,191,0.15) !important',
-                    borderColor: '#2dd4bf !important', color: '#2dd4bf !important',
-                    padding: '14px 24px', borderRadius: '40px', fontWeight: '700',
-                    fontSize: '1rem', cursor: 'pointer', width: '100%', marginTop: '16px',
-                    opacity: '0.5', pointerEvents: 'none', transition: '0.2s'
-                });
-
-                buildBtn.addEventListener('click', async () => {
-                    buildBtn.textContent = '⏳ Building...';
-                    buildBtn.style.opacity = '0.7'; buildBtn.style.pointerEvents = 'none';
-
-                    const zoneData = zone.dataset.jsonData;
-                    const pasteData = pasteInput.dataset.json;
-                    let jsonData = zoneData || pasteData;
-                    if (!jsonData) {
-                        UI.toast('⚠️ Please upload or paste your categories JSON first.');
-                        buildBtn.textContent = `🧠 Build My ${subject} Brain`;
-                        buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
-                        return;
-                    }
-
-                    const success = await processOnboardingCategories(jsonData);
-                    if (!success) {
-                        UI.toast('❌ Build failed. Check console for errors.');
-                        buildBtn.textContent = `🧠 Build My ${subject} Brain`;
+        const pasteArea = document.createElement('div');
+        pasteArea.style.cssText = 'margin-top: 12px; display: flex; gap: 8px; align-items: center;';
+        const pasteInput = document.createElement('textarea');
+        pasteInput.placeholder = 'Or paste the JSON text here...';
+        // ---------- DUAL‑COLOR BORDER ----------
+        pasteInput.style.cssText = `
+            flex: 1; padding: 12px 16px; border-radius: 16px;
+            background: rgba(0,0,0,0.4);
+            border: 2px solid rgba(255,255,255,0.8);
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.8);
+            color: #f8fafc; font-family: monospace; font-size: 0.8rem;
+            resize: vertical; min-height: 60px; outline: none;
+        `;
+        pasteInput.addEventListener('input', () => {
+            const val = pasteInput.value.trim();
+            if (val) {
+                try {
+                    const parsed = JSON.parse(val);
+                    const items = parsed.items || (parsed.type === 'categories' ? parsed.items : null);
+                    if (items && Array.isArray(items) && items.length > 0) {
+                        pasteInput.style.borderColor = '#4ade80';
+                        pasteInput.dataset.json = val;
                         buildBtn.style.opacity = '1'; buildBtn.style.pointerEvents = 'auto';
-                        return;
+                    } else {
+                        pasteInput.style.borderColor = '#f43f5e';
+                        buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
                     }
-
-                    // ✅ Success! Move to step 7 (the final "Your brain is ready" step)
-                    onboardingStep = 7;
-                    renderStep(7);
-                });
-
-                container.appendChild(buildBtn);
-
-                const activateBuild = () => { buildBtn.style.opacity = '1'; buildBtn.style.pointerEvents = 'auto'; };
-
-                async function handleOnboardingFile(file, zoneEl) {
-                    try {
-                        const text = await file.text();
-                        const data = JSON.parse(text);
-                        if (!data.items && !data.type) {
-                            zoneEl.style.borderColor = '#f43f5e';
-                            zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">❌</div><div style="font-weight: 600; color: #f43f5e;">Invalid categories file</div>`;
-                            return;
-                        }
-                        zoneEl.style.borderColor = '#4ade80'; zoneEl.style.background = 'rgba(74,222,128,0.05)';
-                        zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">✅</div><div style="font-weight: 600; color: #4ade80;">File loaded successfully!</div><div style="font-size: 0.85rem; color: #94a3b8;">${file.name}</div>`;
-                        zoneEl.dataset.jsonData = JSON.stringify(data);
-                        activateBuild();
-                    } catch (err) {
-                        zoneEl.style.borderColor = '#f43f5e';
-                        zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">❌</div><div style="font-weight: 600; color: #f43f5e;">Error reading file: ${err.message}</div>`;
-                    }
+                } catch (e) {
+                    pasteInput.style.borderColor = '#f43f5e';
+                    buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
                 }
+            } else {
+                pasteInput.style.borderColor = 'rgba(255,255,255,0.8)';
+                buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
             }
-        },
-        // ---- YOUR EXISTING STEP 6 (now step 7) ----
-        7: {
-            title: '🧠 Your brain is ready!',
-            description: '',
-            render: (container) => {
-                const msg = document.createElement('div');
-                msg.style.cssText = 'text-align: center; padding: 8px 0;';
-                const brainIcon = document.createElement('div');
-                brainIcon.style.cssText = 'font-size: 4rem; margin-bottom: 8px;';
-                brainIcon.textContent = '🧠';
-                msg.appendChild(brainIcon);
+        });
 
-                const typewriterContainer = document.createElement('div');
-                typewriterContainer.id = 'onboarding-typewriter';
-                Object.assign(typewriterContainer.style, {
-                    fontFamily: "'Fira Code', monospace", fontSize: '1.1rem',
-                    lineHeight: '1.8', color: '#e2e8f0', minHeight: '80px',
-                    padding: '12px 16px', background: 'rgba(0,0,0,0.3)',
-                    borderRadius: '16px', borderLeft: '3px solid #2dd4bf',
-                    textAlign: 'left', margin: '8px 0', whiteSpace: 'pre-wrap'
-                });
-                msg.appendChild(typewriterContainer);
+        // ---- ENTER KEY SUPPORT ----
+        pasteInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && buildBtn.style.pointerEvents !== 'none') {
+                buildBtn.click();
+            }
+        });
 
-                const subject = onboardingSubject || 'your subject';
-                // Surprise message with 3D brain reference
-                const typeText = `Your ${subject} brain is ready.\nA 3D knowledge map – a network of stars – is waiting for you.\nEach star holds a concept. As you study, they glow from red to green.\n\n🚀 Your 7‑day free trial starts now – time to explore!`;
-                container.appendChild(msg);
+        pasteArea.appendChild(pasteInput);
+        container.appendChild(pasteArea);
 
-                setTimeout(() => {
-                    typewriterEffect(typewriterContainer, typeText, 25, () => {
-                        setTimeout(() => {
-                            const nextBtn = document.getElementById('onboarding-next-btn');
-                            nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto'; nextBtn.dataset.ready = 'true';
-                            nextBtn.textContent = '✨ Start Exploring';
-                            // Glowing pulse effect on the button
-                            nextBtn.style.animation = 'pulseGlow 1.5s ease-in-out infinite';
-                            nextBtn.style.boxShadow = '0 0 20px rgba(45,212,191,0.6)';
-                        }, 400);
-                    });
-                }, 300);
+        // ===== BUILD BUTTON =====
+        const buildBtn = document.createElement('button');
+        buildBtn.className = 'btn-primary';
+        buildBtn.id = 'onboarding-build-btn';
+        const subject = onboardingSubject || 'Brain';
+        buildBtn.textContent = `🧠 Build My ${subject} Brain`;
+        Object.assign(buildBtn.style, {
+            background: 'rgba(45,212,191,0.15) !important',
+            borderColor: '#2dd4bf !important', color: '#2dd4bf !important',
+            padding: '14px 24px', borderRadius: '40px', fontWeight: '700',
+            fontSize: '1rem', cursor: 'pointer', width: '100%', marginTop: '16px',
+            opacity: '0.5', pointerEvents: 'none', transition: '0.2s'
+        });
+
+        buildBtn.addEventListener('click', async () => {
+            buildBtn.textContent = '⏳ Building...';
+            buildBtn.style.opacity = '0.7'; buildBtn.style.pointerEvents = 'none';
+
+            const zoneData = zone.dataset.jsonData;
+            const pasteData = pasteInput.dataset.json;
+            let jsonData = zoneData || pasteData;
+            if (!jsonData) {
+                UI.toast('⚠️ Please upload or paste your categories JSON first.');
+                buildBtn.textContent = `🧠 Build My ${subject} Brain`;
+                buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
+                return;
+            }
+
+            const success = await processOnboardingCategories(jsonData);
+            if (!success) {
+                UI.toast('❌ Build failed. Check console for errors.');
+                buildBtn.textContent = `🧠 Build My ${subject} Brain`;
+                buildBtn.style.opacity = '1'; buildBtn.style.pointerEvents = 'auto';
+                return;
+            }
+
+            // ✅ Success! Move to step 7 (the final "Your brain is ready" step)
+            onboardingStep = 7;
+            renderStep(7);
+        });
+
+        container.appendChild(buildBtn);
+
+        // ---- "I DON'T UNDERSTAND" BUTTON ----
+        const helpBtn = document.createElement('button');
+        helpBtn.className = 'btn-secondary';
+        helpBtn.textContent = '❓ I don’t understand – take me back';
+        Object.assign(helpBtn.style, {
+            background: 'rgba(255,255,255,0.06) !important',
+            border: '1px solid rgba(255,255,255,0.1) !important',
+            color: '#94a3b8 !important', padding: '10px 20px',
+            borderRadius: '40px', cursor: 'pointer', fontSize: '0.85rem',
+            marginTop: '8px'
+        });
+        helpBtn.addEventListener('click', () => {
+            onboardingStep = 5;
+            renderStep(5);
+        });
+        container.appendChild(helpBtn);
+
+        const activateBuild = () => { buildBtn.style.opacity = '1'; buildBtn.style.pointerEvents = 'auto'; };
+
+        async function handleOnboardingFile(file, zoneEl) {
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                if (!data.items && !data.type) {
+                    zoneEl.style.borderColor = '#f43f5e';
+                    zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">❌</div><div style="font-weight: 600; color: #f43f5e;">Invalid categories file</div>`;
+                    return;
+                }
+                zoneEl.style.borderColor = '#4ade80'; zoneEl.style.background = 'rgba(74,222,128,0.05)';
+                zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">✅</div><div style="font-weight: 600; color: #4ade80;">File loaded successfully!</div><div style="font-size: 0.85rem; color: #94a3b8;">${file.name}</div>`;
+                zoneEl.dataset.jsonData = JSON.stringify(data);
+                activateBuild();
+            } catch (err) {
+                zoneEl.style.borderColor = '#f43f5e';
+                zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">❌</div><div style="font-weight: 600; color: #f43f5e;">Error reading file: ${err.message}</div>`;
             }
         }
+    }
+},
+        // ---- YOUR EXISTING STEP 6 (now step 7) ----
+7: {
+    title: '🧠 Your brain is ready!',
+    description: '',
+    render: (container) => {
+        const msg = document.createElement('div');
+        msg.style.cssText = 'text-align: center; padding: 8px 0;';
+        const brainIcon = document.createElement('div');
+        brainIcon.style.cssText = 'font-size: 4rem; margin-bottom: 8px;';
+        brainIcon.textContent = '🧠';
+        msg.appendChild(brainIcon);
+
+        const typewriterContainer = document.createElement('div');
+        typewriterContainer.id = 'onboarding-typewriter';
+        Object.assign(typewriterContainer.style, {
+            fontFamily: "'Fira Code', monospace", fontSize: '1.1rem',
+            lineHeight: '1.8', color: '#e2e8f0', minHeight: '80px',
+            padding: '12px 16px', background: 'rgba(0,0,0,0.3)',
+            borderRadius: '16px', borderLeft: '3px solid #2dd4bf',
+            textAlign: 'left', margin: '8px 0', whiteSpace: 'pre-wrap'
+        });
+        msg.appendChild(typewriterContainer);
+
+        const subject = onboardingSubject || 'knowledge';
+        // Peter Gregory's final, concise, no‑fluff hook
+        const typeText = `Your ${subject} knowledge is now a living structure.\nClick the ☰ menu to see the connections you never knew you had.`;
+
+        container.appendChild(msg);
+
+        setTimeout(() => {
+            typewriterEffect(typewriterContainer, typeText, 25, () => {
+                setTimeout(() => {
+                    const nextBtn = document.getElementById('onboarding-next-btn');
+                    nextBtn.style.opacity = '1';
+                    nextBtn.style.pointerEvents = 'auto';
+                    nextBtn.dataset.ready = 'true';
+                    nextBtn.textContent = '🚀 Explore';
+                    nextBtn.style.animation = 'pulseGlow 1.5s ease-in-out infinite';
+                    nextBtn.style.boxShadow = '0 0 20px rgba(45,212,191,0.6)';
+                }, 400);
+            });
+        }, 300);
+    }
+}
     };
     return steps[step];
 }
