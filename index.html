@@ -12933,17 +12933,41 @@ async function processOnboardingCategories(jsonText) {
             console.log('[Onboarding] Next clicked. Step=', onboardingStep, 'Ready=', nextBtn.dataset.ready);
             if (nextBtn.dataset.ready !== 'true') return;
 
-            if (onboardingStep === 7) {
-                localStorage.setItem(ONBOARDING_KEY, 'true');
-                localStorage.setItem(SUBJECT_KEY, onboardingSubject);
-                modal.remove();
-                // Make sure Brain is ready and focused
-                createOrGetBrainNode();
-                await Core.refresh();
-                Graph3D.fitToScreen(true);
-                setTimeout(() => showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring your brain'), 500);
-                return;
-            }
+if (onboardingStep === 7) {
+    localStorage.setItem(ONBOARDING_KEY, 'true');
+    localStorage.setItem(SUBJECT_KEY, onboardingSubject);
+    modal.remove();
+
+    // Collapse dock and card
+    const dock = document.getElementById('dock');
+    const card = document.getElementById('control-card');
+    if (dock) dock.classList.add('collapsed');
+    if (card) card.classList.add('collapsed');
+    localStorage.setItem('dock_collapsed', 'true');
+    localStorage.setItem('control_card_collapsed', 'true');
+
+    // Set view mode to clean text
+    if (typeof window.setView === 'function') {
+        window.setView('clean', true);
+    } else {
+        const container = document.getElementById('folder-view-container');
+        if (container) {
+            container.classList.remove('list-view', 'grid-view', 'details-view', 'tiles-view', 'prog-view', 'size-view', 'clean-view', 'compact-view', 'huge-view', 'text-view');
+            container.classList.add('clean-view');
+        }
+        localStorage.setItem('folder_view_mode', 'clean-view');
+    }
+
+    // Go to root (no extra Brain node)
+    State.focusId = 'root';
+    State.path = [];
+    await Core.refresh();
+    Graph3D.fitToScreen(true);
+
+    // Show arrow pointing to three‑bar menu
+    setTimeout(() => showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring your brain'), 500);
+    return;
+}
 
             onboardingStep++;
             renderStep(onboardingStep);
