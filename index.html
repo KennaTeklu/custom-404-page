@@ -4240,6 +4240,7 @@ const DB = {
         History.push();
     }
 };
+window.DB = DB;
 
 // Optional: auto-save middleware (uncomment if needed)
 // let autoSaveTimer;
@@ -4600,6 +4601,7 @@ const MathCore = {
         categories.forEach(c => MathCore.cascade(c.id));
     }
 };
+window.MathCore = MathCore;
 
 // ----------------------------------------------------------------------------
 // 3. PARSER & INGESTION (from 2D – handles categories & books, duplicates)
@@ -12109,6 +12111,7 @@ function validateHTML(html) {
     function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
     let onboardingSubject = '';
+	let onboardingLanguage = 'English';
     let onboardingStep = 1;
     let arrowShown = false;
 
@@ -12282,7 +12285,7 @@ function validateHTML(html) {
         Object.assign(progress.style, {
             display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '24px'
         });
-        for (let i = 1; i <= 6; i++) {
+        for (let i = 1; i <= 7; i++) {
             const dot = document.createElement('span');
             dot.dataset.step = i;
             Object.assign(dot.style, {
@@ -12413,370 +12416,435 @@ function validateHTML(html) {
             nextBtn.dataset.ready = 'false';
         }
 
-        function getStepData(step) {
-            const steps = {
-                1: {
-                    title: '🧠 Welcome to your Brain',
-                    description: 'What are you here to study? Type your primary subject or goal below.',
-                    render: (container) => {
-                        const input = document.createElement('input');
-                        input.id = 'onboarding-subject-input';
-                        input.type = 'text';
-                        input.placeholder = 'e.g. USMLE, MCAT, FAA, Gaokao, TOEFL...';
-                        Object.assign(input.style, {
-                            width: '100%', padding: '14px 18px', borderRadius: '40px',
-                            background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)',
-                            color: '#f8fafc', fontSize: '1rem', outline: 'none', marginTop: '4px'
-                        });
-                        input.addEventListener('input', () => {
-                            const val = input.value.trim();
-                            const btn = document.getElementById('onboarding-next-btn');
-                            if (val.length >= 2) {
-                                btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; btn.dataset.ready = 'true';
-                                onboardingSubject = val;
-                            } else {
-                                btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; btn.dataset.ready = 'false';
-                            }
-                        });
-                        container.appendChild(input);
-                        setTimeout(() => input.focus(), 100);
+function getStepData(step) {
+    const steps = {
+        1: {
+            title: '🧠 Welcome to your Brain',
+            description: 'What are you here to study? Type your primary subject or goal below.',
+            render: (container) => {
+                const input = document.createElement('input');
+                input.id = 'onboarding-subject-input';
+                input.type = 'text';
+                input.placeholder = 'e.g. USMLE, MCAT, FAA, book, TOEFL...';
+                Object.assign(input.style, {
+                    width: '100%', padding: '14px 18px', borderRadius: '40px',
+                    background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)',
+                    color: '#f8fafc', fontSize: '1rem', outline: 'none', marginTop: '4px'
+                });
+                input.addEventListener('input', () => {
+                    const val = input.value.trim();
+                    const btn = document.getElementById('onboarding-next-btn');
+                    if (val.length >= 2) {
+                        btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; btn.dataset.ready = 'true';
+                        onboardingSubject = val;
+                    } else {
+                        btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; btn.dataset.ready = 'false';
                     }
-                },
-                2: {
-                    title: '📝 Prepare your study material',
-                    description: 'To study effectively, you need a <strong>note or document</strong> that contains the content you want to learn.<br><br>When you have your material ready, type the phrase below to confirm.',
-                    render: (container) => {
-                        const wrapper = document.createElement('div');
-                        Object.assign(wrapper.style, {
-                            background: 'rgba(0,0,0,0.3)', borderRadius: '16px',
-                            padding: '16px 20px', border: '1px solid rgba(255,255,255,0.06)', marginTop: '4px'
-                        });
-                        const label = document.createElement('p');
-                        Object.assign(label.style, { fontSize: '0.85rem', color: '#94a3b8', margin: '0 0 8px 0' });
-                        label.textContent = 'Type exactly: "I have my files ready"';
-                        wrapper.appendChild(label);
+                });
+                container.appendChild(input);
+                setTimeout(() => input.focus(), 100);
+            }
+        },
+        // ---- NEW LANGUAGE STEP ----
+        2: {
+            title: '🌐 Choose your language',
+            description: 'Select the language you want your content and quizzes to be in. You can type a language or pick from the list.',
+            render: (container) => {
+                const wrapper = document.createElement('div');
+                wrapper.style.cssText = 'display: flex; flex-direction: column; gap: 12px; margin-top: 8px;';
 
-                        const input = document.createElement('input');
-                        input.id = 'onboarding-ready-input';
-                        input.type = 'text';
-                        input.placeholder = 'I have my files ready';
-                        Object.assign(input.style, {
-                            width: '100%', padding: '12px 16px', borderRadius: '40px',
-                            background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)',
-                            color: '#f8fafc', fontSize: '0.95rem', outline: 'none'
-                        });
-                        input.addEventListener('input', () => {
-                            const val = input.value.trim().toLowerCase();
-                            const btn = document.getElementById('onboarding-next-btn');
-                            if (val === 'i have my files ready') {
-                                btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; btn.dataset.ready = 'true';
-                            } else {
-                                btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; btn.dataset.ready = 'false';
-                            }
-                        });
-                        wrapper.appendChild(input);
-                        container.appendChild(wrapper);
-                        setTimeout(() => input.focus(), 100);
-                    }
-                },
-                3: {
-                    title: '📋 Get your categories file',
-                    description: 'Click the button below to copy a <strong>special prompt</strong>. Then go to your favorite AI website (ChatGPT, Claude, DeepSeek, etc.), paste the prompt, and upload your study notes. The AI will give you a JSON file.',
-                    render: (container) => {
-                        const btnWrapper = document.createElement('div');
-                        btnWrapper.style.cssText = 'display: flex; flex-direction: column; gap: 12px; margin-top: 8px;';
+                const languages = [
+                    'English', 'Spanish', 'French', 'German', 'Italian', 'Portuguese',
+                    'Russian', 'Arabic', 'Chinese (Simplified)', 'Japanese', 'Korean',
+                    'Hindi', 'Bengali', 'Urdu', 'Turkish', 'Dutch', 'Polish', 'Swedish'
+                ];
 
-                        const copyBtn = document.createElement('button');
-                        copyBtn.className = 'btn-primary';
-                        copyBtn.id = 'onboarding-copy-prompt-btn';
-                        copyBtn.innerHTML = '📋 Copy AI Prompt';
-                        Object.assign(copyBtn.style, {
-                            background: 'rgba(45,212,191,0.15) !important',
-                            borderColor: '#2dd4bf !important', color: '#2dd4bf !important',
-                            padding: '14px 24px', borderRadius: '40px', fontWeight: '600',
-                            fontSize: '1rem', cursor: 'pointer', width: '100%'
-                        });
-                        copyBtn.addEventListener('click', async () => {
-                            const prompt = getCategoriesPrompt();
-                            try {
-                                await navigator.clipboard.writeText(prompt);
-                                copyBtn.innerHTML = '✅ Copied! Good job!';
-                                copyBtn.style.background = 'rgba(74,222,128,0.15) !important';
-                                copyBtn.style.borderColor = '#4ade80 !important';
-                                copyBtn.style.color = '#4ade80 !important';
+                const select = document.createElement('select');
+                Object.assign(select.style, {
+                    width: '100%', padding: '12px 16px', borderRadius: '40px',
+                    background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)',
+                    color: '#f8fafc', fontSize: '1rem', outline: 'none'
+                });
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '-- Select a language --';
+                select.appendChild(defaultOption);
+                languages.forEach(lang => {
+                    const opt = document.createElement('option');
+                    opt.value = lang;
+                    opt.textContent = lang;
+                    select.appendChild(opt);
+                });
 
-                                const explain = document.createElement('div');
-                                Object.assign(explain.style, {
-                                    background: 'rgba(0,0,0,0.3)', borderRadius: '16px',
-                                    padding: '14px 18px', borderLeft: '3px solid #2dd4bf',
-                                    marginTop: '8px', fontSize: '0.9rem', color: '#cbd5e1', lineHeight: '1.6'
-                                });
-                                explain.innerHTML = `
-                                    <strong>📌 What to do next:</strong><br>
-                                    1. Go to <strong>ChatGPT, Claude, DeepSeek, or any AI</strong>.<br>
-                                    2. Paste the prompt and upload your study notes.<br>
-                                    3. The AI will give you a <strong>JSON file</strong> with your categories.<br>
-                                    4. Save that file to your computer.<br><br>
-                                    <em style="color:#94a3b8;">When you have the file, click "Next" below.</em>
-                                `;
-                                btnWrapper.appendChild(explain);
+                const manualInput = document.createElement('input');
+                manualInput.type = 'text';
+                manualInput.placeholder = 'Or type your language...';
+                Object.assign(manualInput.style, {
+                    width: '100%', padding: '12px 16px', borderRadius: '40px',
+                    background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)',
+                    color: '#f8fafc', fontSize: '1rem', outline: 'none', marginTop: '4px'
+                });
 
-                                const nextBtn = document.getElementById('onboarding-next-btn');
-                                nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto'; nextBtn.dataset.ready = 'true';
-                            } catch (err) {
-                                copyBtn.textContent = '❌ Copy failed - try again';
-                                setTimeout(() => {
-                                    copyBtn.innerHTML = '📋 Copy AI Prompt';
-                                    copyBtn.style.background = 'rgba(45,212,191,0.15) !important';
-                                    copyBtn.style.borderColor = '#2dd4bf !important';
-                                    copyBtn.style.color = '#2dd4bf !important';
-                                }, 2000);
-                            }
-                        });
-                        btnWrapper.appendChild(copyBtn);
-
-                        const promptPreview = document.createElement('details');
-                        Object.assign(promptPreview.style, {
-                            background: 'rgba(0,0,0,0.2)', borderRadius: '12px',
-                            padding: '8px 12px', fontSize: '0.8rem', color: '#94a3b8'
-                        });
-                        const summary = document.createElement('summary');
-                        summary.textContent = '📄 Preview the prompt (optional)';
-                        summary.style.cssText = 'cursor: pointer; font-weight: 500; color: #cbd5e1;';
-                        promptPreview.appendChild(summary);
-                        const pre = document.createElement('pre');
-                        Object.assign(pre.style, {
-                            whiteSpace: 'pre-wrap', wordBreak: 'break-word',
-                            fontFamily: 'monospace', fontSize: '0.75rem', color: '#94a3b8',
-                            marginTop: '8px', maxHeight: '180px', overflowY: 'auto',
-                            padding: '8px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px'
-                        });
-                        pre.textContent = getCategoriesPrompt();
-                        promptPreview.appendChild(pre);
-                        btnWrapper.appendChild(promptPreview);
-                        container.appendChild(btnWrapper);
-                    }
-                },
-                4: {
-                    title: '📁 Do you have the file ready?',
-                    description: 'Have you pasted the prompt into an AI and received your <strong>categories JSON file</strong>?',
-                    render: (container) => {
-                        const btnWrapper = document.createElement('div');
-                        btnWrapper.style.cssText = 'display: flex; flex-direction: column; gap: 12px; margin-top: 8px;';
-
-                        const yesBtn = document.createElement('button');
-                        yesBtn.className = 'btn-primary';
-                        yesBtn.textContent = '✅ Yes, I have the file!';
-                        Object.assign(yesBtn.style, {
-                            background: 'rgba(45,212,191,0.15) !important',
-                            borderColor: '#2dd4bf !important', color: '#2dd4bf !important',
-                            padding: '14px 24px', borderRadius: '40px', fontWeight: '600',
-                            fontSize: '1rem', cursor: 'pointer', width: '100%'
-                        });
-                        yesBtn.addEventListener('click', () => {
-                            const nextBtn = document.getElementById('onboarding-next-btn');
-                            nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto'; nextBtn.dataset.ready = 'true';
-                            yesBtn.textContent = '✅ Great! Click Next →';
-                            yesBtn.style.background = 'rgba(74,222,128,0.15) !important';
-                            yesBtn.style.borderColor = '#4ade80 !important';
-                            yesBtn.style.color = '#4ade80 !important';
-                            yesBtn.disabled = true;
-                        });
-                        btnWrapper.appendChild(yesBtn);
-
-                        const noBtn = document.createElement('button');
-                        noBtn.className = 'btn-secondary';
-                        noBtn.textContent = '← Not yet, take me back';
-                        Object.assign(noBtn.style, {
-                            background: 'rgba(255,255,255,0.06) !important',
-                            border: '1px solid rgba(255,255,255,0.1) !important',
-                            color: '#94a3b8 !important', padding: '10px 20px',
-                            borderRadius: '40px', cursor: 'pointer', fontSize: '0.85rem'
-                        });
-                        noBtn.addEventListener('click', () => { onboardingStep = 3; renderStep(3); });
-                        btnWrapper.appendChild(noBtn);
-                        container.appendChild(btnWrapper);
-                    }
-                },
-                5: {
-                    title: '📤 Upload your categories file',
-                    description: 'Now paste or upload the <strong>JSON file</strong> that the AI generated for you.<br><br>This will build your knowledge map — the <strong>brain</strong>.',
-                    render: (container) => {
-                        const zone = document.createElement('div');
-                        Object.assign(zone.style, {
-                            border: '2px dashed rgba(45,212,191,0.3)', borderRadius: '20px',
-                            padding: '30px 20px', textAlign: 'center', cursor: 'pointer',
-                            transition: '0.2s', background: 'rgba(0,0,0,0.2)', marginTop: '4px'
-                        });
-                        zone.innerHTML = `
-                            <div style="font-size: 2.5rem; margin-bottom: 8px;">📄</div>
-                            <div style="font-weight: 600; color: #cbd5e1;">Drag & drop your JSON file here</div>
-                            <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 4px;">or click to browse</div>
-                        `;
-
-                        const fileInput = document.createElement('input');
-                        fileInput.type = 'file'; fileInput.accept = '.json'; fileInput.style.display = 'none';
-                        zone.addEventListener('click', () => fileInput.click());
-                        zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.style.borderColor = '#2dd4bf'; zone.style.background = 'rgba(45,212,191,0.05)'; });
-                        zone.addEventListener('dragleave', () => { zone.style.borderColor = 'rgba(45,212,191,0.3)'; zone.style.background = 'rgba(0,0,0,0.2)'; });
-                        zone.addEventListener('drop', (e) => {
-                            e.preventDefault();
-                            zone.style.borderColor = 'rgba(45,212,191,0.3)'; zone.style.background = 'rgba(0,0,0,0.2)';
-                            const files = e.dataTransfer.files;
-                            if (files.length > 0) handleOnboardingFile(files[0], zone);
-                        });
-                        fileInput.addEventListener('change', (e) => {
-                            if (e.target.files.length > 0) handleOnboardingFile(e.target.files[0], zone);
-                        });
-                        container.appendChild(zone);
-                        container.appendChild(fileInput);
-
-                        const pasteArea = document.createElement('div');
-                        pasteArea.style.cssText = 'margin-top: 12px; display: flex; gap: 8px; align-items: center;';
-                        const pasteInput = document.createElement('textarea');
-                        pasteInput.placeholder = 'Or paste the JSON text here...';
-                        Object.assign(pasteInput.style, {
-                            flex: '1', padding: '12px 16px', borderRadius: '16px',
-                            background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)',
-                            color: '#f8fafc', fontFamily: 'monospace', fontSize: '0.8rem',
-                            resize: 'vertical', minHeight: '60px', outline: 'none'
-                        });
-                        pasteInput.addEventListener('input', () => {
-                            const val = pasteInput.value.trim();
-                            if (val) {
-                                try {
-                                    const parsed = JSON.parse(val);
-                                    const items = parsed.items || (parsed.type === 'categories' ? parsed.items : null);
-                                    if (items && Array.isArray(items) && items.length > 0) {
-                                        pasteInput.style.borderColor = '#4ade80';
-                                        pasteInput.dataset.json = val;
-                                        buildBtn.style.opacity = '1'; buildBtn.style.pointerEvents = 'auto';
-                                    } else {
-                                        pasteInput.style.borderColor = '#f43f5e';
-                                        buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
-                                    }
-                                } catch (e) {
-                                    pasteInput.style.borderColor = '#f43f5e';
-                                    buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
-                                }
-                            } else {
-                                pasteInput.style.borderColor = 'rgba(255,255,255,0.12)';
-                                buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
-                            }
-                        });
-                        pasteArea.appendChild(pasteInput);
-                        container.appendChild(pasteArea);
-
-                        // ===== NEW DEDICATED BUILD BUTTON =====
-                        const buildBtn = document.createElement('button');
-                        buildBtn.className = 'btn-primary';
-                        buildBtn.id = 'onboarding-build-btn';
-                        const subject = onboardingSubject || 'Brain';
-                        buildBtn.textContent = `🧠 Build My ${subject} Brain`;
-                        Object.assign(buildBtn.style, {
-                            background: 'rgba(45,212,191,0.15) !important',
-                            borderColor: '#2dd4bf !important', color: '#2dd4bf !important',
-                            padding: '14px 24px', borderRadius: '40px', fontWeight: '700',
-                            fontSize: '1rem', cursor: 'pointer', width: '100%', marginTop: '16px',
-                            opacity: '0.5', pointerEvents: 'none', transition: '0.2s'
-                        });
-
-                        buildBtn.addEventListener('click', async () => {
-                            buildBtn.textContent = '⏳ Building...';
-                            buildBtn.style.opacity = '0.7'; buildBtn.style.pointerEvents = 'none';
-
-                            const zoneData = zone.dataset.jsonData;
-                            const pasteData = pasteInput.dataset.json;
-                            let jsonData = zoneData || pasteData;
-                            if (!jsonData) {
-                                UI.toast('⚠️ Please upload or paste your categories JSON first.');
-                                buildBtn.textContent = `🧠 Build My ${subject} Brain`;
-                                buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
-                                return;
-                            }
-
-                            const success = await processOnboardingCategories(jsonData);
-                            if (!success) {
-                                UI.toast('❌ Build failed. Check console for errors.');
-                                buildBtn.textContent = `🧠 Build My ${subject} Brain`;
-                                buildBtn.style.opacity = '1'; buildBtn.style.pointerEvents = 'auto';
-                                return;
-                            }
-
-                            // ✅ Success! Automatically move to Step 6
-                            onboardingStep = 6;
-                            renderStep(6);
-                        });
-
-                        container.appendChild(buildBtn);
-
-                        // Helper to activate build button
-                        const activateBuild = () => { buildBtn.style.opacity = '1'; buildBtn.style.pointerEvents = 'auto'; };
-
-                        async function handleOnboardingFile(file, zoneEl) {
-                            try {
-                                const text = await file.text();
-                                const data = JSON.parse(text);
-                                if (!data.items && !data.type) {
-                                    zoneEl.style.borderColor = '#f43f5e';
-                                    zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">❌</div><div style="font-weight: 600; color: #f43f5e;">Invalid categories file</div>`;
-                                    return;
-                                }
-                                zoneEl.style.borderColor = '#4ade80'; zoneEl.style.background = 'rgba(74,222,128,0.05)';
-                                zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">✅</div><div style="font-weight: 600; color: #4ade80;">File loaded successfully!</div><div style="font-size: 0.85rem; color: #94a3b8;">${file.name}</div>`;
-                                zoneEl.dataset.jsonData = JSON.stringify(data);
-                                activateBuild();
-                            } catch (err) {
-                                zoneEl.style.borderColor = '#f43f5e';
-                                zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">❌</div><div style="font-weight: 600; color: #f43f5e;">Error reading file: ${err.message}</div>`;
-                            }
-                        }
-                    }
-                },
-                6: {
-                    title: '🧠 Your brain is ready!',
-                    description: '',
-                    render: (container) => {
-                        const msg = document.createElement('div');
-                        msg.style.cssText = 'text-align: center; padding: 8px 0;';
-                        const brainIcon = document.createElement('div');
-                        brainIcon.style.cssText = 'font-size: 4rem; margin-bottom: 8px;';
-                        brainIcon.textContent = '🧠';
-                        msg.appendChild(brainIcon);
-
-                        const typewriterContainer = document.createElement('div');
-                        typewriterContainer.id = 'onboarding-typewriter';
-                        Object.assign(typewriterContainer.style, {
-                            fontFamily: "'Fira Code', monospace", fontSize: '1.1rem',
-                            lineHeight: '1.8', color: '#e2e8f0', minHeight: '80px',
-                            padding: '12px 16px', background: 'rgba(0,0,0,0.3)',
-                            borderRadius: '16px', borderLeft: '3px solid #2dd4bf',
-                            textAlign: 'left', margin: '8px 0', whiteSpace: 'pre-wrap'
-                        });
-                        msg.appendChild(typewriterContainer);
-
-                        const subject = onboardingSubject || 'your subject';
-                        const typeText = `This is the brain.\nImprove its color by studying "${subject}".\nEach section turns from red to green through rigorous quizzes.`;
-                        container.appendChild(msg);
-
-                        setTimeout(() => {
-                            typewriterEffect(typewriterContainer, typeText, 25, () => {
-                                setTimeout(() => {
-                                    const nextBtn = document.getElementById('onboarding-next-btn');
-                                    nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto'; nextBtn.dataset.ready = 'true';
-                                    nextBtn.textContent = '✨ Start Exploring';
-                                }, 400);
-                            });
-                        }, 300);
+                function updateLanguage() {
+                    const selectVal = select.value.trim();
+                    const manualVal = manualInput.value.trim();
+                    onboardingLanguage = selectVal || manualVal || 'English';
+                    const btn = document.getElementById('onboarding-next-btn');
+                    if (onboardingLanguage.length >= 2) {
+                        btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; btn.dataset.ready = 'true';
+                    } else {
+                        btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; btn.dataset.ready = 'false';
                     }
                 }
-            };
-            return steps[step];
-        }
 
-        function getCategoriesPrompt() {
-            const subject = onboardingSubject || 'your subject';
-            return `Act as an expert in hierarchical categorization. Based on the study material I will provide, extract the complete hierarchical structure of topics.
+                select.addEventListener('change', updateLanguage);
+                manualInput.addEventListener('input', updateLanguage);
+
+                wrapper.appendChild(select);
+                wrapper.appendChild(manualInput);
+                container.appendChild(wrapper);
+                setTimeout(() => select.focus(), 100);
+            }
+        },
+        // ---- YOUR EXISTING STEP 2 (now step 3) ----
+        3: {
+            title: '📝 Prepare your study material',
+            description: 'To study effectively, you need a <strong>note or document</strong> that contains the content you want to learn.<br><br>When you have your material ready, type the phrase below to confirm.',
+            render: (container) => {
+                const wrapper = document.createElement('div');
+                Object.assign(wrapper.style, {
+                    background: 'rgba(0,0,0,0.3)', borderRadius: '16px',
+                    padding: '16px 20px', border: '1px solid rgba(255,255,255,0.06)', marginTop: '4px'
+                });
+                const label = document.createElement('p');
+                Object.assign(label.style, { fontSize: '0.85rem', color: '#94a3b8', margin: '0 0 8px 0' });
+                label.textContent = 'Type exactly: "I have my files ready"';
+                wrapper.appendChild(label);
+
+                const input = document.createElement('input');
+                input.id = 'onboarding-ready-input';
+                input.type = 'text';
+                input.placeholder = 'I have my files ready';
+                Object.assign(input.style, {
+                    width: '100%', padding: '12px 16px', borderRadius: '40px',
+                    background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)',
+                    color: '#f8fafc', fontSize: '0.95rem', outline: 'none'
+                });
+                input.addEventListener('input', () => {
+                    const val = input.value.trim().toLowerCase();
+                    const btn = document.getElementById('onboarding-next-btn');
+                    if (val === 'i have my files ready') {
+                        btn.style.opacity = '1'; btn.style.pointerEvents = 'auto'; btn.dataset.ready = 'true';
+                    } else {
+                        btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; btn.dataset.ready = 'false';
+                    }
+                });
+                wrapper.appendChild(input);
+                container.appendChild(wrapper);
+                setTimeout(() => input.focus(), 100);
+            }
+        },
+        // ---- YOUR EXISTING STEP 3 (now step 4) ----
+        4: {
+            title: '📋 Get your categories file',
+            description: 'Click the button below to copy a <strong>special prompt</strong>. Then go to your favorite AI website (ChatGPT, Claude, DeepSeek, etc.), paste the prompt, and upload your study notes. The AI will give you a JSON file.',
+            render: (container) => {
+                const btnWrapper = document.createElement('div');
+                btnWrapper.style.cssText = 'display: flex; flex-direction: column; gap: 12px; margin-top: 8px;';
+
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'btn-primary';
+                copyBtn.id = 'onboarding-copy-prompt-btn';
+                copyBtn.innerHTML = '📋 Copy AI Prompt';
+                Object.assign(copyBtn.style, {
+                    background: 'rgba(45,212,191,0.15) !important',
+                    borderColor: '#2dd4bf !important', color: '#2dd4bf !important',
+                    padding: '14px 24px', borderRadius: '40px', fontWeight: '600',
+                    fontSize: '1rem', cursor: 'pointer', width: '100%'
+                });
+                copyBtn.addEventListener('click', async () => {
+                    const prompt = getCategoriesPrompt();
+                    try {
+                        await navigator.clipboard.writeText(prompt);
+                        copyBtn.innerHTML = '✅ Copied! Good job!';
+                        copyBtn.style.background = 'rgba(74,222,128,0.15) !important';
+                        copyBtn.style.borderColor = '#4ade80 !important';
+                        copyBtn.style.color = '#4ade80 !important';
+
+                        const explain = document.createElement('div');
+                        Object.assign(explain.style, {
+                            background: 'rgba(0,0,0,0.3)', borderRadius: '16px',
+                            padding: '14px 18px', borderLeft: '3px solid #2dd4bf',
+                            marginTop: '8px', fontSize: '0.9rem', color: '#cbd5e1', lineHeight: '1.6'
+                        });
+                        explain.innerHTML = `
+                            <strong>📌 What to do next:</strong><br>
+                            1. Go to <strong>ChatGPT, Claude, DeepSeek, or any AI</strong>.<br>
+                            2. Paste the prompt and upload your study notes.<br>
+                            3. The AI will give you a <strong>JSON file</strong> with your categories.<br>
+                            4. Save that file to your computer.<br><br>
+                            <em style="color:#94a3b8;">When you have the file, click "Next" below.</em>
+                        `;
+                        btnWrapper.appendChild(explain);
+
+                        const nextBtn = document.getElementById('onboarding-next-btn');
+                        nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto'; nextBtn.dataset.ready = 'true';
+                    } catch (err) {
+                        copyBtn.textContent = '❌ Copy failed - try again';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = '📋 Copy AI Prompt';
+                            copyBtn.style.background = 'rgba(45,212,191,0.15) !important';
+                            copyBtn.style.borderColor = '#2dd4bf !important';
+                            copyBtn.style.color = '#2dd4bf !important';
+                        }, 2000);
+                    }
+                });
+                btnWrapper.appendChild(copyBtn);
+
+                const promptPreview = document.createElement('details');
+                Object.assign(promptPreview.style, {
+                    background: 'rgba(0,0,0,0.2)', borderRadius: '12px',
+                    padding: '8px 12px', fontSize: '0.8rem', color: '#94a3b8'
+                });
+                const summary = document.createElement('summary');
+                summary.textContent = '📄 Preview the prompt (optional)';
+                summary.style.cssText = 'cursor: pointer; font-weight: 500; color: #cbd5e1;';
+                promptPreview.appendChild(summary);
+                const pre = document.createElement('pre');
+                Object.assign(pre.style, {
+                    whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                    fontFamily: 'monospace', fontSize: '0.75rem', color: '#94a3b8',
+                    marginTop: '8px', maxHeight: '180px', overflowY: 'auto',
+                    padding: '8px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px'
+                });
+                pre.textContent = getCategoriesPrompt();
+                promptPreview.appendChild(pre);
+                btnWrapper.appendChild(promptPreview);
+                container.appendChild(btnWrapper);
+            }
+        },
+        // ---- YOUR EXISTING STEP 4 (now step 5) ----
+        5: {
+            title: '📁 Do you have the file ready?',
+            description: 'Have you pasted the prompt into an AI and received your <strong>categories JSON file</strong>?',
+            render: (container) => {
+                const btnWrapper = document.createElement('div');
+                btnWrapper.style.cssText = 'display: flex; flex-direction: column; gap: 12px; margin-top: 8px;';
+
+                const yesBtn = document.createElement('button');
+                yesBtn.className = 'btn-primary';
+                yesBtn.textContent = '✅ Yes, I have the file!';
+                Object.assign(yesBtn.style, {
+                    background: 'rgba(45,212,191,0.15) !important',
+                    borderColor: '#2dd4bf !important', color: '#2dd4bf !important',
+                    padding: '14px 24px', borderRadius: '40px', fontWeight: '600',
+                    fontSize: '1rem', cursor: 'pointer', width: '100%'
+                });
+                yesBtn.addEventListener('click', () => {
+                    const nextBtn = document.getElementById('onboarding-next-btn');
+                    nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto'; nextBtn.dataset.ready = 'true';
+                    yesBtn.textContent = '✅ Great! Click Next →';
+                    yesBtn.style.background = 'rgba(74,222,128,0.15) !important';
+                    yesBtn.style.borderColor = '#4ade80 !important';
+                    yesBtn.style.color = '#4ade80 !important';
+                    yesBtn.disabled = true;
+                });
+                btnWrapper.appendChild(yesBtn);
+
+                const noBtn = document.createElement('button');
+                noBtn.className = 'btn-secondary';
+                noBtn.textContent = '← Not yet, take me back';
+                Object.assign(noBtn.style, {
+                    background: 'rgba(255,255,255,0.06) !important',
+                    border: '1px solid rgba(255,255,255,0.1) !important',
+                    color: '#94a3b8 !important', padding: '10px 20px',
+                    borderRadius: '40px', cursor: 'pointer', fontSize: '0.85rem'
+                });
+                noBtn.addEventListener('click', () => { onboardingStep = 3; renderStep(3); });
+                btnWrapper.appendChild(noBtn);
+                container.appendChild(btnWrapper);
+            }
+        },
+        // ---- YOUR EXISTING STEP 5 (now step 6) ----
+        6: {
+            title: '📤 Upload your categories file',
+            description: 'Now paste or upload the <strong>JSON file</strong> that the AI generated for you.<br><br>This will build your knowledge map — the <strong>brain</strong>.',
+            render: (container) => {
+                const zone = document.createElement('div');
+                Object.assign(zone.style, {
+                    border: '2px dashed rgba(45,212,191,0.3)', borderRadius: '20px',
+                    padding: '30px 20px', textAlign: 'center', cursor: 'pointer',
+                    transition: '0.2s', background: 'rgba(0,0,0,0.2)', marginTop: '4px'
+                });
+                zone.innerHTML = `
+                    <div style="font-size: 2.5rem; margin-bottom: 8px;">📄</div>
+                    <div style="font-weight: 600; color: #cbd5e1;">Drag & drop your JSON file here</div>
+                    <div style="font-size: 0.85rem; color: #94a3b8; margin-top: 4px;">or click to browse</div>
+                `;
+
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file'; fileInput.accept = '.json'; fileInput.style.display = 'none';
+                zone.addEventListener('click', () => fileInput.click());
+                zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.style.borderColor = '#2dd4bf'; zone.style.background = 'rgba(45,212,191,0.05)'; });
+                zone.addEventListener('dragleave', () => { zone.style.borderColor = 'rgba(45,212,191,0.3)'; zone.style.background = 'rgba(0,0,0,0.2)'; });
+                zone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    zone.style.borderColor = 'rgba(45,212,191,0.3)'; zone.style.background = 'rgba(0,0,0,0.2)';
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) handleOnboardingFile(files[0], zone);
+                });
+                fileInput.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) handleOnboardingFile(e.target.files[0], zone);
+                });
+                container.appendChild(zone);
+                container.appendChild(fileInput);
+
+                const pasteArea = document.createElement('div');
+                pasteArea.style.cssText = 'margin-top: 12px; display: flex; gap: 8px; align-items: center;';
+                const pasteInput = document.createElement('textarea');
+                pasteInput.placeholder = 'Or paste the JSON text here...';
+                Object.assign(pasteInput.style, {
+                    flex: '1', padding: '12px 16px', borderRadius: '16px',
+                    background: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)',
+                    color: '#f8fafc', fontFamily: 'monospace', fontSize: '0.8rem',
+                    resize: 'vertical', minHeight: '60px', outline: 'none'
+                });
+                pasteInput.addEventListener('input', () => {
+                    const val = pasteInput.value.trim();
+                    if (val) {
+                        try {
+                            const parsed = JSON.parse(val);
+                            const items = parsed.items || (parsed.type === 'categories' ? parsed.items : null);
+                            if (items && Array.isArray(items) && items.length > 0) {
+                                pasteInput.style.borderColor = '#4ade80';
+                                pasteInput.dataset.json = val;
+                                buildBtn.style.opacity = '1'; buildBtn.style.pointerEvents = 'auto';
+                            } else {
+                                pasteInput.style.borderColor = '#f43f5e';
+                                buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
+                            }
+                        } catch (e) {
+                            pasteInput.style.borderColor = '#f43f5e';
+                            buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
+                        }
+                    } else {
+                        pasteInput.style.borderColor = 'rgba(255,255,255,0.12)';
+                        buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
+                    }
+                });
+                pasteArea.appendChild(pasteInput);
+                container.appendChild(pasteArea);
+
+                // ===== BUILD BUTTON =====
+                const buildBtn = document.createElement('button');
+                buildBtn.className = 'btn-primary';
+                buildBtn.id = 'onboarding-build-btn';
+                const subject = onboardingSubject || 'Brain';
+                buildBtn.textContent = `🧠 Build My ${subject} Brain`;
+                Object.assign(buildBtn.style, {
+                    background: 'rgba(45,212,191,0.15) !important',
+                    borderColor: '#2dd4bf !important', color: '#2dd4bf !important',
+                    padding: '14px 24px', borderRadius: '40px', fontWeight: '700',
+                    fontSize: '1rem', cursor: 'pointer', width: '100%', marginTop: '16px',
+                    opacity: '0.5', pointerEvents: 'none', transition: '0.2s'
+                });
+
+                buildBtn.addEventListener('click', async () => {
+                    buildBtn.textContent = '⏳ Building...';
+                    buildBtn.style.opacity = '0.7'; buildBtn.style.pointerEvents = 'none';
+
+                    const zoneData = zone.dataset.jsonData;
+                    const pasteData = pasteInput.dataset.json;
+                    let jsonData = zoneData || pasteData;
+                    if (!jsonData) {
+                        UI.toast('⚠️ Please upload or paste your categories JSON first.');
+                        buildBtn.textContent = `🧠 Build My ${subject} Brain`;
+                        buildBtn.style.opacity = '0.5'; buildBtn.style.pointerEvents = 'none';
+                        return;
+                    }
+
+                    const success = await processOnboardingCategories(jsonData);
+                    if (!success) {
+                        UI.toast('❌ Build failed. Check console for errors.');
+                        buildBtn.textContent = `🧠 Build My ${subject} Brain`;
+                        buildBtn.style.opacity = '1'; buildBtn.style.pointerEvents = 'auto';
+                        return;
+                    }
+
+                    // ✅ Success! Move to step 7 (the final "Your brain is ready" step)
+                    onboardingStep = 7;
+                    renderStep(7);
+                });
+
+                container.appendChild(buildBtn);
+
+                const activateBuild = () => { buildBtn.style.opacity = '1'; buildBtn.style.pointerEvents = 'auto'; };
+
+                async function handleOnboardingFile(file, zoneEl) {
+                    try {
+                        const text = await file.text();
+                        const data = JSON.parse(text);
+                        if (!data.items && !data.type) {
+                            zoneEl.style.borderColor = '#f43f5e';
+                            zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">❌</div><div style="font-weight: 600; color: #f43f5e;">Invalid categories file</div>`;
+                            return;
+                        }
+                        zoneEl.style.borderColor = '#4ade80'; zoneEl.style.background = 'rgba(74,222,128,0.05)';
+                        zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">✅</div><div style="font-weight: 600; color: #4ade80;">File loaded successfully!</div><div style="font-size: 0.85rem; color: #94a3b8;">${file.name}</div>`;
+                        zoneEl.dataset.jsonData = JSON.stringify(data);
+                        activateBuild();
+                    } catch (err) {
+                        zoneEl.style.borderColor = '#f43f5e';
+                        zoneEl.innerHTML = `<div style="font-size: 2rem; margin-bottom: 8px;">❌</div><div style="font-weight: 600; color: #f43f5e;">Error reading file: ${err.message}</div>`;
+                    }
+                }
+            }
+        },
+        // ---- YOUR EXISTING STEP 6 (now step 7) ----
+        7: {
+            title: '🧠 Your brain is ready!',
+            description: '',
+            render: (container) => {
+                const msg = document.createElement('div');
+                msg.style.cssText = 'text-align: center; padding: 8px 0;';
+                const brainIcon = document.createElement('div');
+                brainIcon.style.cssText = 'font-size: 4rem; margin-bottom: 8px;';
+                brainIcon.textContent = '🧠';
+                msg.appendChild(brainIcon);
+
+                const typewriterContainer = document.createElement('div');
+                typewriterContainer.id = 'onboarding-typewriter';
+                Object.assign(typewriterContainer.style, {
+                    fontFamily: "'Fira Code', monospace", fontSize: '1.1rem',
+                    lineHeight: '1.8', color: '#e2e8f0', minHeight: '80px',
+                    padding: '12px 16px', background: 'rgba(0,0,0,0.3)',
+                    borderRadius: '16px', borderLeft: '3px solid #2dd4bf',
+                    textAlign: 'left', margin: '8px 0', whiteSpace: 'pre-wrap'
+                });
+                msg.appendChild(typewriterContainer);
+
+                const subject = onboardingSubject || 'your subject';
+                const typeText = `This is the brain.\nImprove its color by studying "${subject}".\nEach section turns from red to green through rigorous quizzes.`;
+                container.appendChild(msg);
+
+                setTimeout(() => {
+                    typewriterEffect(typewriterContainer, typeText, 25, () => {
+                        setTimeout(() => {
+                            const nextBtn = document.getElementById('onboarding-next-btn');
+                            nextBtn.style.opacity = '1'; nextBtn.style.pointerEvents = 'auto'; nextBtn.dataset.ready = 'true';
+                            nextBtn.textContent = '✨ Start Exploring';
+                        }, 400);
+                    });
+                }, 300);
+            }
+        }
+    };
+    return steps[step];
+}
+function getCategoriesPrompt() {
+    const subject = onboardingSubject || 'your subject';
+    const language = onboardingLanguage || 'English';
+    return `Act as an expert in hierarchical categorization. Based on the study material I will provide, extract the complete hierarchical structure of topics.
 
 For each topic, include a very short (few words) contextual summary in brackets after the name, explaining what that topic covers.
 
@@ -12789,10 +12857,10 @@ Output valid JSON inside a markdown code block \`\`\`json according to this sche
 }
 
 The study material is about: ${subject}
+The content and summaries must be in ${language}.
 
 Now, analyze the following content and generate the categories JSON:`;
-        }
-
+}
         // --- ROBUST CATEGORY PROCESSING (Fixed `await` & Redundancy) ---
         async function processOnboardingCategories(jsonText) {
             try {
@@ -12857,7 +12925,7 @@ Now, analyze the following content and generate the categories JSON:`;
             console.log('[Onboarding] Next clicked. Step=', onboardingStep, 'Ready=', nextBtn.dataset.ready);
             if (nextBtn.dataset.ready !== 'true') return;
 
-            if (onboardingStep === 6) {
+            if (onboardingStep === 7) {
                 localStorage.setItem(ONBOARDING_KEY, 'true');
                 localStorage.setItem(SUBJECT_KEY, onboardingSubject);
                 modal.remove();
@@ -12999,7 +13067,7 @@ Now, analyze the following content and generate the categories JSON:`;
     function init() {
         console.log('[Onboarding] Init running...');
         const checkReady = setInterval(() => {
-            if (window.State && window.Core && window.Graph3D && window.UI) {
+            if (window.State && window.Core && window.Graph3D && window.UI && typeof MathCore !== 'undefined' && typeof DB !== 'undefined') {
                 clearInterval(checkReady);
                 console.log('[Onboarding] App ready. Onboarding needed?', isOnboardingNeeded());
                 if (isOnboardingNeeded()) {
