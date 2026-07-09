@@ -6618,14 +6618,14 @@ renderFolders: () => {
     }
 
     // Add New button with liquid glass
-    let html = `
-        <div class="folder-item add-new-btn liquid-glass" data-action="add" onclick="UI.showModal('upload-hub-modal')" style="border:1px dashed var(--accent); cursor:pointer; margin-bottom:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:500; color:var(--accent);"><i class="fas fa-plus-circle"></i> Add Folder</span>
-                <span style="color:var(--accent);">+</span>
-            </div>
+let html = `
+    <div class="folder-item add-new-btn liquid-glass" data-action="add" onclick="openManualFolderModal(State.focusId)" style="border:1px dashed var(--accent); cursor:pointer; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:500; color:var(--accent);"><i class="fas fa-plus-circle"></i> Add Folder</span>
+            <span style="color:var(--accent);">+</span>
         </div>
-    `;
+    </div>
+`;
 
     // Folder list
     if (children.length === 0) {
@@ -6674,10 +6674,10 @@ renderFolders: () => {
             e.stopPropagation();
             const action = btn.dataset.action;
             const id = btn.dataset.id;
-            if (action === 'add') {
-                UI.showModal('upload-hub-modal');
-                return;
-            }
+			if (action === 'add') {
+			    openManualFolderModal(State.focusId);
+			    return;
+			}
             const node = State.nodes.find(n => n.id === id);
             if (!node) return;
             switch(action) {
@@ -9765,7 +9765,6 @@ document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListene
 }));
 
 // Paste JSON modal
-let pendingPasteZone = null;
 document.getElementById('paste-submit-btn').addEventListener('click', async () => {
     // Check subscription
     if (!(await window.__paywall.isAllowed())) {
@@ -13266,24 +13265,23 @@ function createManualFolder() {
 }
 
 // ---- Event Listeners for Manual Modal ----
-document.addEventListener('DOMContentLoaded', function() {
-    const createBtn = document.getElementById('manual-folder-create');
-    const cancelBtn = document.getElementById('manual-folder-cancel');
-    const nameInput = document.getElementById('manual-folder-name');
-    
-    if (createBtn) createBtn.addEventListener('click', createManualFolder);
-    if (cancelBtn) cancelBtn.addEventListener('click', () => UI.hideModal('manual-folder-modal'));
-    if (nameInput) nameInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') createManualFolder();
-    });
+const createBtn = document.getElementById('manual-folder-create');
+const cancelBtn = document.getElementById('manual-folder-cancel');
+const nameInput = document.getElementById('manual-folder-name');
+
+if (createBtn) createBtn.addEventListener('click', createManualFolder);
+if (cancelBtn) cancelBtn.addEventListener('click', () => UI.hideModal('manual-folder-modal'));
+if (nameInput) nameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') createManualFolder();
 });
 	
 	function updateMakeBrainButton() {
-	    const btn = document.getElementById('dock-add');
-	    if (!btn) return;
-	    const hasBrain = State.nodes.some(n => n.id !== 'root');
-	    btn.innerHTML = hasBrain ? '<i class="fas fa-plus"></i> 🔄 Swap Brain' : '<i class="fas fa-plus"></i> 🧠 Make Brain';
-	}
+    const btn = document.getElementById('dock-add');
+    if (!btn) return;
+    const hasBrain = State.nodes.some(n => n.id !== 'root');
+    btn.innerHTML = hasBrain ? '<i class="fas fa-plus"></i> 🔄 Swap Brain' : '<i class="fas fa-plus"></i> 🧠 Make Brain';
+}
+window.updateMakeBrainButton = updateMakeBrainButton;
 	
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
