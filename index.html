@@ -3007,7 +3007,7 @@ button:hover,
                 <div id="action-panel" style="display: none;">
                     <div id="selected-folder-title"></div>
                     <div class="action-grid">
-                        <button id="btn-add-category-from-action" class="btn-primary" style="grid-column: span 2;">📁 Add Folder</button>
+                        <button id="btn-add-category-from-action" class="btn-primary" style="grid-column: span 2;">➕ Add Category / Book</button>
 						<button id="btn-quiz-mode" class="btn-primary" style="grid-column: span 1;">📝 Multiple Choice</button>
                         <button id="btn-fill-blank" class="btn-primary" style="grid-column: span 1;">📝 Fill in the Blank</button>
 						<button id="btn-adjust-understanding" class="btn-primary">📊 Set Understanding</button>
@@ -3062,7 +3062,38 @@ button:hover,
 </div>
 
     <!-- ========== MODALS (all identical to original, for 3D version) ========== -->
-
+    
+    <!-- Dual‑Zone Upload Modal -->
+    <div id="upload-hub-modal" class="modal-bg">
+        <div class="modal-large">
+            <div class="modal-header">
+                <h2>Add Knowledge Files</h2>
+                <button class="close-modal-btn">✕</button>
+            </div>
+            <div class="upload-zones-container" style="display: flex; gap: 24px; padding: 32px; background: transparent;">
+                <div class="upload-zone" id="zone-categories" style="flex: 1; background: rgba(255, 255, 255, 0.45); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+                    <h3>1. Master Categories</h3>
+                    <p>Establish your educational subjects. (Filters applied automatically via prompt).</p>
+                    <button id="copy-cat-prompt" class="btn-secondary">📋 Copy Category AI Prompt</button>
+                    <div class="drop-area" id="drop-categories">
+                        <span>Drag & Drop Category JSON Here</span>
+                        <input type="file" id="file-categories" accept=".json" hidden>
+                    </div>
+                    <button class="paste-json-btn btn-secondary" data-zone="categories" style="margin-top: 8px;">📋 Paste JSON Text</button>
+                </div>
+                <div class="upload-zone" id="zone-books" style="flex: 1; background: rgba(255, 255, 255, 0.45); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.4); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+                    <h3>2. Books & Documents</h3>
+                    <p>Add content to your categories. Preserves deep hierarchy to the bold word.</p>
+                    <button id="copy-book-prompt" class="btn-secondary">📋 Copy Book AI Prompt</button>
+                    <div class="drop-area" id="drop-books">
+                        <span>Drag & Drop Book JSON Here</span>
+                        <input type="file" id="file-books" accept=".json" hidden>
+                    </div>
+                    <button class="paste-json-btn btn-secondary" data-zone="books" style="margin-top: 8px;">📋 Paste JSON Text</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- File Management Modal -->
     <div id="file-manage-modal" class="modal-bg">
         <div class="modal-medium">
@@ -3198,6 +3229,21 @@ button:hover,
     <!-- Toast Container -->
     <div id="toast-container"></div>
 
+    <!-- Paste JSON Modal -->
+    <div id="paste-json-modal" class="modal-bg">
+      <div class="modal-medium">
+          <h3>Paste JSON</h3>
+          <div id="paste-drop-zone" style="border: 2px dashed rgba(255,255,255,0.4); border-radius: 12px; padding: 1rem; background: rgba(255,255,255,0.1); transition: 0.2s;">
+              <textarea id="paste-json-textarea" rows="12" placeholder='Paste your JSON here, or drag & drop a .json file here.' style="width:100%; background:rgba(255,255,255,0.6); border:1px solid rgba(255,255,255,0.4); border-radius:12px; padding:12px; font-family:monospace; font-size:0.85rem; color:#1d1d1f; resize:vertical;"></textarea>
+              <div style="text-align:center; margin-top:0.5rem; font-size:0.85rem; color:#1d1d1f; opacity:0.7;">📁 Drag & drop JSON file here, or paste JSON above</div>
+          </div>
+          <div class="modal-footer">
+              <button id="paste-submit-btn" class="btn-primary">Process</button>
+              <button id="paste-cancel-btn" class="btn-secondary">Cancel</button>
+          </div>
+      </div>
+    </div>
+
     <!-- Test Scores Modal -->
     <div id="scores-modal" class="modal-bg">
         <div class="modal-medium">
@@ -3315,6 +3361,14 @@ button:hover,
         </div>
     </div>
 
+<!-- Global Drop Overlay -->
+<div id="global-drop-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px); z-index:99999; display:none; justify-content:center; align-items:center; pointer-events:none;">
+    <div style="background:rgba(0,0,0,0.8); padding:2rem 4rem; border-radius:24px; border:2px dashed #2dd4bf; color:#f8fafc; text-align:center;">
+        <div style="font-size:3rem; margin-bottom:0.5rem;">📂</div>
+        <div style="font-size:1.2rem; font-weight:600;">Drop JSON file anywhere</div>
+        <div style="font-size:0.9rem; color:#94a3b8;">(Categories or Books JSON)</div>
+    </div>
+</div>
     <!-- Fill in the Blank Wizard Modal -->
     <div id="fillBlankModal" class="modal-bg">
         <div class="modal-large" style="max-width: 900px;">
@@ -3387,24 +3441,6 @@ button:hover,
         </article>
         <div style="margin-top:2rem; border-top:1px solid rgba(255,255,255,0.1); padding-top:1rem; text-align:center; font-size:0.8rem; color:#94a3b8;">
             © 2026 Kenna Teklu. All rights reserved.
-        </div>
-    </div>
-</div>
-<!-- Manual Folder Creation Modal -->
-<div id="manual-folder-modal" class="modal-bg">
-    <div class="modal-small">
-        <h3>📁 Create New Folder</h3>
-        <p style="color:var(--text-dim); font-size:0.9rem;">Enter a name for the new category.</p>
-        <div style="margin: 16px 0;">
-            <input type="text" id="manual-folder-name" placeholder="Folder name..." style="width:100%; padding:12px 16px; border-radius:40px; background:rgba(0,0,0,0.4); border:1px solid var(--border); color:#f8fafc; font-size:1rem; outline:none;">
-            <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
-                <label for="manual-parent-select" style="font-size:0.85rem; color:var(--text-dim);">Parent:</label>
-                <select id="manual-parent-select" style="flex:1; padding:8px 12px; border-radius:40px; background:rgba(0,0,0,0.4); border:1px solid var(--border); color:#f8fafc; font-size:0.9rem; outline:none;"></select>
-            </div>
-        </div>
-        <div class="modal-footer" style="margin-top:8px;">
-            <button id="manual-folder-create" class="btn-primary">✅ Create</button>
-            <button id="manual-folder-cancel" class="btn-secondary">Cancel</button>
         </div>
     </div>
 </div>
@@ -4572,8 +4608,119 @@ const MathCore = {
 window.MathCore = MathCore;
 
 // ----------------------------------------------------------------------------
-// 3. PARSER & INGESTION (from 2D – handles categories & books, duplicates) (moved elsewhere, where it is more useful)
+// 3. PARSER & INGESTION (from 2D – handles categories & books, duplicates)
 // ----------------------------------------------------------------------------
+const Parser = {
+    healJSON: (rawText) => {
+        try { return JSON.parse(rawText); } catch(e) {
+            UI.toast("⚠️ AI formatting error. Attempting repair...");
+            let fixed = rawText.replace(/,\s*([\]}])/g, '$1');
+            try { return JSON.parse(fixed); } catch(e2) {
+                alert("Auto-Repair Failed.\nPlease ask the AI to output valid JSON.");
+                return null;
+            }
+        }
+    },
+    process: async (file, isCategoryZone) => {
+        UI.loader(true, "Reading File...");
+        await new Promise(r => setTimeout(r, 100));
+        const text = await file.text();
+        UI.loader(true, "Parsing AI JSON...", 30);
+        const data = Parser.healJSON(text);
+        if (!data) return UI.loader(false);
+      
+
+        // Check if we have a stored target parent (from action panel button)
+        let targetParentId = window._uploadTargetParent || null;
+        // Clear after use
+        delete window._uploadTargetParent;
+
+        UI.loader(true, "Building Hierarchy...", 70);
+        if (isCategoryZone || data.type === 'categories') {
+            if (!data.items) return alert("Invalid Category JSON.");
+            const createCategoryNode = (cat, parentId) => {
+                let existing = State.nodes.find(n => n.name === cat.name && n.parentIds.includes(parentId));
+                if (existing) {
+                    if (cat.content) existing.content = cat.content;
+                    if (cat.understanding) existing.understanding = cat.understanding;
+                    existing.date = Date.now();
+                } else {
+                    const newId = 'c_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+                    State.nodes.push({
+                        id: newId, name: cat.name, type: 'category', parentIds: [parentId],
+                        size: (cat.content?.length || 500) + 300, understanding: cat.understanding || 0,
+                        content: cat.content || '', date: Date.now()
+                    });
+                    existing = State.nodes[State.nodes.length-1];
+                }
+                if (cat.children && Array.isArray(cat.children)) {
+                    for (let child of cat.children) createCategoryNode(child, existing.id);
+                }
+            };
+            let targetParentId = window._uploadTargetParent || 'root';
+            // Clear after use
+            delete window._uploadTargetParent;
+            if (State.focusId !== 'root') {
+                const focusNode = State.nodes.find(n => n.id === State.focusId);
+                if (focusNode && focusNode.type === 'category') targetParentId = State.focusId;
+            }
+            for (let cat of data.items) createCategoryNode(cat, targetParentId);
+        } else {
+            // book/document import
+            if (!data.title) return alert("Invalid Book JSON.");
+            let catIds = [];
+            if (data.categories) {
+                data.categories.forEach(cn => {
+                    let existing = State.nodes.find(n => n.name === cn && n.type === 'category');
+                    if (existing) catIds.push(existing.id);
+                });
+            }
+            if (!catIds.length) {
+                let fallback = State.nodes.find(n => n.type === 'category');
+                if (!fallback) {
+                    fallback = { id: 'c_gen', name: 'General Studies', type: 'category', parentIds: ['root'], size: 2000, understanding: 0, content: '', date: Date.now() };
+                    State.nodes.push(fallback);
+                }
+                catIds = [fallback.id];
+            }
+            let existingBook = State.nodes.find(n => n.name === data.title && n.type === 'book' && n.parentIds.some(pid => catIds.includes(pid)));
+            const bookId = existingBook ? existingBook.id : ('b_' + Date.now());
+            if (!existingBook) {
+                State.nodes.push({ id: bookId, name: data.title, type: 'book', parentIds: catIds,
+                    size: (data.summary || "").length + 5000, understanding: 0, content: data.summary || '', date: Date.now() });
+            } else {
+                existingBook.content = data.summary || existingBook.content;
+                existingBook.size = (data.summary || "").length + 5000;
+                existingBook.date = Date.now();
+            }
+            const traverse = (item, parentId) => {
+                let existingChild = State.nodes.find(n => n.name === item.title && n.parentIds.includes(parentId));
+                const nodeId = existingChild ? existingChild.id : ('n_' + Math.random().toString(36).substr(2,9));
+                if (!existingChild) {
+                    const content = item.content || item.summary || "";
+                    State.nodes.push({ id: nodeId, name: item.title, type: 'folder', parentIds: [parentId],
+                        content, size: content.length + 200, understanding: 0, date: Date.now() });
+                } else {
+                    existingChild.content = item.content || existingChild.content;
+                    existingChild.size = (item.content?.length || 300) + 200;
+                    existingChild.date = Date.now();
+                }
+                if (item.children && item.children.length) {
+                    for (let child of item.children) traverse(child, nodeId);
+                }
+            };
+            if (data.children) for (let child of data.children) traverse(child, bookId);
+        }
+        UI.loader(true, "Cascading...", 90);
+        MathCore.cascadeAll();
+        await DB.save();
+        UI.loader(false);
+        UI.hideModal('upload-hub-modal');
+        Core.refresh();
+        Graph3D.fitToScreen(true);
+        UI.toast("✅ Assimilation Complete.");
+    }
+};
 
 // ----------------------------------------------------------------------------
 // 4. 3D GRAPH ENGINE (unchanged – works with the fixed state)
@@ -6210,6 +6357,17 @@ editContent: () => {
         a.download = `KnowledgeBackup_${new Date().toISOString().split('T')[0]}.json`; a.click();
         localStorage.setItem('last_backup', Date.now());
     },
+copyCatPrompt: () => {
+    const prompt = `Act as an Expert in hierarchical categories. Based only on the Table of Contents from the provided GMAT Official Guide document, extract the complete hierarchical structure. Use the exact headings as they appear in the document (including section numbers). For each heading, add a very short (few words) contextual summary inside brackets after the name, explaining what that section covers. Exclude sensitive topics. Output valid JSON inside a markdown code block \`\`\`json according to the schema: { "type": "categories", "items": [{"name": "...", "children": [{"name": "..."}] }] }`;
+    navigator.clipboard.writeText(prompt);
+    UI.toast("📋 Category Prompt Copied");
+},
+    copyBookPrompt: () => {
+        let cats = State.nodes.filter(n=>n.type==='category').map(n=>n.name).join(", ");
+        const prompt = `Extract book hierarchy. Output JSON in markdown code block. Schema: { "type": "book", "title": "...", "categories": [${cats || 'General Education'}], "children": [{"title": "...", "children": [...]}] } Exclude sensitive content.`;
+        navigator.clipboard.writeText(prompt);
+        UI.toast("📋 Book Prompt Copied");
+    },
     openScoresModal: () => {
         let id = document.getElementById('selected-folder-title').dataset.id;
         let node = State.nodes.find(n => n.id === id);
@@ -6618,14 +6776,14 @@ renderFolders: () => {
     }
 
     // Add New button with liquid glass
-let html = `
-    <div class="folder-item add-new-btn liquid-glass" data-action="add" onclick="openManualFolderModal(State.focusId)" style="border:1px dashed var(--accent); cursor:pointer; margin-bottom:12px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-weight:500; color:var(--accent);"><i class="fas fa-plus-circle"></i> Add Folder</span>
-            <span style="color:var(--accent);">+</span>
+    let html = `
+        <div class="folder-item add-new-btn liquid-glass" data-action="add" onclick="UI.showModal('upload-hub-modal')" style="border:1px dashed var(--accent); cursor:pointer; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-weight:500; color:var(--accent);"><i class="fas fa-plus-circle"></i> Add New <span style="font-weight:700;">Category</span> or <span style="font-weight:700;">Book</span></span>
+                <span style="color:var(--accent);">+</span>
+            </div>
         </div>
-    </div>
-`;
+    `;
 
     // Folder list
     if (children.length === 0) {
@@ -6674,10 +6832,10 @@ let html = `
             e.stopPropagation();
             const action = btn.dataset.action;
             const id = btn.dataset.id;
-			if (action === 'add') {
-			    openManualFolderModal(State.focusId);
-			    return;
-			}
+            if (action === 'add') {
+                UI.showModal('upload-hub-modal');
+                return;
+            }
             const node = State.nodes.find(n => n.id === id);
             if (!node) return;
             switch(action) {
@@ -6703,9 +6861,10 @@ let html = `
                 case 'details':
                     Core.showRichDetails(id);
                     break;
-				case 'add-child':
-				    openManualFolderModal(id);
-				    break;
+                case 'add-child':
+                    window._uploadTargetParent = id;
+                    UI.showModal('upload-hub-modal');
+                    break;
             }
         });
     });
@@ -8335,6 +8494,8 @@ document.getElementById('dock-restore').addEventListener('click', () => {
     input.click();
 });
 document.getElementById('dock-delete-all').addEventListener('click', Core.deleteAll);
+document.getElementById('copy-cat-prompt').addEventListener('click', Core.copyCatPrompt);
+document.getElementById('copy-book-prompt').addEventListener('click', Core.copyBookPrompt);
 document.getElementById('btn-quiz-mode').addEventListener('click', () => {
     let folderId = State.selectedFolderId || document.getElementById('selected-folder-title').dataset.id;
     if (!folderId) { UI.toast('Select a folder first.'); return; }
@@ -9506,7 +9667,17 @@ document.getElementById('content-textarea')?.addEventListener('input', () => {
 });
 document.getElementById('btn-rename').addEventListener('click', Core.rename);
 document.getElementById('btn-delete').addEventListener('click', Core.deleteFolder);
-
+// Add Category/Book from Action Panel
+document.getElementById('btn-add-category-from-action')?.addEventListener('click', () => {
+    const folderId = document.getElementById('selected-folder-title').dataset.id;
+    if (folderId) {
+        // Store the current focus as the target parent for the upload modal
+        window._uploadTargetParent = folderId;
+    } else {
+        window._uploadTargetParent = null;
+    }
+    UI.showModal('upload-hub-modal');
+});
 // --- ADD NEW CATEGORY OR BOOK BUTTON ---
 document.addEventListener('click', async (e) => {
     const addBtn = e.target.closest('.add-new-btn');
@@ -9753,6 +9924,36 @@ document.getElementById('quiz-reset-btn')?.addEventListener('click', async () =>
 document.getElementById('close-scores-modal').addEventListener('click', () => UI.hideModal('scores-modal'));
 document.getElementById('fit-graph-btn').addEventListener('click', () => Graph3D.fitToScreen(true));
 
+// Upload zones
+const setupDrop = (zoneId, fileInputId, isCat) => {
+    let zone = document.getElementById(zoneId);
+    zone.addEventListener('click', () => document.getElementById(fileInputId).click());
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.style.borderColor = 'var(--accent)'; });
+    zone.addEventListener('dragleave', e => { e.preventDefault(); zone.style.borderColor = 'var(--border)'; });
+    zone.addEventListener('drop', async (e) => {
+        e.preventDefault(); zone.style.borderColor = 'var(--border)';
+        if (e.dataTransfer.files.length === 0) return;
+        // Check subscription
+        if (!(await window.__paywall.isAllowed())) {
+            window.__paywall.showPanel(document.getElementById('upload-hub-modal').querySelector('.modal-large'));
+            return;
+        }
+        await Parser.process(e.dataTransfer.files[0], isCat);
+    });
+    document.getElementById(fileInputId).addEventListener('change', async (e) => {
+        if (e.target.files[0]) {
+            if (!(await window.__paywall.isAllowed())) {
+                window.__paywall.showPanel(document.getElementById('upload-hub-modal').querySelector('.modal-large'));
+                e.target.value = ''; // reset input
+                return;
+            }
+            await Parser.process(e.target.files[0], isCat);
+        }
+    });
+};
+setupDrop('drop-categories', 'file-categories', true);
+setupDrop('drop-books', 'file-books', false);
+
 // Close modals properly (restore UI)
 document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListener('click', (e) => {
     const modal = e.target.closest('.modal-bg');
@@ -9765,6 +9966,14 @@ document.querySelectorAll('.close-modal-btn').forEach(btn => btn.addEventListene
 }));
 
 // Paste JSON modal
+let pendingPasteZone = null;
+document.querySelectorAll('.paste-json-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        pendingPasteZone = btn.dataset.zone;
+        document.getElementById('paste-json-textarea').value = '';
+        UI.showModal('paste-json-modal');
+    });
+});
 document.getElementById('paste-submit-btn').addEventListener('click', async () => {
     // Check subscription
     if (!(await window.__paywall.isAllowed())) {
@@ -12323,15 +12532,15 @@ skipBtn.addEventListener('click', async () => {
             background: 'transparent', border: 'none', color: '#94a3b8',
             fontSize: '1.4rem', cursor: 'pointer', padding: '4px 8px'
         });
-		closeBtn.addEventListener('click', () => {
-		    localStorage.setItem(ONBOARDING_KEY, 'true');
-		    modal.remove();
-		    State.focusId = 'root';
-		    State.path = [];
-		    Core.refresh();
-		    Graph3D.fitToScreen(true);
-		    setTimeout(() => showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring'), 500);
-		});
+        closeBtn.addEventListener('click', () => {
+            localStorage.setItem(ONBOARDING_KEY, 'true');
+            modal.remove();
+            createOrGetBrainNode();
+            Core.refresh().then(() => {
+                Graph3D.fitToScreen(true);
+                setTimeout(() => showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring'), 500);
+            });
+        });
         container.appendChild(closeBtn);
 
         modal.appendChild(container);
@@ -13139,6 +13348,11 @@ window._onboardingEnterHandler = enterHandler; // optional, for cleanup
                 if (isOnboardingNeeded()) {
                     setTimeout(runOnboarding, 800);
                 } else {
+                    // Ensure Brain exists (e.g., from a previous successful run)
+                    if (State.nodes.some(n => n.id === BRAIN_NODE_ID)) {
+                        createOrGetBrainNode();
+                        // No refresh needed since it's already built
+                    }
                 }
                 setupQuizHijacking();
             }
@@ -13182,107 +13396,12 @@ window._onboardingEnterHandler = enterHandler; // optional, for cleanup
     }
 };
 
-// ---- MANUAL FOLDER CREATION ----
-let manualFolderCount = parseInt(localStorage.getItem('manualFolderCount') || '0');
-const MANUAL_LIMIT = 20;
-
-function updateManualFolderCount() {
-    localStorage.setItem('manualFolderCount', String(manualFolderCount));
-}
-
-function openManualFolderModal(parentId) {
-    const modal = document.getElementById('manual-folder-modal');
-    const nameInput = document.getElementById('manual-folder-name');
-    const parentSelect = document.getElementById('manual-parent-select');
-    
-    const categories = State.nodes.filter(n => n.type === 'category' || n.type === 'folder');
-    parentSelect.innerHTML = '<option value="root">Root</option>';
-    categories.forEach(n => {
-        const opt = document.createElement('option');
-        opt.value = n.id;
-        opt.textContent = n.name;
-        parentSelect.appendChild(opt);
-    });
-    if (parentId && categories.some(n => n.id === parentId)) {
-        parentSelect.value = parentId;
-    } else if (State.focusId !== 'root' && categories.some(n => n.id === State.focusId)) {
-        parentSelect.value = State.focusId;
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
     }
-    
-    nameInput.value = '';
-    modal.style.display = 'flex';
-    setTimeout(() => nameInput.focus(), 100);
-}
 
-function createManualFolder() {
-    const nameInput = document.getElementById('manual-folder-name');
-    const parentSelect = document.getElementById('manual-parent-select');
-    const name = nameInput.value.trim();
-    if (!name) {
-        UI.toast('⚠️ Please enter a folder name.');
-        return;
-    }
-    const parentId = parentSelect.value;
-    const newId = 'manual_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
-    State.nodes.push({
-        id: newId,
-        name: name,
-        type: 'category',
-        parentIds: [parentId],
-        size: 300,
-        understanding: 0,
-        content: '',
-        date: Date.now()
-    });
-    manualFolderCount++;
-    updateManualFolderCount();
-    DB.save(false);
-    Core.refresh();
-    Graph3D.fitToScreen(true);
-    UI.hideModal('manual-folder-modal');
-    UI.toast(`✅ Created "${name}"`);
-    
-    if (manualFolderCount >= MANUAL_LIMIT) {
-        setTimeout(() => {
-            Swal.fire({
-                title: '📦 You\'ve created many folders manually!',
-                text: `You've manually added ${manualFolderCount} folders. Consider using the JSON import to quickly build a structured brain. Would you like to start the onboarding now?`,
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonText: '🔄 Start Onboarding',
-                cancelButtonText: 'Continue Manually',
-                background: 'rgba(15,18,28,0.95)',
-                backdrop: 'rgba(0,0,0,0.8)',
-                confirmButtonColor: '#2dd4bf',
-                cancelButtonColor: '#f43f5e'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.handleMakeBrain();
-                }
-            });
-        }, 500);
-    }
-}
-
-// ---- Event Listeners for Manual Modal ----
-const createBtn = document.getElementById('manual-folder-create');
-const cancelBtn = document.getElementById('manual-folder-cancel');
-const nameInput = document.getElementById('manual-folder-name');
-
-if (createBtn) createBtn.addEventListener('click', createManualFolder);
-if (cancelBtn) cancelBtn.addEventListener('click', () => UI.hideModal('manual-folder-modal'));
-if (nameInput) nameInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') createManualFolder();
-});
-	
-	function updateMakeBrainButton() {
-    const btn = document.getElementById('dock-add');
-    if (!btn) return;
-    const hasBrain = State.nodes.some(n => n.id !== 'root');
-    btn.innerHTML = hasBrain ? '<i class="fas fa-plus"></i> 🔄 Swap Brain' : '<i class="fas fa-plus"></i> 🧠 Make Brain';
-}
-window.updateMakeBrainButton = updateMakeBrainButton;
-	
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
