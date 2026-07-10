@@ -12230,10 +12230,7 @@ function validateHTML(html) {
 })();
 </script>
 <script>
-// ----------------------------------------------------------------
-// BRAIN SCORE – SIMPLE WEIGHTED AVERAGE
-// ----------------------------------------------------------------
-
+// ----- Brain Score (weighted average) -----
 function updateBrainUI() {
     const nodes = window.State?.nodes || [];
     const nonRoot = nodes.filter(n => n.id !== 'root');
@@ -12242,8 +12239,6 @@ function updateBrainUI() {
         setFavicon(0);
         return;
     }
-
-    // Weighted average using 'size' (if available, else 1)
     let totalWeighted = 0, totalWeight = 0;
     for (let n of nonRoot) {
         const w = n.size || 1;
@@ -12274,30 +12269,28 @@ function setFavicon(percent) {
     link.href = url;
 }
 
-// –– Update on every save ––
+// ---- Hook into saves and slider events ----
 const originalSave = window.DB?.save || async () => {};
-window.DB.save = async function(recordHistory = true) {
-    const r = await originalSave.call(this, recordHistory);
+window.DB.save = async function(recordHistory) {
+    const result = await originalSave.call(this, recordHistory);
     updateBrainUI();
-    return r;
+    return result;
 };
-
-// –– Update when slider changes ––
-document.addEventListener('input', e => {
+document.addEventListener('input', function(e) {
     if (e.target.id === 'understanding-slider') updateBrainUI();
 });
 
-// –– Initial update ––
+// ---- Initial run ----
 updateBrainUI();
 
-// –– Dock button (simple) ––
+// ---- Dock button (Make Brain / Swap Brain) ----
 function updateDockButton() {
     const btn = document.getElementById('dock-add');
     if (!btn) return;
     const count = (window.State?.nodes || []).filter(n => n.id !== 'root').length;
     btn.textContent = count > 1 ? '🔄 Swap Brain' : '🧠 Make Brain';
 }
-document.getElementById('dock-add').addEventListener('click', () => {
+document.getElementById('dock-add').addEventListener('click', function() {
     if (typeof runOnboarding === 'function') runOnboarding();
     else { localStorage.removeItem('onboarding_complete_v2'); location.reload(); }
 });
