@@ -13353,7 +13353,7 @@ window._onboardingEnterHandler = enterHandler; // optional, for cleanup
 })();
 </script>
 <script>
-// ----- Helper: count descendants -----
+// ----- Helper: count all descendants of a node (including itself) -----
 function countDescendants(nodeId, allNodes) {
     let count = 1;
     const children = allNodes.filter(n => n.parentIds?.includes(nodeId));
@@ -13363,14 +13363,12 @@ function countDescendants(nodeId, allNodes) {
     return count;
 }
 
-// ----- Brain Score (weighted) -----
+// ----- Brain Score (weighted by subtree size) -----
 function updateBrainUI() {
     const allNodes = window.State?.nodes || [];
     const nonRoot = allNodes.filter(n => n.id !== 'root');
-    console.log(`[BrainUI] nonRoot count: ${nonRoot.length}`);
     if (!nonRoot.length) {
         document.title = 'Brain';
-        console.log('[BrainUI] No non-root nodes, title set to "Brain"');
         return;
     }
 
@@ -13379,14 +13377,12 @@ function updateBrainUI() {
         const w = countDescendants(n.id, allNodes);
         totalWeighted += (n.understanding || 0) * w;
         totalWeight += w;
-        console.log(`[BrainUI] node: ${n.name}, weight: ${w}, understanding: ${n.understanding || 0}`);
     }
     const percent = Math.round((totalWeighted / totalWeight) * 100);
-    console.log(`[BrainUI] calculated percent: ${percent}`);
     document.title = `Brain: ${percent}%`;
 }
 
-// ----- Dock button -----
+// ----- Dock button text -----
 function updateDockButton() {
     const btn = document.getElementById('dock-add');
     if (!btn) return;
@@ -13394,42 +13390,41 @@ function updateDockButton() {
     btn.textContent = count > 1 ? '🔄 Swap Brain' : '🧠 Make Brain';
 }
 
-// ----- Robust initialisation -----
-let initAttempts = 0;
-const MAX_ATTEMPTS = 50;
-
-function initBrainUI() {
-    console.log(`[BrainUI] init attempt ${initAttempts + 1}`);
+// ----- Robust initialisation (waits for State and DB) -----
+function waitForApp(callback, attempts = 0, maxAttempts = 30) {
     if (window.State && window.State.nodes && window.DB) {
-        console.log('[BrainUI] State and DB are ready');
-        if (!window._brainUIHooked) {
-            window._brainUIHooked = true;
-            const originalSave = window.DB.save || function() {};
-            window.DB.save = async function(recordHistory) {
-                const result = await originalSave.call(this, recordHistory);
-                updateBrainUI();
-                updateDockButton();
-                return result;
-            };
-        }
-        updateBrainUI();
-        updateDockButton();
-        clearTimeout(window._brainUITimer);
+        callback();
         return;
     }
-
-    if (++initAttempts < MAX_ATTEMPTS) {
-        window._brainUITimer = setTimeout(initBrainUI, 200);
-    } else {
-        updateBrainUI();
-        updateDockButton();
-        console.warn('[BrainUI] Timeout: State or DB not ready');
+    if (attempts >= maxAttempts) {
+        console.warn('Brain UI: Timed out waiting for State/DB – forcing update with whatever data exists.');
+        callback();
+        return;
     }
+    setTimeout(() => waitForApp(callback, attempts + 1, maxAttempts), 300);
 }
 
-window._brainUITimer = setTimeout(initBrainUI, 200);
+function initBrainUI() {
+    // Hook into DB.save (only once)
+    if (!window._brainUIHooked && window.DB) {
+        window._brainUIHooked = true;
+        const originalSave = window.DB.save || function() {};
+        window.DB.save = async function(recordHistory) {
+            const result = await originalSave.call(this, recordHistory);
+            updateBrainUI();
+            updateDockButton();
+            return result;
+        };
+    }
 
-// ----- Slider updates -----
+    updateBrainUI();
+    updateDockButton();
+}
+
+// ----- Start initialisation when the page is ready -----
+waitForApp(initBrainUI);
+
+// ----- Live updates on slider -----
 document.addEventListener('input', function(e) {
     if (e.target.id === 'understanding-slider') {
         updateBrainUI();
@@ -13437,7 +13432,7 @@ document.addEventListener('input', function(e) {
     }
 });
 
-// ----- Dock button click -----
+// ----- Dock button click (restart onboarding) -----
 document.getElementById('dock-add').addEventListener('click', function() {
     if (typeof runOnboarding === 'function') {
         runOnboarding();
