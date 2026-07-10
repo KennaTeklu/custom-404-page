@@ -12269,19 +12269,31 @@ function setFavicon(percent) {
     link.href = url;
 }
 
-// ---- Hook into saves and slider events ----
-const originalSave = window.DB?.save || function() {};
-window.DB.save = async function(recordHistory) {
-    const result = await originalSave.call(this, recordHistory);
-    updateBrainUI();
-    return result;
-};
+// ---- Hook into saves (only if DB exists) ----
+if (window.DB) {
+    const originalSave = window.DB.save || function() {};
+    window.DB.save = async function(recordHistory) {
+        const result = await originalSave.call(this, recordHistory);
+        updateBrainUI();
+        return result;
+    };
+}
+
+// ---- Update on slider changes ----
 document.addEventListener('input', function(e) {
     if (e.target.id === 'understanding-slider') updateBrainUI();
 });
 
-// ---- Initial run ----
-updateBrainUI();
+// ---- Initial run (wait for State to be ready) ----
+function tryUpdate() {
+    if (window.State && window.State.nodes) {
+        updateBrainUI();
+        updateDockButton();
+    } else {
+        setTimeout(tryUpdate, 200);
+    }
+}
+tryUpdate();
 
 // ---- Dock button (Make Brain / Swap Brain) ----
 function updateDockButton() {
@@ -12294,7 +12306,6 @@ document.getElementById('dock-add').addEventListener('click', function() {
     if (typeof runOnboarding === 'function') runOnboarding();
     else { localStorage.removeItem('onboarding_complete_v2'); location.reload(); }
 });
-updateDockButton();
 </script>
 <script>
 // ================================================================
