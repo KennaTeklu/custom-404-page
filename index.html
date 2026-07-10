@@ -13390,41 +13390,49 @@ function updateDockButton() {
     btn.textContent = count > 1 ? '🔄 Swap Brain' : '🧠 Make Brain';
 }
 
-// ----- Robust initialisation (waits for State and DB) -----
-function waitForApp(callback, attempts = 0, maxAttempts = 30) {
-    if (window.State && window.State.nodes && window.DB) {
-        callback();
-        return;
-    }
-    if (attempts >= maxAttempts) {
-        console.warn('Brain UI: Timed out waiting for State/DB – forcing update with whatever data exists.');
-        callback();
-        return;
-    }
-    setTimeout(() => waitForApp(callback, attempts + 1, maxAttempts), 300);
-}
-
+// ----- Initialisation (waits for State and DB, then hooks and updates) -----
 function initBrainUI() {
-    // Hook into DB.save (only once)
-    if (!window._brainUIHooked && window.DB) {
-        window._brainUIHooked = true;
-        const originalSave = window.DB.save || function() {};
-        window.DB.save = async function(recordHistory) {
-            const result = await originalSave.call(this, recordHistory);
-            updateBrainUI();
-            updateDockButton();
-            return result;
-        };
+    // Only run once the app is ready
+    if (window.State && window.State.nodes && window.DB) {
+        // Hook into DB.save (only once)
+        if (!window._brainUIHooked) {
+            window._brainUIHooked = true;
+            const originalSave = window.DB.save || function() {};
+            window.DB.save = async function(recordHistory) {
+                const result = await originalSave.call(this, recordHistory);
+                updateBrainUI();
+                updateDockButton();
+                return result;
+            };
+        }
+        // Update immediately
+        updateBrainUI();
+        updateDockButton();
+        return true; // indicates success
     }
-
-    updateBrainUI();
-    updateDockButton();
+    return false;
 }
 
-// ----- Start initialisation when the page is ready -----
-waitForApp(initBrainUI);
+// ----- Start the initialisation after a short delay -----
+// This ensures the main app has time to load and set up State and DB.
+setTimeout(() => {
+    // If init fails, retry a few times (up to 6 seconds total)
+    let attempts = 0;
+    const maxAttempts = 20; // 20 * 300ms = 6 seconds
+    const timer = setInterval(() => {
+        attempts++;
+        if (initBrainUI() || attempts >= maxAttempts) {
+            clearInterval(timer);
+            // If still not ready after max attempts, force‑update anyway
+            if (!window._brainUIHooked) {
+                updateBrainUI();
+                updateDockButton();
+            }
+        }
+    }, 300);
+}, 500); // start checking after 500ms
 
-// ----- Live updates on slider -----
+// ----- Live updates on slider (no save needed) -----
 document.addEventListener('input', function(e) {
     if (e.target.id === 'understanding-slider') {
         updateBrainUI();
