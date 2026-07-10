@@ -12230,84 +12230,6 @@ function validateHTML(html) {
 })();
 </script>
 <script>
-// ----- Brain Score (weighted average) -----
-function updateBrainUI() {
-    const nodes = window.State?.nodes || [];
-    const nonRoot = nodes.filter(n => n.id !== 'root');
-    if (!nonRoot.length) {
-        document.title = '🧠 Brain';
-        setFavicon(0);
-        return;
-    }
-    let totalWeighted = 0, totalWeight = 0;
-    for (let n of nonRoot) {
-        const w = n.size || 1;
-        totalWeighted += (n.understanding || 0) * w;
-        totalWeight += w;
-    }
-    const percent = Math.round((totalWeighted / totalWeight) * 100);
-    document.title = `🧠 Brain: ${percent}%`;
-    setFavicon(percent);
-}
-
-function setFavicon(percent) {
-    const hue = Math.min(120, Math.max(0, percent * 1.2));
-    const bg = `hsl(${hue}, 80%, 40%)`;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="45" fill="${bg}" />
-        <text x="50" y="58" font-size="36" text-anchor="middle" fill="white" font-weight="bold">${percent}%</text>
-    </svg>`;
-    const url = `data:image/svg+xml,${encodeURIComponent(svg)}`;
-    let link = document.getElementById('favicon-dynamic');
-    if (!link) {
-        link = document.createElement('link');
-        link.id = 'favicon-dynamic';
-        link.rel = 'icon';
-        link.type = 'image/svg+xml';
-        document.head.appendChild(link);
-    }
-    link.href = url;
-}
-
-// ---- Hook into saves (only if DB exists) ----
-if (window.DB) {
-    const originalSave = window.DB.save || function() {};
-    window.DB.save = async function(recordHistory) {
-        const result = await originalSave.call(this, recordHistory);
-        updateBrainUI();
-        return result;
-    };
-}
-
-// ---- Update on slider changes ----
-document.addEventListener('input', function(e) {
-    if (e.target.id === 'understanding-slider') updateBrainUI();
-});
-
-// ---- Initial run (wait for State to be ready) ----
-function tryUpdate() {
-    if (window.State && window.State.nodes) {
-        updateBrainUI();
-        updateDockButton();
-    } else {
-        setTimeout(tryUpdate, 200);
-    }
-}
-tryUpdate();
-
-// ---- Dock button (Make Brain / Swap Brain) ----
-function updateDockButton() {
-    const btn = document.getElementById('dock-add');
-    if (!btn) return;
-    const count = (window.State?.nodes || []).filter(n => n.id !== 'root').length;
-    btn.textContent = count > 1 ? '🔄 Swap Brain' : '🧠 Make Brain';
-}
-document.getElementById('dock-add').addEventListener('click', function() {
-    if (typeof runOnboarding === 'function') runOnboarding();
-    else { localStorage.removeItem('onboarding_complete_v2'); location.reload(); }
-});
-</script>
-<script>
 // ================================================================
 // ONBOARDING WIZARD + QUIZ HIJACKING – FINAL ROBUST VERSION
 // ================================================================
@@ -13429,6 +13351,96 @@ window._onboardingEnterHandler = enterHandler; // optional, for cleanup
     }
 
 })();
+</script>
+<script>
+// ----- Helper: count all descendants of a node (including itself) -----
+function countDescendants(nodeId, allNodes) {
+    let count = 1; // include itself
+    const children = allNodes.filter(n => n.parentIds?.includes(nodeId));
+    for (let child of children) {
+        count += countDescendants(child.id, allNodes);
+    }
+    return count;
+}
+
+// ----- Brain Score (weighted by subtree size) -----
+function updateBrainUI() {
+    const allNodes = window.State?.nodes || [];
+    const nonRoot = allNodes.filter(n => n.id !== 'root');
+    if (!nonRoot.length) {
+        document.title = 'Brain';
+        return;
+    }
+
+    let totalWeighted = 0, totalWeight = 0;
+    for (let n of nonRoot) {
+        const w = countDescendants(n.id, allNodes);
+        totalWeighted += (n.understanding || 0) * w;
+        totalWeight += w;
+    }
+    const percent = Math.round((totalWeighted / totalWeight) * 100);
+    document.title = `Brain: ${percent}%`;
+}
+
+// ----- Dock button text -----
+function updateDockButton() {
+    const btn = document.getElementById('dock-add');
+    if (!btn) return;
+    const count = (window.State?.nodes || []).filter(n => n.id !== 'root').length;
+    btn.textContent = count > 1 ? '🔄 Swap Brain' : '🧠 Make Brain';
+}
+
+// ----- Robust initialisation (waits for State and DB) -----
+let initAttempts = 0;
+const MAX_ATTEMPTS = 50; // 50 * 200ms = 10 seconds
+
+function initBrainUI() {
+    if (window.State && window.State.nodes && window.DB) {
+        if (!window._brainUIHooked) {
+            window._brainUIHooked = true;
+            const originalSave = window.DB.save || function() {};
+            window.DB.save = async function(recordHistory) {
+                const result = await originalSave.call(this, recordHistory);
+                updateBrainUI();
+                updateDockButton();
+                return result;
+            };
+        }
+        updateBrainUI();
+        updateDockButton();
+        clearInterval(window._brainUITimer);
+        return;
+    }
+
+    if (++initAttempts < MAX_ATTEMPTS) {
+        window._brainUITimer = setTimeout(initBrainUI, 200);
+    } else {
+        updateBrainUI();
+        updateDockButton();
+        console.warn('Brain UI: State or DB not ready after 10 seconds – using fallback.');
+    }
+}
+
+// ----- Start initialisation -----
+window._brainUITimer = setTimeout(initBrainUI, 200);
+
+// ----- Live updates on slider -----
+document.addEventListener('input', function(e) {
+    if (e.target.id === 'understanding-slider') {
+        updateBrainUI();
+        updateDockButton();
+    }
+});
+
+// ----- Dock button click (restart onboarding) -----
+document.getElementById('dock-add').addEventListener('click', function() {
+    if (typeof runOnboarding === 'function') {
+        runOnboarding();
+    } else {
+        localStorage.removeItem('onboarding_complete_v2');
+        location.reload();
+    }
+});
 </script>
 </body>
 </html>
