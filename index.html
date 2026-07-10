@@ -13353,9 +13353,9 @@ window._onboardingEnterHandler = enterHandler; // optional, for cleanup
 })();
 </script>
 <script>
-// ----- Helper: count all descendants of a node (including itself) -----
+// ----- Helper: count descendants -----
 function countDescendants(nodeId, allNodes) {
-    let count = 1; // include itself
+    let count = 1;
     const children = allNodes.filter(n => n.parentIds?.includes(nodeId));
     for (let child of children) {
         count += countDescendants(child.id, allNodes);
@@ -13363,12 +13363,14 @@ function countDescendants(nodeId, allNodes) {
     return count;
 }
 
-// ----- Brain Score (weighted by subtree size) -----
+// ----- Brain Score (weighted) -----
 function updateBrainUI() {
     const allNodes = window.State?.nodes || [];
     const nonRoot = allNodes.filter(n => n.id !== 'root');
+    console.log(`[BrainUI] nonRoot count: ${nonRoot.length}`);
     if (!nonRoot.length) {
         document.title = 'Brain';
+        console.log('[BrainUI] No non-root nodes, title set to "Brain"');
         return;
     }
 
@@ -13377,12 +13379,14 @@ function updateBrainUI() {
         const w = countDescendants(n.id, allNodes);
         totalWeighted += (n.understanding || 0) * w;
         totalWeight += w;
+        console.log(`[BrainUI] node: ${n.name}, weight: ${w}, understanding: ${n.understanding || 0}`);
     }
     const percent = Math.round((totalWeighted / totalWeight) * 100);
+    console.log(`[BrainUI] calculated percent: ${percent}`);
     document.title = `Brain: ${percent}%`;
 }
 
-// ----- Dock button text -----
+// ----- Dock button -----
 function updateDockButton() {
     const btn = document.getElementById('dock-add');
     if (!btn) return;
@@ -13390,12 +13394,14 @@ function updateDockButton() {
     btn.textContent = count > 1 ? '🔄 Swap Brain' : '🧠 Make Brain';
 }
 
-// ----- Robust initialisation (waits for State and DB) -----
+// ----- Robust initialisation -----
 let initAttempts = 0;
-const MAX_ATTEMPTS = 50; // 50 * 200ms = 10 seconds
+const MAX_ATTEMPTS = 50;
 
 function initBrainUI() {
+    console.log(`[BrainUI] init attempt ${initAttempts + 1}`);
     if (window.State && window.State.nodes && window.DB) {
+        console.log('[BrainUI] State and DB are ready');
         if (!window._brainUIHooked) {
             window._brainUIHooked = true;
             const originalSave = window.DB.save || function() {};
@@ -13408,7 +13414,7 @@ function initBrainUI() {
         }
         updateBrainUI();
         updateDockButton();
-        clearInterval(window._brainUITimer);
+        clearTimeout(window._brainUITimer);
         return;
     }
 
@@ -13417,14 +13423,13 @@ function initBrainUI() {
     } else {
         updateBrainUI();
         updateDockButton();
-        console.warn('Brain UI: State or DB not ready after 10 seconds – using fallback.');
+        console.warn('[BrainUI] Timeout: State or DB not ready');
     }
 }
 
-// ----- Start initialisation -----
 window._brainUITimer = setTimeout(initBrainUI, 200);
 
-// ----- Live updates on slider -----
+// ----- Slider updates -----
 document.addEventListener('input', function(e) {
     if (e.target.id === 'understanding-slider') {
         updateBrainUI();
@@ -13432,7 +13437,7 @@ document.addEventListener('input', function(e) {
     }
 });
 
-// ----- Dock button click (restart onboarding) -----
+// ----- Dock button click -----
 document.getElementById('dock-add').addEventListener('click', function() {
     if (typeof runOnboarding === 'function') {
         runOnboarding();
