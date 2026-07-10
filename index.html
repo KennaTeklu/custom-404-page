@@ -12270,7 +12270,7 @@ function setFavicon(percent) {
 }
 
 // ---- Hook into saves and slider events ----
-const originalSave = window.DB?.save || async () => {};
+const originalSave = window.DB?.save || function() {};
 window.DB.save = async function(recordHistory) {
     const result = await originalSave.call(this, recordHistory);
     updateBrainUI();
