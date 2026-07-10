@@ -3026,7 +3026,7 @@ button:hover,
         <div id="dock" class="pointer-events-auto">
             <button id="dock-toggle-left" class="btn-secondary" style="padding: 8px 12px;"><i class="fas fa-chevron-down"></i></button>
             <button id="dock-home"><i class="fas fa-home"></i> Home</button>
-            <button id="dock-add" class="btn-primary"><i class="fas fa-plus"></i> 🧠 Make Brain</button>
+            <button id="dock-add" class="btn-primary"><i class="fas fa-plus"></i> Add File</button>
             <button id="dock-settings"><i class="fas fa-cog"></i> Settings</button>
             <div style="display:flex; flex-direction:column; gap:4px;">
                 <button id="dock-backup"><i class="fas fa-download"></i> Backup</button>
@@ -7923,7 +7923,6 @@ window.addEventListener('load', async () => {
     
     await DB.load();
     loadGlobalActivity();
-	updateMakeBrainButton();
     
     // --- ONE-TIME MIGRATION: Delete Master node ---
     const masterMigrationKey = 'master_deleted_v1';
@@ -12439,58 +12438,15 @@ function showFloatingArrow(targetSelector, message, duration = 8000) {
             color: '#94a3b8 !important', padding: '8px 20px',
             borderRadius: '40px', cursor: 'pointer', fontSize: '0.85rem'
         });
-skipBtn.addEventListener('click', async () => {
-    const confirmed = await Swal.fire({
-        title: 'Skip onboarding?',
-        text: 'Your knowledge map will be empty. You can create one anytime using the "Make Brain" button in the dock.',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Yes, skip',
-        cancelButtonText: 'Go back',
-        background: 'rgba(15,18,28,0.95)',
-        backdrop: 'rgba(0,0,0,0.8)',
-        confirmButtonColor: '#2dd4bf',
-        cancelButtonColor: '#f43f5e'
-    });
-
-    if (confirmed.isConfirmed) {
-        localStorage.setItem(ONBOARDING_KEY, 'true');
-        modal.remove();
-
-        // Clean slate – no nodes, no auto-import
-        State.focusId = 'root';
-        State.path = [];
-        await Core.refresh();
-        updateMakeBrainButton(); // 👈 ADDED HERE
-        Graph3D.fitToScreen(true);
-
-        // Collapse dock and card to keep it clean
-        const dock = document.getElementById('dock');
-        const card = document.getElementById('control-card');
-        if (dock) dock.classList.add('collapsed');
-        if (card) card.classList.add('collapsed');
-        localStorage.setItem('dock_collapsed', 'true');
-        localStorage.setItem('control_card_collapsed', 'true');
-
-        // Set view mode to clean text
-        if (typeof window.setView === 'function') {
-            window.setView('clean', true);
-        } else {
-            const container = document.getElementById('folder-view-container');
-            if (container) {
-                container.classList.remove('list-view', 'grid-view', 'details-view', 'tiles-view', 'prog-view', 'size-view', 'clean-view', 'compact-view', 'huge-view', 'text-view');
-                container.classList.add('clean-view');
-            }
-            localStorage.setItem('folder_view_mode', 'clean-view');
-        }
-
-        // Show a helpful toast notification
-        UI.toast('📂 You skipped the setup. Use the "Make Brain" button in the dock to get started.');
-
-        // Point the arrow to the dock's "Make Brain" button (#dock-add)
-        setTimeout(() => showFloatingArrow('#dock-add', 'Click here to make your first brain.'), 800);
-    }
-});
+        skipBtn.addEventListener('click', () => {
+            localStorage.setItem(ONBOARDING_KEY, 'true');
+            modal.remove();
+            createOrGetBrainNode();
+            Core.refresh().then(() => {
+                Graph3D.fitToScreen(true);
+                setTimeout(() => showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring'), 500);
+            });
+        });
         footer.appendChild(skipBtn);
 
         const navRight = document.createElement('div');
@@ -13161,50 +13117,49 @@ async function processOnboardingCategories(jsonText) {
     }
 }
         // --- NEXT BUTTON HANDLER WITH DEBUG LOGS ---
-nextBtn.addEventListener('click', async () => {
-    console.log('[Onboarding] Next clicked. Step=', onboardingStep, 'Ready=', nextBtn.dataset.ready);
-    if (nextBtn.dataset.ready !== 'true') return;
+        nextBtn.addEventListener('click', async () => {
+            console.log('[Onboarding] Next clicked. Step=', onboardingStep, 'Ready=', nextBtn.dataset.ready);
+            if (nextBtn.dataset.ready !== 'true') return;
 
-    if (onboardingStep === 7) {
-        localStorage.setItem(ONBOARDING_KEY, 'true');
-        localStorage.setItem(SUBJECT_KEY, onboardingSubject);
-        modal.remove();
+if (onboardingStep === 7) {
+    localStorage.setItem(ONBOARDING_KEY, 'true');
+    localStorage.setItem(SUBJECT_KEY, onboardingSubject);
+    modal.remove();
 
-        // Collapse dock and card
-        const dock = document.getElementById('dock');
-        const card = document.getElementById('control-card');
-        if (dock) dock.classList.add('collapsed');
-        if (card) card.classList.add('collapsed');
-        localStorage.setItem('dock_collapsed', 'true');
-        localStorage.setItem('control_card_collapsed', 'true');
+    // Collapse dock and card
+    const dock = document.getElementById('dock');
+    const card = document.getElementById('control-card');
+    if (dock) dock.classList.add('collapsed');
+    if (card) card.classList.add('collapsed');
+    localStorage.setItem('dock_collapsed', 'true');
+    localStorage.setItem('control_card_collapsed', 'true');
 
-        // Set view mode to clean text
-        if (typeof window.setView === 'function') {
-            window.setView('clean', true);
-        } else {
-            const container = document.getElementById('folder-view-container');
-            if (container) {
-                container.classList.remove('list-view', 'grid-view', 'details-view', 'tiles-view', 'prog-view', 'size-view', 'clean-view', 'compact-view', 'huge-view', 'text-view');
-                container.classList.add('clean-view');
-            }
-            localStorage.setItem('folder_view_mode', 'clean-view');
+    // Set view mode to clean text
+    if (typeof window.setView === 'function') {
+        window.setView('clean', true);
+    } else {
+        const container = document.getElementById('folder-view-container');
+        if (container) {
+            container.classList.remove('list-view', 'grid-view', 'details-view', 'tiles-view', 'prog-view', 'size-view', 'clean-view', 'compact-view', 'huge-view', 'text-view');
+            container.classList.add('clean-view');
         }
-
-        // Go to root (no extra Brain node)
-        State.focusId = 'root';
-        State.path = [];
-        await Core.refresh();
-        updateMakeBrainButton(); // 👈 ADDED HERE
-        Graph3D.fitToScreen(true);
-
-        // Show arrow pointing to three‑bar menu
-        setTimeout(() => showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring your brain'), 500);
-        return;
+        localStorage.setItem('folder_view_mode', 'clean-view');
     }
 
-    onboardingStep++;
-    renderStep(onboardingStep);
-});
+    // Go to root (no extra Brain node)
+    State.focusId = 'root';
+    State.path = [];
+    await Core.refresh();
+    Graph3D.fitToScreen(true);
+
+    // Show arrow pointing to three‑bar menu
+    setTimeout(() => showFloatingArrow('#collapse-toggle-btn', 'Click the ☰ menu to start exploring your brain'), 500);
+    return;
+}
+
+            onboardingStep++;
+            renderStep(onboardingStep);
+        });
 
         renderStep(1);
 
@@ -13364,50 +13319,12 @@ window._onboardingEnterHandler = enterHandler; // optional, for cleanup
         location.reload();
     };
 
-	window.handleMakeBrain = async function() {
-    const nonRootNodes = State.nodes.filter(n => n.id !== 'root');
-    if (nonRootNodes.length > 0) {
-        const result = await Swal.fire({
-            title: '⚠️ Replace your brain?',
-            text: 'You already have a knowledge map. Creating a new one will completely wipe your current data and start fresh.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#2dd4bf',
-            cancelButtonColor: '#f43f5e',
-            confirmButtonText: 'Yes, start over',
-            cancelButtonText: 'Cancel'
-        });
-        if (!result.isConfirmed) return;
-        
-        // Wipe all nodes except root
-        State.nodes = State.nodes.filter(n => n.id === 'root');
-        await DB.save(false);
-        // Clear the onboarding flag so it runs again
-        localStorage.removeItem(ONBOARDING_KEY);
-        // Clear any leftover state
-        State.focusId = 'root';
-        State.path = [];
-    }
-    // Trigger the onboarding wizard
-    if (typeof runOnboarding === 'function') {
-        runOnboarding();
-    } else {
-        UI.toast('Onboarding is not ready. Please refresh.');
-    }
-};
-
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
         init();
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
-    } else {
-        init();
-    }
-	
 })();
 </script>
 </body>
