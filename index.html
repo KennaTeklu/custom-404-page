@@ -13353,7 +13353,7 @@ window._onboardingEnterHandler = enterHandler; // optional, for cleanup
 })();
 </script>
 <script>
-// ----- Helper: count all descendants of a node (including itself) -----
+// ----- Helper: count descendants -----
 function countDescendants(nodeId, allNodes) {
     let count = 1;
     const children = allNodes.filter(n => n.parentIds?.includes(nodeId));
@@ -13378,7 +13378,8 @@ function updateBrainUI() {
         totalWeighted += (n.understanding || 0) * w;
         totalWeight += w;
     }
-    const percent = Math.round((totalWeighted / totalWeight) * 100);
+    // understanding is already a percentage (0–100), so no *100
+    const percent = Math.round(totalWeighted / totalWeight);
     document.title = `Brain: ${percent}%`;
 }
 
@@ -13390,11 +13391,9 @@ function updateDockButton() {
     btn.textContent = count > 1 ? '🔄 Swap Brain' : '🧠 Make Brain';
 }
 
-// ----- Initialisation (waits for State and DB, then hooks and updates) -----
+// ----- Initialisation (waits for State and DB) -----
 function initBrainUI() {
-    // Only run once the app is ready
     if (window.State && window.State.nodes && window.DB) {
-        // Hook into DB.save (only once)
         if (!window._brainUIHooked) {
             window._brainUIHooked = true;
             const originalSave = window.DB.save || function() {};
@@ -13405,34 +13404,30 @@ function initBrainUI() {
                 return result;
             };
         }
-        // Update immediately
         updateBrainUI();
         updateDockButton();
-        return true; // indicates success
+        return true;
     }
     return false;
 }
 
-// ----- Start the initialisation after a short delay -----
-// This ensures the main app has time to load and set up State and DB.
+// ----- Retry initialisation up to 6 seconds -----
 setTimeout(() => {
-    // If init fails, retry a few times (up to 6 seconds total)
     let attempts = 0;
-    const maxAttempts = 20; // 20 * 300ms = 6 seconds
+    const maxAttempts = 20;
     const timer = setInterval(() => {
         attempts++;
         if (initBrainUI() || attempts >= maxAttempts) {
             clearInterval(timer);
-            // If still not ready after max attempts, force‑update anyway
             if (!window._brainUIHooked) {
                 updateBrainUI();
                 updateDockButton();
             }
         }
     }, 300);
-}, 500); // start checking after 500ms
+}, 500);
 
-// ----- Live updates on slider (no save needed) -----
+// ----- Live updates on slider -----
 document.addEventListener('input', function(e) {
     if (e.target.id === 'understanding-slider') {
         updateBrainUI();
