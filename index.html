@@ -8434,7 +8434,46 @@ if (savedViewClass) {
     window.setView('grid', false);
 }
 document.getElementById('dock-home').addEventListener('click', Core.goHome);
-document.getElementById('dock-add').addEventListener('click', () => UI.showModal('upload-hub-modal'));
+// Dynamic button label and restart onboarding
+function updateDockAddButton() {
+    const btn = document.getElementById('dock-add');
+    if (!btn) return;
+    const nonRootCount = (State.nodes || []).filter(n => n.id !== 'root').length;
+    if (nonRootCount === 0) {
+        btn.textContent = '🧠 Make Brain';
+        btn.dataset.action = 'onboard';
+    } else if (nonRootCount === 1) {
+        btn.textContent = '🧠 Make Brain';
+        btn.dataset.action = 'onboard';
+    } else {
+        btn.textContent = '🔄 Swap Brain';
+        btn.dataset.action = 'onboard';
+    }
+}
+
+document.getElementById('dock-add').addEventListener('click', function() {
+    // Don't show upload modal – just restart onboarding
+    if (typeof runOnboarding === 'function') {
+        runOnboarding();
+    } else {
+        // Fallback: if onboarding not loaded, reload to trigger it
+        localStorage.removeItem('onboarding_complete_v2');
+        location.reload();
+    }
+});
+
+// Call after every node change
+const originalSave = DB.save;
+DB.save = async function(recordHistory = true) {
+    await originalSave.call(this, recordHistory);
+    updateDockAddButton();
+};
+// Also call after load
+if (document.readyState === 'complete') {
+    setTimeout(updateDockAddButton, 500);
+} else {
+    window.addEventListener('load', () => setTimeout(updateDockAddButton, 500));
+}
 document.getElementById('dock-settings').addEventListener('click', () => UI.showModal('settings-modal'));
 document.getElementById('dock-backup').addEventListener('click', Core.backup);
 // --- RESTORE FROM BACKUP ---
@@ -12190,20 +12229,183 @@ function validateHTML(html) {
     });
 })();
 </script>
-    <script>
-        function updateBrainTitle() {
-            const totalNodes = window.State?.nodes?.length || 0;
-            if (totalNodes === 0) {
-                document.title = "Brain";
-                return;
-            }
-            const completedNodes = window.State?.nodes?.filter(n => n.completed === true).length || 0;
-            const percent = Math.round((completedNodes / totalNodes) * 100);
-            document.title = `Brain: ${percent}% complete`;
+<script>
+// ================================================================
+// BRAIN SCORE ENGINE – Reactive, Event‑Driven, No Polling
+// ================================================================
+
+// ----- Dynamic Weight Calculator -----
+function computeWeight(node, allNodes) {
+    // Weight = content length + (number of children * 10) + (depth * 5)
+    // This gives more influence to deeper, content‑rich nodes.
+    const contentLen = (node.content?.length || 0);
+    const childrenCount = allNodes.filter(n => n.parentIds?.includes(node.id)).length;
+    let depth = 0;
+    let current = node;
+    while (current && current.parentIds?.length) {
+        const parent = allNodes.find(n => n.id === current.parentIds[0]);
+        if (!parent) break;
+        current = parent;
+        depth++;
+    }
+    return contentLen + childrenCount * 10 + depth * 5;
+}
+
+// ----- Reactive Store for Brain Score -----
+class BrainScore {
+    constructor() {
+        this._score = 0;
+        this._subscribers = [];
+        this._nodes = [];
+        this._updateTimer = null;
+        this._boundCleanup = this._cleanup.bind(this);
+        window.addEventListener('beforeunload', this._boundCleanup);
+    }
+
+    // Set the node list – triggers an update
+    setNodes(nodes) {
+        this._nodes = nodes || [];
+        this._scheduleUpdate();
+    }
+
+    // Subscribe a callback – runs whenever the score changes
+    subscribe(callback) {
+        if (typeof callback !== 'function') return;
+        this._subscribers.push(callback);
+        callback(this._score);
+        return () => {
+            this._subscribers = this._subscribers.filter(cb => cb !== callback);
+        };
+    }
+
+    // Debounced update using requestAnimationFrame
+    _scheduleUpdate() {
+        if (this._updateTimer) cancelAnimationFrame(this._updateTimer);
+        this._updateTimer = requestAnimationFrame(() => {
+            this._update();
+            this._updateTimer = null;
+        });
+    }
+
+    _update() {
+        const nonRoot = this._nodes.filter(n => n.id !== 'root');
+        if (nonRoot.length === 0) {
+            this._score = 0;
+            this._notify();
+            return;
         }
-        updateBrainTitle();
-        setInterval(updateBrainTitle, 5000);
-    </script>
+
+        let totalWeighted = 0;
+        let totalWeight = 0;
+        for (let n of nonRoot) {
+            const weight = computeWeight(n, this._nodes);
+            totalWeighted += (n.understanding || 0) * weight;
+            totalWeight += weight;
+        }
+        this._score = Math.round((totalWeighted / totalWeight) * 100);
+        this._notify();
+    }
+
+    _notify() {
+        for (let cb of this._subscribers) cb(this._score);
+    }
+
+    _cleanup() {
+        if (this._updateTimer) cancelAnimationFrame(this._updateTimer);
+        window.removeEventListener('beforeunload', this._boundCleanup);
+    }
+}
+
+// ----- Instantiate the store -----
+const brainScore = new BrainScore();
+
+// ----- UI Updaters (Title & Favicon) -----
+function setFavicon(percent) {
+    const hue = Math.min(120, Math.max(0, percent * 1.2));
+    const bgColor = `hsl(${hue}, 80%, 40%)`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="45" fill="${bgColor}" />
+        <text x="50" y="58" font-size="36" text-anchor="middle" fill="white" 
+              font-weight="bold" font-family="Arial, sans-serif">${percent}%</text>
+    </svg>`;
+    const url = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+    let link = document.getElementById('dynamic-favicon');
+    if (!link) {
+        link = document.createElement('link');
+        link.id = 'dynamic-favicon';
+        link.rel = 'icon';
+        link.type = 'image/svg+xml';
+        document.head.appendChild(link);
+    }
+    link.href = url;
+}
+
+// Subscribe the title and favicon to the brain score
+brainScore.subscribe((score) => {
+    document.title = `🧠 Brain: ${score}%`;
+    setFavicon(score);
+});
+
+// ----- Connect to the Application State -----
+function refreshBrainScore() {
+    const nodes = window.State?.nodes || [];
+    brainScore.setNodes(nodes);
+}
+
+// Hook into existing DB.save – update after every save
+const originalSave = window.DB?.save || async () => {};
+window.DB.save = async function(recordHistory = true) {
+    const result = await originalSave.call(this, recordHistory);
+    refreshBrainScore();
+    if (typeof updateDockAddButton === 'function') updateDockAddButton();
+    return result;
+};
+
+// Hook into slider changes (for live updates without saving)
+document.addEventListener('input', (e) => {
+    if (e.target.id === 'understanding-slider') {
+        refreshBrainScore();
+    }
+});
+
+// ----- Dock Button Logic ("Make Brain" / "Swap Brain") -----
+function updateDockAddButton() {
+    const btn = document.getElementById('dock-add');
+    if (!btn) return;
+    const nonRootCount = (window.State?.nodes || []).filter(n => n.id !== 'root').length;
+    if (nonRootCount === 0 || nonRootCount === 1) {
+        btn.textContent = '🧠 Make Brain';
+    } else {
+        btn.textContent = '🔄 Swap Brain';
+    }
+}
+
+document.getElementById('dock-add').addEventListener('click', function() {
+    // Restart onboarding without showing upload modal
+    if (typeof runOnboarding === 'function') {
+        runOnboarding();
+    } else {
+        // Fallback: force reload to trigger onboarding
+        localStorage.removeItem('onboarding_complete_v2');
+        location.reload();
+    }
+});
+
+// ----- Initialisation -----
+document.addEventListener('DOMContentLoaded', () => {
+    refreshBrainScore();
+    updateDockAddButton();
+});
+if (document.readyState === 'complete') {
+    refreshBrainScore();
+    updateDockAddButton();
+} else {
+    window.addEventListener('load', () => {
+        refreshBrainScore();
+        updateDockAddButton();
+    });
+}
+</script>
 <script>
 // ================================================================
 // ONBOARDING WIZARD + QUIZ HIJACKING – FINAL ROBUST VERSION
