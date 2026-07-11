@@ -13447,7 +13447,7 @@ document.getElementById('dock-add').addEventListener('click', function() {
 </script>
 <script>
 // =========================================================================
-// STATS PANEL – Safe Integration (Fixed Override)
+// STATS PANEL – Full Integration (Wrapper Button + Detail Modal)
 // =========================================================================
 (function() {
     'use strict';
@@ -13462,94 +13462,135 @@ document.getElementById('dock-add').addEventListener('click', function() {
     waitForApp();
 
     function initStatsPanel() {
-        // ---- Inject HTML ----
+        // ─── Inject HTML ──────────────────────────────────────────────
         const panelHTML = `
         <div id="stats-panel" class="liquid-glass" style="
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 24px;
+            right: 24px;
             z-index: 1000;
-            width: 320px;
-            padding: 16px 20px;
+            width: 380px;
+            padding: 20px 24px;
             display: none;
             flex-direction: column;
-            gap: 12px;
+            gap: 16px;
             pointer-events: auto;
-            transition: all 0.3s ease;
+            transform-origin: top right;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
         ">
-            <div class="stats-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:8px;">
-                <span style="font-size:16px; font-weight:700; color:var(--text);">Stats</span>
+            <div class="stats-header" style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:12px;">
+                <span style="font-size:18px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:10px;">
+                    <i class="fas fa-chart-simple" style="color:var(--text-dim); font-size:18px;"></i> Stats
+                </span>
                 <button id="stats-close-btn" class="icon-btn" style="background:none; border:none; color:var(--text-dim); font-size:18px; cursor:pointer;">✕</button>
             </div>
-            <div class="stats-grid" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;">
-                <div class="stat-card" style="background:rgba(255,255,255,0.03); border-radius:12px; padding:10px 4px; text-align:center;">
+
+            <div class="stats-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;">
+                <!-- Nodes -->
+                <div class="stat-card" data-stat="nodes" style="background:rgba(255,255,255,0.03); border-radius:16px; padding:14px 6px; text-align:center; border:1px solid transparent; transition:0.2s; cursor:pointer; position:relative;">
+                    <button class="stat-info-btn" data-stat="nodes" style="position:absolute; top:6px; right:8px; background:transparent; border:none; color:var(--text-dim); font-size:11px; opacity:0.4; cursor:pointer; transition:0.2s; padding:2px; border-radius:50%;">ℹ️</button>
                     <div class="stat-value" id="stat-nodes" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">-</div>
                     <div class="stat-label" style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Nodes</div>
                 </div>
-                <div class="stat-card" style="background:rgba(255,255,255,0.03); border-radius:12px; padding:10px 4px; text-align:center;">
+                <!-- Progress -->
+                <div class="stat-card" data-stat="progress" style="background:rgba(255,255,255,0.03); border-radius:16px; padding:14px 6px; text-align:center; border:1px solid transparent; transition:0.2s; cursor:pointer; position:relative;">
+                    <button class="stat-info-btn" data-stat="progress" style="position:absolute; top:6px; right:8px; background:transparent; border:none; color:var(--text-dim); font-size:11px; opacity:0.4; cursor:pointer; transition:0.2s; padding:2px; border-radius:50%;">ℹ️</button>
                     <div class="stat-value" id="stat-progress" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">-</div>
                     <div class="stat-label" style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Progress</div>
+                    <div class="stat-progress-bar" style="height:4px; background:rgba(255,255,255,0.1); border-radius:2px; margin-top:4px; overflow:hidden;">
+                        <div class="stat-progress-fill" style="height:100%; width:0%; background:var(--accent); transition:width 0.5s;"></div>
+                    </div>
                 </div>
-                <div class="stat-card" style="background:rgba(255,255,255,0.03); border-radius:12px; padding:10px 4px; text-align:center;">
+                <!-- Time Left -->
+                <div class="stat-card" data-stat="time-left" style="background:rgba(255,255,255,0.03); border-radius:16px; padding:14px 6px; text-align:center; border:1px solid transparent; transition:0.2s; cursor:pointer; position:relative;">
+                    <button class="stat-info-btn" data-stat="time-left" style="position:absolute; top:6px; right:8px; background:transparent; border:none; color:var(--text-dim); font-size:11px; opacity:0.4; cursor:pointer; transition:0.2s; padding:2px; border-radius:50%;">ℹ️</button>
                     <div class="stat-value" id="stat-time-left" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">-</div>
                     <div class="stat-label" style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Time left</div>
                 </div>
-                <div class="stat-card" style="background:rgba(255,255,255,0.03); border-radius:12px; padding:10px 4px; text-align:center;">
+                <!-- Est. Finish -->
+                <div class="stat-card" data-stat="est-finish" style="background:rgba(255,255,255,0.03); border-radius:16px; padding:14px 6px; text-align:center; border:1px solid transparent; transition:0.2s; cursor:pointer; position:relative;">
+                    <button class="stat-info-btn" data-stat="est-finish" style="position:absolute; top:6px; right:8px; background:transparent; border:none; color:var(--text-dim); font-size:11px; opacity:0.4; cursor:pointer; transition:0.2s; padding:2px; border-radius:50%;">ℹ️</button>
                     <div class="stat-value" id="stat-finish" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">-</div>
                     <div class="stat-label" style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Est. finish</div>
                 </div>
-                <div class="stat-card" style="background:rgba(255,255,255,0.03); border-radius:12px; padding:10px 4px; text-align:center;">
+                <!-- Streak -->
+                <div class="stat-card" data-stat="streak" style="background:rgba(255,255,255,0.03); border-radius:16px; padding:14px 6px; text-align:center; border:1px solid transparent; transition:0.2s; cursor:pointer; position:relative;">
+                    <button class="stat-info-btn" data-stat="streak" style="position:absolute; top:6px; right:8px; background:transparent; border:none; color:var(--text-dim); font-size:11px; opacity:0.4; cursor:pointer; transition:0.2s; padding:2px; border-radius:50%;">ℹ️</button>
                     <div class="stat-value" id="stat-streak" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">-</div>
                     <div class="stat-label" style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Streak</div>
                 </div>
-                <div class="stat-card" style="background:rgba(255,255,255,0.03); border-radius:12px; padding:10px 4px; text-align:center;">
+                <!-- Battery -->
+                <div class="stat-card" data-stat="battery" style="background:rgba(255,255,255,0.03); border-radius:16px; padding:14px 6px; text-align:center; border:1px solid transparent; transition:0.2s; cursor:pointer; position:relative;">
+                    <button class="stat-info-btn" data-stat="battery" style="position:absolute; top:6px; right:8px; background:transparent; border:none; color:var(--text-dim); font-size:11px; opacity:0.4; cursor:pointer; transition:0.2s; padding:2px; border-radius:50%;">ℹ️</button>
                     <div class="stat-value" id="stat-battery" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">-</div>
                     <div class="stat-label" style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Battery</div>
                 </div>
             </div>
-            <div class="coach-card" style="background:rgba(255,255,255,0.04); border-left:3px solid var(--text-dim); border-radius:8px; padding:8px 12px; font-size:13px; color:var(--text);">
-                <span id="coach-text">Add some topics to get started.</span>
+
+            <div class="coach-card" style="background:rgba(255,255,255,0.04); border-left:3px solid var(--text-dim); border-radius:12px; padding:12px 16px;">
+                <div class="coach-text" style="font-size:14px; line-height:1.6; color:var(--text);">
+                    <span class="highlight" style="color:var(--text); font-weight:600;">— h</span> today. Estimated finish in <span class="highlight" style="color:var(--text); font-weight:600;">— days</span> at current pace.
+                </div>
             </div>
-            <div class="stats-footer" style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-dim); border-top:1px solid rgba(255,255,255,0.06); padding-top:8px;">
-                <span id="stats-updated">-</span>
-                <button id="stats-info-btn" style="background:none; border:none; color:var(--text-dim); cursor:pointer;">ℹ️</button>
+
+            <div class="stats-footer" style="display:flex; flex-direction:column; gap:6px; font-size:12px; color:var(--text-dim); border-top:1px solid rgba(255,255,255,0.06); padding-top:12px;">
+                <div class="row" style="display:flex; justify-content:space-between; align-items:center;">
+                    <span id="stats-updated">Updated —</span>
+                    <div style="display:flex;gap:4px; align-items:center;">
+                        <span class="battery-wrap" style="display:flex; align-items:center; gap:6px;">
+                            <i class="fas fa-battery-three-quarters" id="battery-icon"></i>
+                            <span class="pct battery-normal" id="battery-pct" style="font-size:11px; font-weight:500; color:var(--text-dim);">—</span>
+                        </span>
+                        <button id="stats-breakdown-btn" style="background:transparent;border:none;color:var(--text-dim);cursor:pointer;padding:4px 8px;border-radius:12px;transition:0.2s;">📋</button>
+                        <button id="stats-refresh-btn" style="background:transparent;border:none;color:var(--text-dim);cursor:pointer;padding:4px 8px;border-radius:12px;transition:0.2s;">↻</button>
+                    </div>
+                </div>
+                <div class="disclaimer" style="font-size:10px; color:var(--text-dim); opacity:0.5; text-align:center;">Estimates may change as you study.</div>
             </div>
         </div>
-        <button id="stats-show-btn" class="liquid-glass" style="
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 999;
-            width: auto;
-            padding: 0 16px;
-            height: 56px;
-            border-radius: 40px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text);
-            background: var(--surface);
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            overflow: hidden;
-            position: relative;
-            transition: 0.3s;
-        ">
-            <div id="btn-progress-fill" style="position:absolute; left:0; top:0; height:100%; width:0%; background:var(--accent); opacity:0.2; border-radius:40px; transition:width 0.5s; pointer-events:none; z-index:0;"></div>
-            <i class="fas fa-chart-simple" style="position:relative; z-index:1;"></i>
-            <span id="stats-btn-label" style="position:relative; z-index:1;">-</span>
-        </button>
+
+        <!-- Toggle Button using wrapper method -->
+        <div class="stats-button-wrapper" style="position:fixed; top:24px; right:0; z-index:999; display:flex; justify-content:flex-end; width:100%; pointer-events:none;">
+            <button id="stats-show-btn" class="liquid-glass" style="
+                pointer-events:auto;
+                width:auto; padding:0 16px; height:56px; border-radius:40px;
+                display:flex; align-items:center; gap:8px; cursor:pointer;
+                font-size:16px; font-weight:600; color:var(--text);
+                background:var(--surface); backdrop-filter:blur(24px) saturate(180%);
+                border:1px solid var(--border); box-shadow:0 4px 20px rgba(0,0,0,0.5);
+                margin-right:24px; overflow:hidden; position:relative;
+                transition:0.3s cubic-bezier(0.34,1.56,0.64,1);
+            ">
+                <div id="btn-progress-fill" style="position:absolute; left:0; top:0; height:100%; width:0%; background:var(--accent); opacity:0.25; border-radius:40px; transition:width 0.5s ease; pointer-events:none; z-index:0;"></div>
+                <i class="fas fa-chart-simple" style="position:relative; z-index:1; font-size:18px;"></i>
+                <span id="stats-btn-label" style="position:relative; z-index:1;">—</span>
+            </button>
+        </div>
         `;
 
         document.body.insertAdjacentHTML('beforeend', panelHTML);
 
+        // ─── UI References ────────────────────────────────────────────
         const panel = document.getElementById('stats-panel');
         const showBtn = document.getElementById('stats-show-btn');
         const closeBtn = document.getElementById('stats-close-btn');
+        const refreshBtn = document.getElementById('stats-refresh-btn');
+        const breakdownBtn = document.getElementById('stats-breakdown-btn');
+        const updatedSpan = document.getElementById('stats-updated');
+        const batteryPctEl = document.getElementById('battery-pct');
+        const batteryIconEl = document.getElementById('battery-icon');
+        const statNodes = document.getElementById('stat-nodes');
+        const statProgress = document.getElementById('stat-progress');
+        const statTimeLeft = document.getElementById('stat-time-left');
+        const statFinish = document.getElementById('stat-finish');
+        const statStreak = document.getElementById('stat-streak');
+        const statBattery = document.getElementById('stat-battery');
+        const btnProgressFill = document.getElementById('btn-progress-fill');
+        const btnLabel = document.getElementById('stats-btn-label');
+        const coachText = document.querySelector('.coach-text');
+        const progressFill = document.querySelector('.stat-progress-fill');
 
+        // ─── Toggle Panel ────────────────────────────────────────────
         function showPanel() {
             panel.style.display = 'flex';
             showBtn.style.display = 'none';
@@ -13562,41 +13603,59 @@ document.getElementById('dock-add').addEventListener('click', function() {
         showBtn.addEventListener('click', showPanel);
         closeBtn.addEventListener('click', hidePanel);
 
-        // ---- Clock ----
+        // ─── Clock ────────────────────────────────────────────────────
         function updateClock() {
             const now = new Date();
             let hours = now.getHours();
             const ampm = hours >= 12 ? 'PM' : 'AM';
             hours = hours % 12 || 12;
             const minutes = String(now.getMinutes()).padStart(2, '0');
-            document.getElementById('stats-updated').textContent = `Updated ${hours}:${minutes} ${ampm}`;
+            updatedSpan.textContent = `Updated ${hours}:${minutes} ${ampm}`;
         }
         updateClock();
         setInterval(updateClock, 1000);
 
-        // ---- Battery ----
-        const batteryEl = document.getElementById('stat-battery');
+        // ─── Real Battery ─────────────────────────────────────────────
+        let batterySupported = false;
         if (navigator.getBattery) {
             navigator.getBattery().then(batt => {
+                batterySupported = true;
                 function updateBattery() {
-                    batteryEl.textContent = Math.round(batt.level * 100) + '%';
+                    const pct = Math.round(batt.level * 100);
+                    statBattery.textContent = pct + '%';
+                    batteryPctEl.textContent = pct + '%';
+                    let colorClass = 'battery-normal';
+                    if (pct <= 5) colorClass = 'battery-critical';
+                    else if (pct <= 10) colorClass = 'battery-mid';
+                    else if (pct <= 15) colorClass = 'battery-low';
+                    batteryPctEl.className = 'pct ' + colorClass;
+                    let iconName = 'fa-battery-three-quarters';
+                    if (pct <= 5) iconName = 'fa-battery-empty';
+                    else if (pct <= 10) iconName = 'fa-battery-quarter';
+                    else if (pct <= 15) iconName = 'fa-battery-half';
+                    batteryIconEl.className = 'fas ' + iconName + ' ' + colorClass;
                 }
                 updateBattery();
                 batt.addEventListener('levelchange', updateBattery);
-            }).catch(() => { batteryEl.textContent = '-'; });
-        } else {
-            batteryEl.textContent = '-';
+            }).catch(() => { batterySupported = false; });
+        }
+        if (!batterySupported) {
+            statBattery.textContent = '—';
+            batteryPctEl.textContent = '—';
+            batteryIconEl.className = 'fas fa-battery-slash';
         }
 
-        // ---- Stats Update ----
+        // ─── Stats Update ─────────────────────────────────────────────
         function updateStats() {
             const nodes = State.nodes || [];
             const total = nodes.length;
             const avgUnderstanding = total ? Math.round(nodes.reduce((sum, n) => sum + (n.understanding || 0), 0) / total) : 0;
 
-            document.getElementById('stat-nodes').textContent = total || '-';
-            document.getElementById('stat-progress').textContent = avgUnderstanding ? avgUnderstanding + '%' : '-';
+            statNodes.textContent = total || '-';
+            statProgress.textContent = avgUnderstanding ? avgUnderstanding + '%' : '-';
+            if (progressFill) progressFill.style.width = avgUnderstanding + '%';
 
+            // Streak
             let streak = '-';
             if (total) {
                 const dates = nodes.flatMap(n => n.accessDates || []).map(d => new Date(d).toISOString().split('T')[0]);
@@ -13611,52 +13670,238 @@ document.getElementById('dock-add').addEventListener('click', function() {
                     streak = count;
                 }
             }
-            document.getElementById('stat-streak').textContent = streak;
+            statStreak.textContent = streak;
 
-            document.getElementById('stat-time-left').textContent = '-';
-            document.getElementById('stat-finish').textContent = '-';
+            // Placeholders for time left and finish (can be extended later)
+            statTimeLeft.textContent = '-';
+            statFinish.textContent = '-';
 
-            const label = document.getElementById('stats-btn-label');
-            const fill = document.getElementById('btn-progress-fill');
+            // Update toggle button label and progress fill
             if (avgUnderstanding > 0) {
-                label.textContent = avgUnderstanding + '%';
-                fill.style.width = avgUnderstanding + '%';
+                btnLabel.textContent = avgUnderstanding + '%';
+                btnProgressFill.style.width = avgUnderstanding + '%';
             } else {
-                label.textContent = '-';
-                fill.style.width = '0%';
+                btnLabel.textContent = '—';
+                btnProgressFill.style.width = '0%';
             }
 
-            const coach = document.getElementById('coach-text');
+            // Coach text
             if (total === 0) {
-                coach.textContent = 'Add some topics to get started.';
+                coachText.innerHTML = `Add some topics to get started.`;
             } else {
-                coach.textContent = `You have ${total} topic${total>1?'s':''} with an average understanding of ${avgUnderstanding}%. Keep going!`;
+                coachText.innerHTML = `<span class="highlight">${avgUnderstanding}%</span> average understanding across <span class="highlight">${total}</span> topic${total>1?'s':''}. Keep going!`;
             }
             updateClock();
         }
 
-        // ════════════════════════════════════════════════════════════
-        // 🔥 THE FIX: Chain onto Core.refresh instead of replacing it
-        // ════════════════════════════════════════════════════════════
+        // ─── Chain onto Core.refresh ──────────────────────────────────
         const originalRefresh = Core.refresh;
         Core.refresh = async function() {
-            // 1. Always call the original refresh first (it builds the graph and updates navigation)
             await originalRefresh.apply(this, arguments);
-            
-            // 2. Then safely update our stats panel (only if it's open)
             if (panel.style.display === 'flex') {
                 updateStats();
             }
         };
 
-        document.getElementById('stats-info-btn').addEventListener('click', () => {
-            if (typeof UI !== 'undefined' && UI.toast) {
-                UI.toast('Detailed breakdown coming soon.');
-            } else {
-                alert('Detailed breakdown coming soon.');
+        // ─── Stat Card Popovers (click card or info button) ──────────
+        const popover = document.createElement('div');
+        popover.className = 'liquid-glass';
+        popover.style.cssText = `
+            position:fixed; z-index:2000; width:280px; padding:16px 18px;
+            border-radius:20px; box-shadow:0 12px 40px rgba(0,0,0,0.8);
+            display:none; transition:opacity 0.2s; font-size:13px; line-height:1.6;
+            pointer-events:auto;
+        `;
+        popover.innerHTML = `
+            <button class="close-popover" style="position:absolute; top:6px; right:10px; background:transparent; border:none; color:var(--text-dim); font-size:14px; cursor:pointer;">✕</button>
+            <div class="popover-title" style="font-weight:600; color:var(--accent); margin-bottom:4px;"></div>
+            <div class="popover-body" style="color:var(--text-dim);"></div>
+        `;
+        document.body.appendChild(popover);
+        const popoverTitle = popover.querySelector('.popover-title');
+        const popoverBody = popover.querySelector('.popover-body');
+        const popoverClose = popover.querySelector('.close-popover');
+
+        const STAT_INFO = {
+            'nodes': 'Total number of topics in your knowledge map. Each topic represents a concept you are studying.',
+            'progress': 'Your overall mastery across all topics, calculated from quiz scores and manual adjustments. Reaching 100% means all topics are fully mastered.',
+            'time-left': 'Estimated active study hours remaining based on your personal pace. This is calculated from how long you spend on each topic compared to the global average.',
+            'est-finish': 'The estimated date you will reach 100% progress if you maintain your current study pace.',
+            'streak': 'The number of consecutive days you have studied.',
+            'battery': 'Current battery level of your device.'
+        };
+
+        function showPopover(statKey, target) {
+            const title = statKey.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase());
+            const body = STAT_INFO[statKey] || 'No additional information.';
+            const rect = target.getBoundingClientRect();
+            let left = rect.right + 8, top = rect.top - 10;
+            if (left + 280 > window.innerWidth) left = rect.left - 280 - 8;
+            if (top + 200 > window.innerHeight) top = window.innerHeight - 200 - 8;
+            if (top < 10) top = 10;
+            popover.style.left = left + 'px';
+            popover.style.top = top + 'px';
+            popoverTitle.textContent = title;
+            popoverBody.textContent = body;
+            popover.style.display = 'block';
+        }
+
+        function hidePopover() {
+            popover.style.display = 'none';
+        }
+
+        // Attach click handlers to stat cards and info buttons
+        document.querySelectorAll('.stat-card').forEach(card => {
+            const statKey = card.dataset.stat;
+            card.addEventListener('click', (e) => {
+                if (e.target.closest('.stat-info-btn')) return;
+                showPopover(statKey, card);
+            });
+            const infoBtn = card.querySelector('.stat-info-btn');
+            if (infoBtn) {
+                infoBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showPopover(statKey, infoBtn);
+                });
             }
         });
 
+        popoverClose.addEventListener('click', hidePopover);
+        document.addEventListener('click', (e) => {
+            if (!popover.contains(e.target) && !e.target.closest('.stat-card')) {
+                hidePopover();
+            }
+        });
+
+        // ─── Detailed Breakdown Modal ──────────────────────────────────
+        // We'll inject a modal if it doesn't already exist in the page.
+        let modal = document.getElementById('detail-modal');
+        if (!modal) {
+            const modalHTML = `
+            <div id="detail-modal" class="modal-bg" style="display:none; position:fixed; inset:0; z-index:2000; justify-content:center; align-items:center; background:rgba(0,0,0,0.7); backdrop-filter:blur(12px);">
+                <div class="modal-content liquid-glass" style="max-width:800px; width:94vw; max-height:88vh; overflow-y:auto; padding:28px 32px; background:var(--surface); backdrop-filter:blur(24px) saturate(180%); border:1px solid var(--border); border-radius:32px; box-shadow:0 16px 48px rgba(0,0,0,0.8);">
+                    <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                        <h2 style="font-size:20px; color:var(--text); font-weight:700;">Detailed Breakdown</h2>
+                        <button class="modal-close" style="background:transparent; border:none; color:var(--text-dim); font-size:24px; cursor:pointer; padding:4px; border-radius:8px; transition:0.2s;">✕</button>
+                    </div>
+                    <div class="modal-body" id="modal-body"></div>
+                </div>
+            </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            modal = document.getElementById('detail-modal');
+            modal.querySelector('.modal-close').addEventListener('click', () => {
+                modal.classList.remove('visible');
+                modal.style.display = 'none';
+            });
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('visible');
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // ─── Render Breakdown Modal (using mock data if no nodes) ────
+        function renderModal() {
+            const modalBody = document.getElementById('modal-body');
+            if (!modalBody) return;
+            const nodes = State.nodes || [];
+            // If no nodes, show placeholder
+            if (!nodes.length) {
+                modalBody.innerHTML = `<p style="color:var(--text-dim);">No topics yet. Add some content to see a breakdown.</p>`;
+                return;
+            }
+
+            // Build tree (mock parent relationships)
+            function buildTree(nodes, parentId) {
+                const children = nodes.filter(n => n.parentIds && n.parentIds.includes(parentId));
+                return children.map(child => ({ ...child, children: buildTree(nodes, child.id) }));
+            }
+            const tree = buildTree(nodes, 'root');
+
+            function calculateMetrics(nodeData) {
+                const globalAvg = nodes.filter(n => n.parentIds && n.parentIds.length).reduce((s, n) => s + (n.rawHours || 0), 0) / nodes.filter(n => n.parentIds && n.parentIds.length).length || 1;
+                const difficulty = (nodeData.rawHours || 0) / globalAvg;
+                const effectiveTime = (nodeData.rawHours || 0) * difficulty;
+                let remaining = 0;
+                if ((nodeData.understanding || 0) < 100) {
+                    remaining = Math.max(0.1, ((100 - (nodeData.understanding || 0)) / 100) * effectiveTime * 1.2);
+                }
+                return { difficulty, effectiveTime, remaining };
+            }
+
+            function getHumanSummary(node) {
+                if (node.id === 'root') return 'Overall progress across all topics.';
+                const m = calculateMetrics(node);
+                const mastery = Math.round(node.understanding || 0);
+                const spent = (node.rawHours || 0).toFixed(1);
+                if (mastery >= 90) return `You spent ${spent}h and are ${mastery}% done. Almost finished!`;
+                if (mastery >= 70) return `You spent ${spent}h, ${mastery}% done. About ${m.remaining.toFixed(1)}h left.`;
+                if (mastery >= 40) return `You spent ${spent}h, ${mastery}% done. This is taking time; you need about ${m.remaining.toFixed(1)}h more.`;
+                return `You spent ${spent}h, only ${mastery}% done. Expect ${m.remaining.toFixed(1)}h more to finish.`;
+            }
+
+            function renderTreeRows(items, depth = 0) {
+                let html = '';
+                items.forEach(item => {
+                    if (item.id === 'root') {
+                        html += renderTreeRows(item.children, 0);
+                        return;
+                    }
+                    const m = calculateMetrics(item);
+                    const remainingStr = m.remaining.toFixed(1) + 'h';
+                    const depthClass = 'depth-' + Math.min(depth, 3);
+                    const summary = getHumanSummary(item);
+                    html += `<tr><td class="${depthClass}" style="padding-left:${12 + depth*16}px; font-weight:${depth===0?'600':'normal'}; color:var(--text);">${item.name}</td><td>${Math.round(item.understanding||0)}%</td><td>${(item.rawHours||0).toFixed(1)}h</td><td>${remainingStr}</td><td>${item.lastAccessDays || '—'} days ago</td><td class="human-summary" style="font-size:12px; color:var(--text-dim); max-width:240px; line-height:1.4;">${summary}</td></tr>`;
+                    html += renderTreeRows(item.children, depth + 1);
+                });
+                return html;
+            }
+
+            const tableRows = renderTreeRows(tree);
+            const totalSpent = nodes.filter(n => n.parentIds && n.parentIds.length).reduce((s, n) => s + (n.rawHours || 0), 0);
+            const avgMastery = nodes.filter(n => n.parentIds && n.parentIds.length).reduce((s, n) => s + (n.understanding || 0), 0) / (nodes.filter(n => n.parentIds && n.parentIds.length).length || 1);
+            const weakNode = nodes.filter(n => n.parentIds && n.parentIds.length).reduce((a, b) => {
+                const scoreA = (a.understanding || 0) + ((a.lastAccessDays || 0) * 5);
+                const scoreB = (b.understanding || 0) + ((b.lastAccessDays || 0) * 5);
+                return scoreA < scoreB ? a : b;
+            }, nodes[0]);
+
+            modalBody.innerHTML = `
+                <p><span class="section-title" style="color:var(--accent); font-weight:600; font-size:16px; display:block; margin-top:20px; margin-bottom:6px;">Overview</span><br>
+                You have spent <span class="stat-num" style="color:#facc15; font-weight:700;">${totalSpent.toFixed(1)} hours</span> across ${nodes.filter(n => n.parentIds && n.parentIds.length).length} topics. 
+                Your average mastery is <span class="stat-num">${Math.round(avgMastery)}%</span>. 
+                Your weakest topic is <span class="stat-num">${weakNode?.name || '—'}</span> (${Math.round(weakNode?.understanding || 0)}%, last seen ${weakNode?.lastAccessDays || '—'} days ago).</p>
+                <div class="topic-table-wrap" style="overflow-x:auto; margin:12px 0; border-radius:12px; border:1px solid rgba(255,255,255,0.05);">
+                    <table class="topic-table" style="width:100%; border-collapse:collapse; font-size:13px;">
+                        <thead><tr><th style="text-align:left; padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.06); color:var(--text-dim); font-weight:500; font-size:11px; letter-spacing:0.3px;">Topic</th><th>Mastery</th><th>Time spent</th><th>Est. remaining</th><th>Last seen</th><th style="max-width:240px;">What this means</th></tr></thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        // ─── Open Breakdown Modal ─────────────────────────────────────
+        breakdownBtn.addEventListener('click', () => {
+            if (modal) {
+                modal.style.display = 'flex';
+                modal.classList.add('visible');
+                renderModal();
+            }
+        });
+
+        // ─── Refresh Button ───────────────────────────────────────────
+        refreshBtn.addEventListener('click', () => {
+            if (panel.style.display === 'flex') {
+                updateStats();
+                if (typeof UI !== 'undefined' && UI.toast) {
+                    UI.toast('Stats refreshed.');
+                }
+            }
+        });
+
+        // ─── Initial Update ───────────────────────────────────────────
         updateStats();
     }
 })();
