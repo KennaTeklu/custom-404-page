@@ -5981,7 +5981,7 @@ function flashDOMNode(nodeId) {
             clearInterval(interval);
             folderItem.classList.remove('flash');
         }
-    }, 150);
+    }, 2000);
 }
 
 // Flash a 3D sphere twice
@@ -5997,7 +5997,7 @@ function flash3DNode(nodeId) {
             clearInterval(interval);
             mesh.material.emissiveIntensity = originalEmissive;
         }
-    }, 150);
+    }, 2000);
 }
 // ----------------------------------------------------------------------------
 // 5. CORE NAVIGATION & ACTIONS (from 2D, adapted for 3D)
@@ -8819,6 +8819,7 @@ function renderQuizQuestion() {
                     Graph3D.updateNodeColor(nodeId, node.understanding);
                     Graph3D.updateRootColor();
                     await DB.save();
+                    if (typeof updateStats === 'function') updateStats();
                     Core.refresh();
                     flashDOMNode(nodeId);
                     flash3DNode(nodeId);
@@ -13600,17 +13601,20 @@ document.getElementById('dock-add').addEventListener('click', function() {
         const btnProgressFill = document.getElementById('btn-progress-fill');
         const btnLabel = document.getElementById('stats-btn-label');
         const coachText = document.querySelector('.coach-text');
+        let panelVisible = false;
         const progressFill = document.querySelector('.stat-progress-fill');
 
         // ─── Toggle Panel ────────────────────────────────────────────
         function showPanel() {
             panel.style.display = 'flex';
             showBtn.style.display = 'none';
+            panelVisible = true;
             updateStats();
         }
         function hidePanel() {
             panel.style.display = 'none';
             showBtn.style.display = 'flex';
+            panelVisible = false;
         }
         showBtn.addEventListener('click', showPanel);
         closeBtn.addEventListener('click', hidePanel);
@@ -13778,7 +13782,7 @@ document.getElementById('dock-add').addEventListener('click', function() {
         const originalRefresh = Core.refresh;
         Core.refresh = async function() {
             await originalRefresh.apply(this, arguments);
-            if (panel.style.display === 'flex') {
+            if (panelVisible) {
                 updateStats();
             }
         };
