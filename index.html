@@ -13447,7 +13447,7 @@ document.getElementById('dock-add').addEventListener('click', function() {
 </script>
 <script>
 // =========================================================================
-// STATS PANEL – Full Integration (Wrapper Button + Detail Modal)
+// STATS PANEL – Full Integration (Predictive, Interactive, Clean)
 // =========================================================================
 (function() {
     'use strict';
@@ -13489,13 +13489,13 @@ document.getElementById('dock-add').addEventListener('click', function() {
                 <!-- Nodes -->
                 <div class="stat-card" data-stat="nodes" style="background:rgba(255,255,255,0.03); border-radius:16px; padding:14px 6px; text-align:center; border:1px solid transparent; transition:0.2s; cursor:pointer; position:relative;">
                     <button class="stat-info-btn" data-stat="nodes" style="position:absolute; top:6px; right:8px; background:transparent; border:none; color:var(--text-dim); font-size:11px; opacity:0.4; cursor:pointer; transition:0.2s; padding:2px; border-radius:50%;">ℹ️</button>
-                    <div class="stat-value" id="stat-nodes" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">-</div>
+                    <div class="stat-value" id="stat-nodes" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">0</div>
                     <div class="stat-label" style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Nodes</div>
                 </div>
                 <!-- Progress -->
                 <div class="stat-card" data-stat="progress" style="background:rgba(255,255,255,0.03); border-radius:16px; padding:14px 6px; text-align:center; border:1px solid transparent; transition:0.2s; cursor:pointer; position:relative;">
                     <button class="stat-info-btn" data-stat="progress" style="position:absolute; top:6px; right:8px; background:transparent; border:none; color:var(--text-dim); font-size:11px; opacity:0.4; cursor:pointer; transition:0.2s; padding:2px; border-radius:50%;">ℹ️</button>
-                    <div class="stat-value" id="stat-progress" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">-</div>
+                    <div class="stat-value" id="stat-progress" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">0%</div>
                     <div class="stat-label" style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Progress</div>
                     <div class="stat-progress-bar" style="height:4px; background:rgba(255,255,255,0.1); border-radius:2px; margin-top:4px; overflow:hidden;">
                         <div class="stat-progress-fill" style="height:100%; width:0%; background:var(--accent); transition:width 0.5s;"></div>
@@ -13504,32 +13504,32 @@ document.getElementById('dock-add').addEventListener('click', function() {
                 <!-- Time Left -->
                 <div class="stat-card" data-stat="time-left" style="background:rgba(255,255,255,0.03); border-radius:16px; padding:14px 6px; text-align:center; border:1px solid transparent; transition:0.2s; cursor:pointer; position:relative;">
                     <button class="stat-info-btn" data-stat="time-left" style="position:absolute; top:6px; right:8px; background:transparent; border:none; color:var(--text-dim); font-size:11px; opacity:0.4; cursor:pointer; transition:0.2s; padding:2px; border-radius:50%;">ℹ️</button>
-                    <div class="stat-value" id="stat-time-left" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">-</div>
+                    <div class="stat-value" id="stat-time-left" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">—</div>
                     <div class="stat-label" style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Time left</div>
                 </div>
                 <!-- Est. Finish -->
                 <div class="stat-card" data-stat="est-finish" style="background:rgba(255,255,255,0.03); border-radius:16px; padding:14px 6px; text-align:center; border:1px solid transparent; transition:0.2s; cursor:pointer; position:relative;">
                     <button class="stat-info-btn" data-stat="est-finish" style="position:absolute; top:6px; right:8px; background:transparent; border:none; color:var(--text-dim); font-size:11px; opacity:0.4; cursor:pointer; transition:0.2s; padding:2px; border-radius:50%;">ℹ️</button>
-                    <div class="stat-value" id="stat-finish" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">-</div>
+                    <div class="stat-value" id="stat-finish" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">—</div>
                     <div class="stat-label" style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Est. finish</div>
                 </div>
                 <!-- Streak -->
                 <div class="stat-card" data-stat="streak" style="background:rgba(255,255,255,0.03); border-radius:16px; padding:14px 6px; text-align:center; border:1px solid transparent; transition:0.2s; cursor:pointer; position:relative;">
                     <button class="stat-info-btn" data-stat="streak" style="position:absolute; top:6px; right:8px; background:transparent; border:none; color:var(--text-dim); font-size:11px; opacity:0.4; cursor:pointer; transition:0.2s; padding:2px; border-radius:50%;">ℹ️</button>
-                    <div class="stat-value" id="stat-streak" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">-</div>
+                    <div class="stat-value" id="stat-streak" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">0</div>
                     <div class="stat-label" style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Streak</div>
                 </div>
                 <!-- Battery -->
                 <div class="stat-card" data-stat="battery" style="background:rgba(255,255,255,0.03); border-radius:16px; padding:14px 6px; text-align:center; border:1px solid transparent; transition:0.2s; cursor:pointer; position:relative;">
                     <button class="stat-info-btn" data-stat="battery" style="position:absolute; top:6px; right:8px; background:transparent; border:none; color:var(--text-dim); font-size:11px; opacity:0.4; cursor:pointer; transition:0.2s; padding:2px; border-radius:50%;">ℹ️</button>
-                    <div class="stat-value" id="stat-battery" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">-</div>
+                    <div class="stat-value" id="stat-battery" style="font-size:22px; font-weight:700; color:var(--text); font-family:var(--font-mono);">—</div>
                     <div class="stat-label" style="font-size:10px; color:var(--text-dim); text-transform:uppercase;">Battery</div>
                 </div>
             </div>
 
             <div class="coach-card" style="background:rgba(255,255,255,0.04); border-left:3px solid var(--text-dim); border-radius:12px; padding:12px 16px;">
                 <div class="coach-text" style="font-size:14px; line-height:1.6; color:var(--text);">
-                    <span class="highlight" style="color:var(--text); font-weight:600;">— h</span> today. Estimated finish in <span class="highlight" style="color:var(--text); font-weight:600;">— days</span> at current pace.
+                    <span class="highlight" style="color:var(--text); font-weight:600;">0%</span> average across <span class="highlight" style="color:var(--text); font-weight:600;">0</span> topics. Add some content to get started.
                 </div>
             </div>
 
@@ -13549,23 +13549,35 @@ document.getElementById('dock-add').addEventListener('click', function() {
             </div>
         </div>
 
-        <!-- Toggle Button using wrapper method -->
-        <div class="stats-button-wrapper" style="position:fixed; top:24px; right:0; z-index:999; display:flex; justify-content:flex-end; width:100%; pointer-events:none;">
-            <button id="stats-show-btn" class="liquid-glass" style="
-                pointer-events:auto;
-                width:auto; padding:0 16px; height:56px; border-radius:40px;
-                display:flex; align-items:center; gap:8px; cursor:pointer;
-                font-size:16px; font-weight:600; color:var(--text);
-                background:var(--surface); backdrop-filter:blur(24px) saturate(180%);
-                border:1px solid var(--border); box-shadow:0 4px 20px rgba(0,0,0,0.5);
-                margin-right:24px; overflow:hidden; position:relative;
-                transition:0.3s cubic-bezier(0.34,1.56,0.64,1);
-            ">
-                <div id="btn-progress-fill" style="position:absolute; left:0; top:0; height:100%; width:0%; background:var(--accent); opacity:0.25; border-radius:40px; transition:width 0.5s ease; pointer-events:none; z-index:0;"></div>
-                <i class="fas fa-chart-simple" style="position:relative; z-index:1; font-size:18px;"></i>
-                <span id="stats-btn-label" style="position:relative; z-index:1;">—</span>
-            </button>
-        </div>
+        <!-- Toggle Button (direct positioning, no wrapper) -->
+        <button id="stats-show-btn" class="liquid-glass" style="
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 999;
+            width: auto;
+            padding: 0 16px;
+            height: 56px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+            background: var(--surface);
+            backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            overflow: hidden;
+            position: relative;
+            transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        ">
+            <div id="btn-progress-fill" style="position:absolute; left:0; top:0; height:100%; width:0%; background:var(--accent); opacity:0.25; border-radius:40px; transition:width 0.5s ease; pointer-events:none; z-index:0;"></div>
+            <i class="fas fa-chart-simple" style="position:relative; z-index:1; font-size:18px;"></i>
+            <span id="stats-btn-label" style="position:relative; z-index:1;">0%</span>
+        </button>
         `;
 
         document.body.insertAdjacentHTML('beforeend', panelHTML);
@@ -13645,18 +13657,78 @@ document.getElementById('dock-add').addEventListener('click', function() {
             batteryIconEl.className = 'fas fa-battery-slash';
         }
 
+        // ─── Compute predictions ─────────────────────────────────────
+        function computePredictions(nodes) {
+            const leafNodes = nodes.filter(n => n.parentIds && n.parentIds.length > 0 && n.id !== 'root');
+            if (leafNodes.length === 0) {
+                return { timeLeft: '—', finishDate: '—', weeklyGain: 0, avgDailyGain: 0 };
+            }
+
+            // Calculate average daily understanding gain over last 7 days
+            const now = Date.now();
+            const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+            let totalGain = 0;
+            let daysWithData = 0;
+            leafNodes.forEach(n => {
+                if (n.understandingHistory && Array.isArray(n.understandingHistory)) {
+                    // Get entries from last 7 days
+                    const recent = n.understandingHistory.filter(h => new Date(h.date).getTime() > sevenDaysAgo);
+                    if (recent.length >= 2) {
+                        const first = recent[0];
+                        const last = recent[recent.length - 1];
+                        const gain = last.value - first.value;
+                        totalGain += gain;
+                        daysWithData++;
+                    }
+                }
+            });
+            const avgDailyGain = daysWithData > 0 ? totalGain / daysWithData : 0;
+
+            // Current average understanding
+            const avgUnderstanding = leafNodes.reduce((sum, n) => sum + (n.understanding || 0), 0) / leafNodes.length;
+
+            // Time left to reach 90% (assuming linear progress)
+            let timeLeft = '—';
+            let finishDate = '—';
+            if (avgDailyGain > 0) {
+                const daysTo90 = (90 - avgUnderstanding) / avgDailyGain;
+                if (daysTo90 > 0) {
+                    timeLeft = Math.round(daysTo90 * 24) + 'h'; // rough hours
+                    const finish = new Date(now + daysTo90 * 24 * 60 * 60 * 1000);
+                    finishDate = finish.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                }
+            }
+
+            // Weekly gain: compare current average to 7 days ago
+            let weeklyGain = 0;
+            leafNodes.forEach(n => {
+                if (n.understandingHistory && Array.isArray(n.understandingHistory)) {
+                    const recent = n.understandingHistory.filter(h => new Date(h.date).getTime() > sevenDaysAgo);
+                    if (recent.length >= 2) {
+                        const first = recent[0];
+                        const last = recent[recent.length - 1];
+                        weeklyGain += (last.value - first.value);
+                    }
+                }
+            });
+            weeklyGain = weeklyGain / leafNodes.length; // average gain across nodes
+
+            return { timeLeft, finishDate, weeklyGain, avgDailyGain };
+        }
+
         // ─── Stats Update ─────────────────────────────────────────────
         function updateStats() {
             const nodes = State.nodes || [];
-            const total = nodes.length;
-            const avgUnderstanding = total ? Math.round(nodes.reduce((sum, n) => sum + (n.understanding || 0), 0) / total) : 0;
+            const total = nodes.filter(n => n.id !== 'root').length;
+            const leafNodes = nodes.filter(n => n.parentIds && n.parentIds.length > 0 && n.id !== 'root');
+            const avgUnderstanding = leafNodes.length ? Math.round(leafNodes.reduce((sum, n) => sum + (n.understanding || 0), 0) / leafNodes.length) : 0;
 
-            statNodes.textContent = total || '-';
-            statProgress.textContent = avgUnderstanding ? avgUnderstanding + '%' : '-';
+            statNodes.textContent = total || '0';
+            statProgress.textContent = avgUnderstanding + '%';
             if (progressFill) progressFill.style.width = avgUnderstanding + '%';
 
             // Streak
-            let streak = '-';
+            let streak = 0;
             if (total) {
                 const dates = nodes.flatMap(n => n.accessDates || []).map(d => new Date(d).toISOString().split('T')[0]);
                 const uniqueDates = [...new Set(dates)].sort();
@@ -13670,26 +13742,34 @@ document.getElementById('dock-add').addEventListener('click', function() {
                     streak = count;
                 }
             }
-            statStreak.textContent = streak;
+            statStreak.textContent = streak || '0';
 
-            // Placeholders for time left and finish (can be extended later)
-            statTimeLeft.textContent = '-';
-            statFinish.textContent = '-';
+            // Predictions
+            const pred = computePredictions(nodes);
+            statTimeLeft.textContent = pred.timeLeft;
+            statFinish.textContent = pred.finishDate;
 
             // Update toggle button label and progress fill
-            if (avgUnderstanding > 0) {
-                btnLabel.textContent = avgUnderstanding + '%';
-                btnProgressFill.style.width = avgUnderstanding + '%';
-            } else {
-                btnLabel.textContent = '—';
-                btnProgressFill.style.width = '0%';
-            }
+            btnLabel.textContent = (avgUnderstanding > 0 ? avgUnderstanding + '%' : '0%');
+            btnProgressFill.style.width = avgUnderstanding + '%';
 
             // Coach text
             if (total === 0) {
-                coachText.innerHTML = `Add some topics to get started.`;
+                coachText.innerHTML = `<span class="highlight">0%</span> average across <span class="highlight">0</span> topics. Add some content to get started.`;
             } else {
-                coachText.innerHTML = `<span class="highlight">${avgUnderstanding}%</span> average understanding across <span class="highlight">${total}</span> topic${total>1?'s':''}. Keep going!`;
+                const weeklyGainText = pred.weeklyGain > 0 ? `+${Math.round(pred.weeklyGain)}%` : '0%';
+                let coachMsg = `<span class="highlight">${avgUnderstanding}%</span> average across <span class="highlight">${total}</span> topics. `;
+                if (pred.avgDailyGain > 0) {
+                    coachMsg += `You've improved <span class="highlight">${weeklyGainText}</span> this week. `;
+                    if (pred.timeLeft !== '—') {
+                        coachMsg += `At this rate, you'll reach 90% in <span class="highlight">${pred.timeLeft}</span>.`;
+                    } else {
+                        coachMsg += `Keep studying to see your projection.`;
+                    }
+                } else {
+                    coachMsg += `Study more to generate a prediction.`;
+                }
+                coachText.innerHTML = coachMsg;
             }
             updateClock();
         }
@@ -13725,8 +13805,8 @@ document.getElementById('dock-add').addEventListener('click', function() {
         const STAT_INFO = {
             'nodes': 'Total number of topics in your knowledge map. Each topic represents a concept you are studying.',
             'progress': 'Your overall mastery across all topics, calculated from quiz scores and manual adjustments. Reaching 100% means all topics are fully mastered.',
-            'time-left': 'Estimated active study hours remaining based on your personal pace. This is calculated from how long you spend on each topic compared to the global average.',
-            'est-finish': 'The estimated date you will reach 100% progress if you maintain your current study pace.',
+            'time-left': 'Estimated active study hours remaining based on your personal pace. This is calculated from your average daily understanding gain.',
+            'est-finish': 'The estimated date you will reach 90% mastery if you maintain your current study pace.',
             'streak': 'The number of consecutive days you have studied.',
             'battery': 'Current battery level of your device.'
         };
@@ -13773,8 +13853,7 @@ document.getElementById('dock-add').addEventListener('click', function() {
             }
         });
 
-        // ─── Detailed Breakdown Modal ──────────────────────────────────
-        // We'll inject a modal if it doesn't already exist in the page.
+        // ─── Detailed Breakdown Modal (with drill‑down) ──────────────
         let modal = document.getElementById('detail-modal');
         if (!modal) {
             const modalHTML = `
@@ -13802,18 +13881,17 @@ document.getElementById('dock-add').addEventListener('click', function() {
             });
         }
 
-        // ─── Render Breakdown Modal (using mock data if no nodes) ────
+        // ─── Render Breakdown Modal (interactive rows) ──────────────
         function renderModal() {
             const modalBody = document.getElementById('modal-body');
             if (!modalBody) return;
             const nodes = State.nodes || [];
-            // If no nodes, show placeholder
             if (!nodes.length) {
                 modalBody.innerHTML = `<p style="color:var(--text-dim);">No topics yet. Add some content to see a breakdown.</p>`;
                 return;
             }
 
-            // Build tree (mock parent relationships)
+            // Build tree
             function buildTree(nodes, parentId) {
                 const children = nodes.filter(n => n.parentIds && n.parentIds.includes(parentId));
                 return children.map(child => ({ ...child, children: buildTree(nodes, child.id) }));
@@ -13853,7 +13931,15 @@ document.getElementById('dock-add').addEventListener('click', function() {
                     const remainingStr = m.remaining.toFixed(1) + 'h';
                     const depthClass = 'depth-' + Math.min(depth, 3);
                     const summary = getHumanSummary(item);
-                    html += `<tr><td class="${depthClass}" style="padding-left:${12 + depth*16}px; font-weight:${depth===0?'600':'normal'}; color:var(--text);">${item.name}</td><td>${Math.round(item.understanding||0)}%</td><td>${(item.rawHours||0).toFixed(1)}h</td><td>${remainingStr}</td><td>${item.lastAccessDays || '—'} days ago</td><td class="human-summary" style="font-size:12px; color:var(--text-dim); max-width:240px; line-height:1.4;">${summary}</td></tr>`;
+                    // Add data-id attribute for click handler
+                    html += `<tr data-id="${item.id}" style="cursor:pointer;" onclick="window._focusNode('${item.id}')">
+                        <td class="${depthClass}" style="padding-left:${12 + depth*16}px; font-weight:${depth===0?'600':'normal'}; color:var(--text);">${item.name}</td>
+                        <td>${Math.round(item.understanding||0)}%</td>
+                        <td>${(item.rawHours||0).toFixed(1)}h</td>
+                        <td>${remainingStr}</td>
+                        <td>${item.lastAccessDays || '—'} days ago</td>
+                        <td class="human-summary" style="font-size:12px; color:var(--text-dim); max-width:240px; line-height:1.4;">${summary}</td>
+                    </tr>`;
                     html += renderTreeRows(item.children, depth + 1);
                 });
                 return html;
@@ -13879,7 +13965,20 @@ document.getElementById('dock-add').addEventListener('click', function() {
                         <tbody>${tableRows}</tbody>
                     </table>
                 </div>
+                <p style="font-size:12px; color:var(--text-dim); margin-top:8px;">Click any row to focus that topic in the 3D graph.</p>
             `;
+
+            // Expose a global function for row clicks
+            window._focusNode = function(id) {
+                if (typeof Core !== 'undefined' && Core.focus) {
+                    Core.focus(id);
+                    // Close the modal after focusing
+                    modal.classList.remove('visible');
+                    modal.style.display = 'none';
+                } else {
+                    console.warn('Core.focus not available');
+                }
+            };
         }
 
         // ─── Open Breakdown Modal ─────────────────────────────────────
