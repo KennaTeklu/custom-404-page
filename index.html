@@ -4365,6 +4365,7 @@ const UIPersistence = {
             const container = document.getElementById('folder-view-container');
             if (prefs.viewMode) container.classList.add(prefs.viewMode);
             if (prefs.cardCollapsed) document.getElementById('control-card').classList.add('collapsed');
+            else document.getElementById('control-card').classList.remove('collapsed');
             if (prefs.dockCollapsed) document.getElementById('dock').classList.add('collapsed');
         }
         if (search?.query) document.getElementById('search-input').value = search.query;
@@ -6066,7 +6067,9 @@ goHome: () => {
     State.focusId = 'root';
     State.path = [];
     // Auto-expand the control card when going home
+    if (localStorage.getItem('control_card_collapsed') !== 'true') {
     document.getElementById('control-card').classList.remove('collapsed');
+}
     localStorage.setItem('control_card_collapsed', 'false');
     document.getElementById('search-input').value = '';
     Core.refresh();
@@ -6633,7 +6636,9 @@ const UI = {
     },
     restoreAllAfterFocus: () => {
         if (window._dockWasExpanded) document.getElementById('dock').classList.remove('collapsed');
-        if (window._cardWasExpanded) document.getElementById('control-card').classList.remove('collapsed');
+        if (window._cardWasExpanded && localStorage.getItem('control_card_collapsed') !== 'true') {
+    document.getElementById('control-card').classList.remove('collapsed');
+}
         if (window._breadcrumbsWasVisible) document.getElementById('breadcrumbs').style.display = 'flex';
         if (window.Graph3D && window.Graph3D.controls) Graph3D.controls.enabled = true;
         delete window._dockWasExpanded;
@@ -13794,6 +13799,12 @@ document.getElementById('dock-add').addEventListener('click', function() {
                 updateStats();
             }
         };
+        // ─── Also update stats on every DB save ─────────────────────────────
+        const originalSave = DB.save;
+        DB.save = async function(recordHistory = true) {
+            await originalSave.call(this, recordHistory);
+            updateStats(); // updates button label and progress fill instantly
+        };
 
         // ─── Stat Card Popovers (click card or info button) ──────────
         const popover = document.createElement('div');
@@ -14016,6 +14027,17 @@ document.getElementById('dock-add').addEventListener('click', function() {
         updateStats();
     }
 })();
+</script>
+<script>
+// ─── Force control card to respect saved state ───
+setTimeout(() => {
+    const card = document.getElementById('control-card');
+    if (localStorage.getItem('control_card_collapsed') === 'true') {
+        card.classList.add('collapsed');
+    } else {
+        card.classList.remove('collapsed');
+    }
+}, 0);
 </script>
 </body>
 </html>
