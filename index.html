@@ -3535,7 +3535,6 @@ tr { break-inside: avoid; }
         </div>
         <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px;">
             <button id="open-billing-manager" class="btn-primary" style="width:100%;">💳 Manage Billing</button>
-            <button id="open-movingboxes-game" class="btn-secondary" style="width:100%;">📦 Play Moving Boxes</button>
         </div>
         <button class="close-modal-btn btn-secondary" style="width: 100%;">Close</button>
     </div>
@@ -3826,54 +3825,192 @@ tr { break-inside: avoid; }
         </div>
     </div>
 </div>
-<!-- ====== PAYWALL OVERLAY – NO CLOSE BUTTON ====== -->
-<div id="paywall-overlay" class="modal-bg" style="display:none; z-index:100000;">
-    <div class="modal-medium" style="max-width:480px; background:rgba(0,0,0,0.95); border:1px solid rgba(45,212,191,0.3);">
+<!-- ========== PAYWALL — Prepaint + Overlay + Modals ========== -->
+<script>
+  // Pre-paint gate: decide overlay visibility BEFORE first paint using cached state.
+  (function() {
+    try {
+      const subCache = JSON.parse(localStorage.getItem('paywall_sub_cache') || 'null');
+      const trialStart = localStorage.getItem('paywall_trial_start');
+      const approved = localStorage.getItem('pw_approved') === 'true';
+      const activeSub = subCache && subCache.active && (Date.now() - subCache.timestamp) < 3 * 24 * 60 * 60 * 1000;
+      const trialActive = trialStart && (Date.now() - parseInt(trialStart, 10)) < 7 * 24 * 60 * 60 * 1000;
+      const hasAccess = activeSub || trialActive || approved;
+      document.documentElement.setAttribute('data-paywall-state', hasAccess ? 'granted' : 'gated');
+    } catch (e) {
+      document.documentElement.setAttribute('data-paywall-state', 'gated');
+    }
+  })();
+</script>
+<style>
+  html[data-paywall-state="granted"] #paywall-overlay { display: none !important; }
 
-        <!-- Header (no close button) -->
-        <h3 style="margin:0 0 4px 0; color:#f8fafc; text-align:center;">
-            Subscribe <span style="color:#2dd4bf;">$19/mo</span>
-        </h3>
+  /* ── FAQ accordion (corrected selectors to match HTML) ── */
+  .faq-answer { display: none; margin-top: 8px; font-size: 13px; color: #94a3b8; line-height: 1.5; }
+  .faq-item.open .faq-answer { display: block; }
+  .faq-question i { transition: transform 0.3s; }
+  .faq-item.open .faq-question i { transform: rotate(180deg); }
 
-        <!-- Trial Status -->
-        <div id="paywall-trial-status" style="background:rgba(45,212,191,0.1); border:1px solid rgba(45,212,191,0.2); border-radius:40px; padding:0.2rem 1rem; font-size:0.7rem; color:#2dd4bf; font-weight:600; display:inline-block; margin:4px auto 8px; text-align:center; width:100%;">
-            📅 Trial ends in <span id="trial-days-left">7</span> days
+  /* ── Preference: reduced motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    #paywall-overlay, #paywall-overlay *,
+    #freeWizardModal, #freeWizardModal *,
+    #paidModal, #paidModal * {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+
+  /* ── Preference: increased contrast ── */
+  @media (prefers-contrast: more) {
+    #paywall-overlay { background: #000 !important; border: 2px solid #fff !important; }
+    #paywall-overlay h2 { color: #fff !important; }
+    #paywall-overlay p { color: #e0e0e0 !important; }
+    #paywall-overlay .btn, #paywall-overlay button { border-width: 2px !important; }
+    #freeWizardModal > div, #paidModal > div { background: #000 !important; border: 2px solid #fff !important; }
+    #freeWizardModal input, #freeWizardModal textarea, #paidModal input {
+      background: #fff !important; color: #000 !important; border: 2px solid #000 !important;
+    }
+  }
+
+  /* ── Preference: forced colors (Windows high-contrast mode) ── */
+  @media (forced-colors: active) {
+    #paywall-overlay, #freeWizardModal > div, #paidModal > div {
+      border: 2px solid ButtonBorder !important;
+      background: Canvas !important;
+      color: CanvasText !important;
+    }
+    #paywall-overlay button, #freeWizardModal button, #paidModal button {
+      border: 1px solid ButtonBorder !important;
+      background: ButtonFace !important;
+      color: ButtonText !important;
+    }
+  }
+
+  /* ── Focus visibility (keyboard users) ── */
+  #paywall-overlay button:focus-visible,
+  #paywall-overlay input:focus-visible,
+  #freeWizardModal button:focus-visible,
+  #freeWizardModal input:focus-visible,
+  #freeWizardModal textarea:focus-visible,
+  #paidModal button:focus-visible,
+  #paidModal input:focus-visible {
+    outline: 2px solid #2dd4bf !important;
+    outline-offset: 2px !important;
+  }
+</style>
+
+<!-- ========== PAYWALL OVERLAY ========== -->
+<div id="paywall-overlay" style="display:flex; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:95%; max-width:1100px; max-height:95vh; overflow-y:auto; background:rgba(0,0,0,0.9); border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:24px 32px 32px; box-shadow:0 24px 80px rgba(0,0,0,0.7); z-index:100000; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);">
+
+    <!-- Compact Header (adaptive) -->
+    <div style="text-align:center; margin-bottom:16px;">
+        <h2 id="pwHeaderTitle" style="font-size:24px; font-weight:800; margin-bottom:4px;">Your trial has ended</h2>
+        <p id="pwHeaderSubtitle" style="font-size:14px; color:#94a3b8;">Choose how to continue.</p>
+    </div>
+
+    <ul style="display:flex; justify-content:flex-start; align-items:center; gap:20px; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none; padding:20px 0; list-style:none;">
+        <!-- Free Plan -->
+        <li id="freePlanCard" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:20px; padding:24px; min-width:260px; flex:0 0 260px; position:relative; transition:0.3s;">
+            <div id="freePlanBadge" style="display:none; position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:#facc15; color:#000; font-size:11px; font-weight:800; padding:5px 18px; border-radius:20px; white-space:nowrap;">Pending review</div>
+            <h3 style="font-size:16px; font-weight:600; margin-bottom:4px;">Free</h3>
+            <p style="font-size:34px; font-weight:800; line-height:1; margin-bottom:2px;">$0<span style="font-size:13px; color:#94a3b8;">/month</span></p>
+            <p style="font-size:12px; color:#94a3b8; margin-bottom:16px;">Apply via DM</p>
+            <ul style="margin:14px 0 20px; padding:0; list-style:none; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
+                <li style="display:flex; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fas fa-check" style="margin-right:8px; color:#2dd4bf;"></i> Full access</li>
+                <li style="display:flex; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fas fa-check" style="margin-right:8px; color:#2dd4bf;"></i> No payment needed</li>
+                <li style="display:flex; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fas fa-check" style="margin-right:8px; color:#2dd4bf;"></i> DM us to apply</li>
+                <li style="display:flex; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fas fa-times" style="margin-right:8px; color:#64748b;"></i> Manual review</li>
+            </ul>
+            <button class="btn--free" onclick="openFreeWizard()" style="display:block; width:100%; padding:12px; border-radius:40px; font-size:14px; font-weight:700; cursor:pointer; border:1px solid rgba(255,255,255,0.2); background:transparent; color:#f8fafc;">Apply Now</button>
+            <p style="font-size:10px; color:#64748b; margin-top:10px; text-align:center;">Adds to review queue</p>
+        </li>
+
+    <!-- Paid Plan -->
+        <li id="paidPlanCard" style="background:linear-gradient(145deg, rgba(45,212,191,0.12), rgba(0,0,0,0.4)); border:2px solid #2dd4bf; border-radius:20px; padding:24px; min-width:340px; flex:0 0 340px; position:relative; transition:0.3s; transform:scale(1.02); box-shadow:0 0 40px rgba(45,212,191,0.2);">
+            <span id="paidPlanRibbon" style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:#2dd4bf; color:#000; font-size:11px; font-weight:800; padding:5px 18px; border-radius:20px; white-space:nowrap;">Instant</span>
+            <h3 style="font-size:16px; font-weight:600; margin-bottom:4px;">Subscribe</h3>
+            <p style="font-size:34px; font-weight:800; line-height:1; margin-bottom:2px;">$19<span style="font-size:13px; color:#94a3b8;">/mo</span></p>
+            <p id="paidPlanSub" style="font-size:12px; color:#94a3b8; margin-bottom:16px;">No waiting</p>
+            <ul style="margin:14px 0 20px; padding:0; list-style:none; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
+                <li style="display:flex; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fas fa-check" style="margin-right:8px; color:#2dd4bf;"></i> Full access</li>
+                <li style="display:flex; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fas fa-check" style="margin-right:8px; color:#2dd4bf;"></i> No DM needed</li>
+                <li style="display:flex; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fas fa-check" style="margin-right:8px; color:#2dd4bf;"></i> Instant activation</li>
+                <li style="display:flex; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fas fa-check" style="margin-right:8px; color:#2dd4bf;"></i> Cancel anytime</li>
+            </ul>
+            <button id="paidPlanBtn" class="btn btn--paid" onclick="openPaidModal()" style="display:block; width:100%; padding:12px; border-radius:40px; font-size:14px; font-weight:700; cursor:pointer; border:none; background:#2dd4bf; color:#000;">Subscribe – $19/mo</button>
+            <p id="paidPlanFooter" style="font-size:10px; color:#64748b; margin-top:10px; text-align:center;">Secure billing · cancel in one click</p>
+        </li>
+    </ul>
+
+    <div style="display:flex; justify-content:center; gap:40px; margin-top:20px; flex-wrap:wrap; text-align:center;">
+        <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:#94a3b8;"><i class="fas fa-shield-alt" style="color:#2dd4bf;"></i> Secure billing</div>
+        <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:#94a3b8;"><i class="fas fa-clock" style="color:#2dd4bf;"></i> Manual review</div>
+        <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:#94a3b8;"><i class="fas fa-times-circle" style="color:#2dd4bf;"></i> No card required for free</div>
+    </div>
+
+    <div style="margin-top:32px;">
+        <h2 style="text-align:center; font-size:20px; margin-bottom:16px;">Frequently Asked Questions</h2>
+
+        <div class="pw-faq-item" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px 16px; margin-bottom:8px;">
+            <div class="pw-faq-question" onclick="toggleFaq(this)" style="font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-size:14px;">How does the free application work? <i class="fas fa-chevron-down"></i></div>
+            <div class="pw-faq-answer">You select a platform, copy your application ID, and DM us on that platform. We'll review your account and respond with next steps.</div>
         </div>
-
-        <p style="color:#94a3b8; margin-bottom:16px; font-size:0.9rem; text-align:center;">
-            Unlock unlimited uploads and study tools.
-        </p>
-
-        <!-- Price Breakdown -->
-        <div class="price-breakdown" style="background:rgba(255,255,255,0.03); border-radius:16px; padding:16px; margin:12px 0; font-size:0.9rem; color:#e2e8f0;">
-            <div class="price-row"><span>Subtotal</span><span class="amount">$19.00</span></div>
-            <div class="price-row"><span>Tax (9.1%)</span><span class="amount">$1.73</span></div>
-            <div class="price-row total"><span>Total</span><span class="amount">$20.73</span></div>
+        <div class="pw-faq-item" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px 16px; margin-bottom:8px;">
+            <div class="pw-faq-question" onclick="toggleFaq(this)" style="font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-size:14px;">How long does review take? <i class="fas fa-chevron-down"></i></div>
+            <div class="pw-faq-answer">We add you to the review queue. We can't guarantee a timeframe – it depends on our current workload. We'll respond to your DM when we get to it.</div>
         </div>
+        <div class="pw-faq-item" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px 16px; margin-bottom:8px;">
+            <div class="pw-faq-question" onclick="toggleFaq(this)" style="font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-size:14px;">Can I cancel my subscription anytime? <i class="fas fa-chevron-down"></i></div>
+            <div class="pw-faq-answer">Yes. You can cancel in one click from your account settings, and you'll keep access until the end of the billing period.</div>
+        </div>
+        <div class="pw-faq-item" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px 16px; margin-bottom:8px;">
+            <div class="pw-faq-question" onclick="toggleFaq(this)" style="font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-size:14px;">What if I don't have social media? <i class="fas fa-chevron-down"></i></div>
+            <div class="pw-faq-answer">Choose "Other" – we'll provide alternative instructions in our reply.</div>
+        </div>
+    </div>
 
-        <!-- Stripe Payment Element -->
-        <div id="payment-element"></div>
-        <div class="pw-err" id="payment-error" style="margin-top:8px;"></div>
-        <button id="paywall-submit-btn" class="pw-pay" style="width:100%; background:#2dd4bf; border:none; border-radius:40px; padding:14px; font-weight:700; font-size:1rem; color:#030408; cursor:pointer; transition:0.15s; margin-top:8px;">Subscribe — $20.73</button>
-        <div id="payment-status" style="color:#4ade80; font-size:0.9rem; margin-top:8px; text-align:center;"></div>
+    <div style="text-align:center; margin-top:32px; padding:20px; background:rgba(45,212,191,0.05); border-radius:16px; border:1px solid rgba(45,212,191,0.2);">
+        <h3 style="color:#2dd4bf; font-size:18px; margin-bottom:12px;">Still undecided? Get access now.</h3>
+        <button onclick="openPaidModal()" style="display:inline-block; width:auto; padding:12px 32px; margin:0 8px; border-radius:40px; background:#2dd4bf; border:none; color:#000; font-weight:600;">Subscribe – $19/mo</button>
+        <button onclick="openFreeWizard()" style="display:inline-block; width:auto; padding:12px 32px; margin:0 8px; border-radius:40px; background:transparent; border:1px solid rgba(255,255,255,0.2); color:#f8fafc; font-weight:600;">Apply for Free</button>
+    </div>
+</div>
 
-        <!-- Moving Boxes Game -->
-        <div id="game-container" style="width:100%; display:flex; flex-direction:column; align-items:center; background:rgba(0,0,0,0.3); border-radius:16px; padding:0.4rem 0.4rem 0.2rem; border:1px solid rgba(255,255,255,0.06); margin:12px 0;">
-            <div style="display:flex; justify-content:space-between; width:100%; font-size:0.7rem; color:#94a3b8; padding:0 0.1rem 0.2rem 0.1rem;">
-                <span>📦 Moving Boxes <span style="font-weight:400; color:#64748b;">(arrow keys)</span></span>
-                <div style="display:flex; gap:12px;">
-                    <span>🏆 <span id="pw-game-score-display">0</span></span>
-                    <span>👑 <span id="pw-game-high-display">0</span></span>
+<!-- ========== FREE WIZARD MODAL ========== -->
+<div id="freeWizardModal" style="position:fixed; inset:0; z-index:100001; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); display:none; justify-content:center; align-items:center; padding:20px;">
+    <div style="background:rgba(0,0,0,0.95); border:1px solid rgba(255,255,255,0.1); border-radius:20px; padding:24px; max-width:480px; width:100%; max-height:90vh; overflow-y:auto; position:relative;">
+        <button onclick="closeFreeWizard()" style="position:absolute; top:12px; right:16px; background:none; border:none; color:#94a3b8; font-size:22px; cursor:pointer;">✕</button>
+        <div id="freeWizardContent"></div>
+    </div>
+</div>
+
+<!-- ========== PAID MODAL (STRIPE) ========== -->
+<div id="paidModal" style="position:fixed; inset:0; z-index:100001; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); display:none; justify-content:center; align-items:center; padding:20px;">
+    <div style="background:rgba(0,0,0,0.95); border:1px solid rgba(45,212,191,0.3); border-radius:20px; padding:28px 24px; max-width:480px; width:100%; max-height:90vh; overflow-y:auto; position:relative;">
+        <button onclick="closePaidModal()" style="position:absolute; top:12px; right:16px; background:none; border:none; color:#94a3b8; font-size:22px; cursor:pointer; z-index:10;">✕</button>
+
+        <div id="stripe-loading">
+            <div style="text-align:center; margin:20px 0;">
+                <div id="loading-percent" style="font-size:24px; font-weight:700; color:#2dd4bf; margin-bottom:8px;">0%</div>
+                <div style="width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
+                    <div id="loading-bar-fill" style="height:100%; width:0%; background:#2dd4bf; transition:width 0.1s linear;"></div>
                 </div>
+                <p style="font-size:12px; color:#94a3b8; margin-top:8px;">Loading secure payment...</p>
             </div>
-            <canvas id="pw-movingboxes-canvas" width="240" height="240" style="background:#0a0c12; border-radius:10px; border:1px solid rgba(255,255,255,0.08); width:100%; max-width:240px; aspect-ratio:1/1; display:block; touch-action:none;"></canvas>
         </div>
 
-        <!-- Trust Footer -->
-        <div style="margin-top:16px; padding-top:12px; border-top:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; font-size:0.65rem; color:#475569;">
-            <span><i class="fas fa-lock" style="color:#2dd4bf; font-size:0.8rem;"></i> Secure billing</span>
-            <span><i class="fas fa-rotate-left" style="color:#2dd4bf; font-size:0.8rem;"></i> Cancel anytime</span>
-            <span><i class="fas fa-shield-alt" style="color:#2dd4bf; font-size:0.8rem;"></i> 7‑day free trial</span>
+        <div id="stripe-payment-content" style="display:none;">
+            <h3 style="text-align:center; color:#f8fafc; margin-bottom:8px;">Subscribe $19/mo</h3>
+            <div style="background:rgba(255,255,255,0.03); border-radius:16px; padding:16px; margin:12px 0; font-size:0.9rem; color:#e2e8f0;">
+                <div style="display:flex; justify-content:space-between; padding:4px 0; color:#94a3b8;">Subtotal <span style="font-weight:500;">$19.00</span></div>
+                <div style="display:flex; justify-content:space-between; padding:4px 0; color:#94a3b8;">Tax (9.1%) <span style="font-weight:500;">$1.73</span></div>
+                <div style="border-top:1px solid rgba(255,255,255,0.1); margin-top:8px; padding-top:12px; font-weight:700; color:#f8fafc; font-size:1.1rem; display:flex; justify-content:space-between;">Total <span>$20.73</span></div>
+            </div>
+            <div id="payment-element"></div>
+            <div id="payment-error" style="color:#f87171; font-size:0.85rem; min-height:1.2rem; margin-top:4px;"></div>
+            <button id="paywall-submit-btn" onclick="processPayment()" style="width:100%; background:#2dd4bf; border:none; border-radius:40px; padding:14px; font-weight:700; font-size:1rem; color:#030408; cursor:pointer; margin-top:8px;" disabled>Subscribe — $20.73</button>
+            <div id="payment-status" style="color:#4ade80; font-size:0.9rem; margin-top:8px; text-align:center;"></div>
         </div>
     </div>
 </div>
@@ -12749,8 +12886,7 @@ function requestFullscreen() {
 </script>
 <script>
 // =====================================================================
-// FINAL PAYWALL – Stripe Payment Element + Upgraded Moving Boxes Game
-// Fully integrated, keyboard‑safe, and production‑ready.
+// NEW PAYWALL LOGIC – Free via DM + Paid via Stripe
 // =====================================================================
 (function() {
     'use strict';
@@ -12760,6 +12896,76 @@ function requestFullscreen() {
     const PUBLISHABLE_KEY = 'pk_live_51U06siR4dJL97DpZ0uQuPpLFU0pIVDejXI7VJA6oQIE7Yrkl9hOyaNVqFi5UmiNoGpqnO1zmVXMillPUIDmkDSqB00gfqAAvXi';
     const TRIAL_KEY = 'paywall_trial_start';
     const SUB_CACHE_KEY = 'paywall_sub_cache';
+
+    // ───── OFFLINE DETECTION ─────
+    // Track offline state so we show clean messages instead of generic
+    // network errors, and so we can auto-refresh when the user comes back.
+    let _isOffline = (typeof navigator !== 'undefined' && 'onLine' in navigator) ? !navigator.onLine : false;
+    function isOffline() { return _isOffline; }
+
+    // ───── TOAST ACCESSIBILITY ─────
+    // Screen reader users need to be told about status changes. We hook into
+    // the existing toast system (or create a parallel aria-live region if
+    // UI.toast isn't available) so every status message is announced.
+    (function initToastAccessibility() {
+        // Create the aria-live region once
+        let liveRegion = document.getElementById('pw-a11y-live');
+        if (!liveRegion) {
+            liveRegion = document.createElement('div');
+            liveRegion.id = 'pw-a11y-live';
+            liveRegion.setAttribute('role', 'status');
+            liveRegion.setAttribute('aria-live', 'polite');
+            liveRegion.setAttribute('aria-atomic', 'true');
+            liveRegion.style.cssText = 'position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;';
+            document.body.appendChild(liveRegion);
+        }
+
+        // Announce anything sent through the standard toast pathway.
+        // We wrap the existing UI.toast once — after that, all calls flow through.
+        if (typeof window.UI !== 'undefined' && typeof window.UI.toast === 'function' && !window.UI.__a11yWrapped) {
+            const originalToast = window.UI.toast;
+            window.UI.toast = function(msg) {
+                // Announce to assistive tech
+                try {
+                    const live = document.getElementById('pw-a11y-live');
+                    if (live) {
+                        // Reset first, then set on next tick — some SRs need this
+                        // to re-announce identical strings
+                        live.textContent = '';
+                        setTimeout(() => { live.textContent = String(msg || ''); }, 50);
+                    }
+                } catch (e) {}
+                return originalToast.apply(this, arguments);
+            };
+            window.UI.__a11yWrapped = true;
+        }
+
+        // Expose a helper for code paths that don't have UI.toast
+        window.pwAnnounce = function(msg) {
+            try {
+                const live = document.getElementById('pw-a11y-live');
+                if (live) {
+                    live.textContent = '';
+                    setTimeout(() => { live.textContent = String(msg || ''); }, 50);
+                }
+            } catch (e) {}
+        };
+    })();
+
+    if (typeof window !== 'undefined') {
+        window.addEventListener('online', () => {
+            _isOffline = false;
+            const toast = (t) => (typeof UI !== 'undefined' && UI.toast) ? UI.toast(t) : null;
+            toast('Back online.');
+            // Their pending application might have been approved while offline
+            if (typeof throttledCheckAccess === 'function') throttledCheckAccess();
+        });
+        window.addEventListener('offline', () => {
+            _isOffline = true;
+            const toast = (t) => (typeof UI !== 'undefined' && UI.toast) ? UI.toast(t) : null;
+            toast('You are offline. Some actions may not work.');
+        });
+    }
 
     // ───── USER ID ─────
     let _cachedUserId = null;
@@ -12778,6 +12984,41 @@ function requestFullscreen() {
         }
     }
 
+    // ───── APPLICATION ID (for free DM flow) ─────
+    function getApplicationId() {
+        let id = localStorage.getItem('pw_app_id');
+        if (!id) {
+            id = 'APP-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '-' + Date.now().toString(36).toUpperCase();
+            localStorage.setItem('pw_app_id', id);
+        }
+        return id;
+    }
+
+    // ───── SOCIAL PLATFORMS ─────
+    const socials = [
+        { name: "Instagram", icon: "https://cdn.simpleicons.org/instagram", dmUrl: "https://www.instagram.com/try4ever/" },
+        { name: "Twitter / X", icon: "https://cdn.simpleicons.org/x", dmUrl: "https://twitter.com/messages/compose?recipient_id=try4ever" },
+        { name: "TikTok", icon: "https://cdn.simpleicons.org/tiktok", dmUrl: "https://www.tiktok.com/@try4ever" },
+        { name: "Facebook", icon: "https://cdn.simpleicons.org/facebook", dmUrl: "https://www.facebook.com/try4ever" },
+        { name: "LinkedIn", icon: "https://cdn.simpleicons.org/linkedin", dmUrl: "https://www.linkedin.com/in/try4ever" },
+        { name: "Snapchat", icon: "https://cdn.simpleicons.org/snapchat", dmUrl: "https://www.snapchat.com/add/try4ever" },
+        { name: "Pinterest", icon: "https://cdn.simpleicons.org/pinterest", dmUrl: "https://www.pinterest.com/try4ever/" },
+        { name: "Reddit", icon: "https://cdn.simpleicons.org/reddit", dmUrl: "https://www.reddit.com/user/try4ever" },
+        { name: "Discord", icon: "https://cdn.simpleicons.org/discord", dmUrl: "https://discord.com/users/try4ever" },
+        { name: "Telegram", icon: "https://cdn.simpleicons.org/telegram", dmUrl: "https://t.me/try4ever" },
+        { name: "WhatsApp", icon: "https://cdn.simpleicons.org/whatsapp", dmUrl: "https://wa.me/1234567890" },
+        { name: "Threads", icon: "https://cdn.simpleicons.org/threads", dmUrl: "https://www.threads.net/@try4ever" },
+        { name: "Mastodon", icon: "https://cdn.simpleicons.org/mastodon", dmUrl: "https://mastodon.social/@try4ever" },
+        { name: "Bluesky", icon: "https://cdn.simpleicons.org/bluesky", dmUrl: "https://bsky.app/profile/try4ever" },
+        { name: "YouTube", icon: "https://cdn.simpleicons.org/youtube", dmUrl: "https://www.youtube.com/@try4ever" },
+        { name: "Twitch", icon: "https://cdn.simpleicons.org/twitch", dmUrl: "https://www.twitch.tv/try4ever" },
+        { name: "Other", icon: "https://cdn.simpleicons.org/whatever", dmUrl: "mailto:apply@try4ever.com" }
+    ];
+
+    // ───── FREE WIZARD STATE ─────
+    let freeStep = 1;
+    let selectedPlatform = null;
+
     // ───── STATUS ─────
     function getCachedStatus() {
         const raw = localStorage.getItem(SUB_CACHE_KEY);
@@ -12794,11 +13035,28 @@ function requestFullscreen() {
             if (res.ok) {
                 const data = await res.json();
                 setCachedStatus(data);
+                // Cache the expiry date if the backend provided one
+                if (data.expiresAt) setSubscriptionExpiry(data.expiresAt);
+                else if (!data.active) setSubscriptionExpiry(null);
                 return data;
             }
         } catch {}
+
         const cached = getCachedStatus();
         if (cached && (Date.now() - cached.timestamp) < 3 * 24 * 60 * 60 * 1000) {
+            // Cached says active — but has the subscription actually expired?
+            // If we have an expiry timestamp and it's in the past, treat as
+            // inactive regardless of what the cache says.
+            if (cached.active) {
+                const expiresAt = getSubscriptionExpiry();
+                if (expiresAt && expiresAt < Date.now()) {
+                    // Locally expired — clear the cache and report inactive
+                    try {
+                        localStorage.setItem(SUB_CACHE_KEY, JSON.stringify({ active: false, timestamp: Date.now() }));
+                    } catch (e) {}
+                    return { active: false };
+                }
+            }
             return { active: cached.active };
         }
         return { active: false };
@@ -12826,6 +13084,45 @@ function requestFullscreen() {
         const remaining = 7 * 24 * 60 * 60 * 1000 - elapsed;
         return Math.max(0, Math.ceil(remaining / (24 * 60 * 60 * 1000)));
     }
+    function getTrialHoursLeft() {
+        const start = getTrialStart();
+        if (!start) return 0;
+        const remaining = 7 * 24 * 60 * 60 * 1000 - (Date.now() - start);
+        return Math.max(0, Math.ceil(remaining / (60 * 60 * 1000)));
+    }
+
+    // ───── SUBSCRIPTION EXPIRY ─────
+    // We store the renewal date locally so we can show "Renews on X" and
+    // warn the user a few days before expiry. The backend is the source of
+    // truth — this is a client-side cache.
+    const SUB_EXPIRES_KEY = 'pw_sub_expires_at';
+
+    function getSubscriptionExpiry() {
+        try {
+            const raw = localStorage.getItem(SUB_EXPIRES_KEY);
+            if (!raw) return null;
+            const ts = parseInt(raw, 10);
+            return isNaN(ts) ? null : ts;
+        } catch (e) { return null; }
+    }
+    function setSubscriptionExpiry(ts) {
+        try {
+            if (ts) localStorage.setItem(SUB_EXPIRES_KEY, String(ts));
+            else localStorage.removeItem(SUB_EXPIRES_KEY);
+        } catch (e) {}
+    }
+    function getSubscriptionDaysLeft() {
+        const expiresAt = getSubscriptionExpiry();
+        if (!expiresAt) return null;
+        const remaining = expiresAt - Date.now();
+        return Math.max(0, Math.ceil(remaining / (24 * 60 * 60 * 1000)));
+    }
+    function formatExpiryDate(ts) {
+        if (!ts) return '';
+        try {
+            return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        } catch (e) { return ''; }
+    }
 
     // ───── PUBLIC API ─────
     window.__paywall = {
@@ -12833,35 +13130,21 @@ function requestFullscreen() {
             const status = await checkStatus();
             if (status.active) return true;
 
-            // If the user has built a brain (content exists) but has no trial start,
-            // automatically start the trial now – this fixes users who never got a timer.
             const hasContent = window.State && window.State.nodes.some(n => n.id !== 'root');
             if (hasContent && !getTrialStart()) {
                 startTrial();
-                return true;   // trial just started, so allow
+                return true;
             }
 
-            // No content yet – allow (onboarding will start trial later)
             if (!getTrialStart()) return true;
 
-            // Otherwise, check if the trial is still active
             return isTrialActive();
         },
         getStatus: checkStatus,
         showFullPage: function() {
             const overlay = document.getElementById('paywall-overlay');
             if (!overlay) return;
-            // Update trial days
-            const days = getTrialDaysLeft();
-            const daysSpan = document.getElementById('trial-days-left');
-            if (daysSpan) daysSpan.textContent = days;
             overlay.style.display = 'flex';
-            mountPaymentElement();
-            // Start the game if not already running
-            if (!window._gameStarted) {
-                initMovingBoxes('pw-movingboxes-canvas');
-                window._gameStarted = true;
-            }
         },
         close: function() {
             document.getElementById('paywall-overlay').style.display = 'none';
@@ -12874,116 +13157,96 @@ function requestFullscreen() {
         isTrialActive
     };
 
-    // ───── STRIPE PAYMENT ELEMENT ─────
+    // ───── STRIPE PAYMENT ELEMENT (state variables) ─────
     let elementsInstance = null;
     let clientSecret = null;
+    let _paidInitToken = 0; // token to cancel in-flight Stripe initialization
 
-    async function mountPaymentElement() {
-        const overlay = document.getElementById('paywall-overlay');
-        const errorEl = overlay.querySelector('#payment-error');
-        const submitBtn = overlay.querySelector('#paywall-submit-btn');
-        const statusEl = overlay.querySelector('#payment-status');
+    async function handlePayment() {
+        if (!elementsInstance || !clientSecret) return;
 
+        // ── Double-click guard ──
+        // If a payment is already in flight, ignore the click entirely.
+        // Without this, double-clicking creates two PaymentIntents and
+        // the user could theoretically be charged twice.
+        if (window._paidSubmitting) return;
+        window._paidSubmitting = true;
+
+        const submitBtn = document.getElementById('paywall-submit-btn');
+        const errorEl = document.getElementById('payment-error');
+        const statusEl = document.getElementById('payment-status');
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loader"></span> Processing…';
+        errorEl.textContent = '';
+        statusEl.textContent = '';
+
+        let succeeded = false;
         try {
+            const stripe = Stripe(PUBLISHABLE_KEY);
+            const { error, paymentIntent } = await stripe.confirmPayment({
+                elements: elementsInstance,
+                confirmParams: { return_url: window.location.origin },
+                redirect: 'if_required'
+            });
+
+            if (error) {
+                errorEl.textContent = error.message || 'Payment failed.';
+                return;
+            }
+
+            // Verify server-side
             const userId = getUserId();
-            const resp = await fetch(`${WORKER_URL}/api/create-payment-intent`, {
+            const verifyRes = await fetch(`${WORKER_URL}/api/confirm-subscription`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId })
+                body: JSON.stringify({ userId, paymentIntentId: paymentIntent.id })
             });
-            if (!resp.ok) throw new Error('Failed to create PaymentIntent');
-            const data = await resp.json();
-            clientSecret = data.clientSecret;
+            if (!verifyRes.ok) throw new Error('Server verification failed');
+            const data = await verifyRes.json();
+            if (!data.active) throw new Error('Subscription not active');
 
-            if (typeof Stripe === 'undefined') {
-                await new Promise((resolve) => {
-                    const script = document.createElement('script');
-                    script.src = 'https://js.stripe.com/v3/';
-                    script.onload = resolve;
-                    document.head.appendChild(script);
-                });
+            succeeded = true;
+            statusEl.textContent = '✅ Subscription active!';
+            submitBtn.textContent = '✅ Subscribed';
+            localStorage.setItem(SUB_CACHE_KEY, JSON.stringify({ active: true, timestamp: Date.now() }));
+
+            // Cache the renewal date so we can show "Renews on X" and warn
+            // before expiry. If the backend gave us one, use it; otherwise
+            // default to 30 days from now.
+            if (data.expiresAt) {
+                setSubscriptionExpiry(data.expiresAt);
+            } else {
+                setSubscriptionExpiry(Date.now() + 30 * 24 * 60 * 60 * 1000);
             }
-            const stripe = Stripe(PUBLISHABLE_KEY);
-            const elements = stripe.elements({
-                appearance: {
-                    theme: 'night',
-                    variables: {
-                        colorPrimary: '#2dd4bf',
-                        colorBackground: '#0a0c12',
-                        colorText: '#f8fafc',
-                        fontFamily: 'system-ui, sans-serif'
-                    }
-                },
-                clientSecret
-            });
 
-            const paymentElement = elements.create('payment', {
-                defaultValues: {
-                    billingDetails: { name: '', address: { line1: '', postal_code: '' } }
+            // A successful resubscribe clears the lapsed mark — the user is
+            // back to being an active subscriber.
+            clearLapsedMark();
+
+            // Clear the paid-pending flag — the flow completed
+            try { localStorage.removeItem('pw_paid_pending'); } catch (e) {}
+
+            setTimeout(() => {
+                closePaidModal();
+                grantAccess();
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ title: 'Subscription active', icon: 'success', background: '#0f172a', color: '#f8fafc' });
                 }
-            });
-            paymentElement.mount('#payment-element');
-            elementsInstance = elements;
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Subscribe — $20.73';
+            }, 1200);
         } catch (err) {
-            errorEl.textContent = 'Error loading payment: ' + err.message;
-            submitBtn.disabled = true;
+            errorEl.textContent = (err && err.message) || 'Verification failed. Please contact support.';
+        } finally {
+            // Only release the lock if the payment did NOT succeed.
+            // If it succeeded, we want the button to stay locked while
+            // the "Subscribed" state renders.
+            if (!succeeded) {
+                window._paidSubmitting = false;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Subscribe — $20.73';
+            }
         }
     }
-
-async function handlePayment() {
-    if (!elementsInstance || !clientSecret) return;
-    const overlay = document.getElementById('paywall-overlay');
-    const submitBtn = overlay.querySelector('#paywall-submit-btn');
-    const errorEl = overlay.querySelector('#payment-error');
-    const statusEl = overlay.querySelector('#payment-status');
-
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="loader"></span> Processing…';
-    errorEl.textContent = '';
-    statusEl.textContent = '';
-
-    const stripe = Stripe(PUBLISHABLE_KEY);
-    const { error, paymentIntent } = await stripe.confirmPayment({
-        elements: elementsInstance,
-        confirmParams: { return_url: window.location.origin },
-        redirect: 'if_required'
-    });
-
-    if (error) {
-        errorEl.textContent = error.message || 'Payment failed.';
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Subscribe — $20.73';
-        return;
-    }
-
-    // --- NEW: Verify the payment on the server ---
-    try {
-        const userId = getUserId();
-        const verifyRes = await fetch(`${WORKER_URL}/api/confirm-subscription`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, paymentIntentId: paymentIntent.id })
-        });
-        if (!verifyRes.ok) throw new Error('Server verification failed');
-        const data = await verifyRes.json();
-        if (!data.active) throw new Error('Subscription not active');
-
-        // Success – now set the cache
-        statusEl.textContent = '✅ Subscription active!';
-        submitBtn.textContent = '✅ Subscribed';
-        localStorage.setItem('paywall_sub_cache', JSON.stringify({ active: true, timestamp: Date.now() }));
-        setTimeout(() => {
-            window.__paywall.close();
-            Swal.fire({ title: 'Subscription active', icon: 'success', background: '#0f172a', color: '#f8fafc' });
-        }, 1500);
-    } catch (err) {
-        errorEl.textContent = 'Verification failed. Please contact support.';
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Subscribe — $20.73';
-    }
-}
 
     // ───── LOADER STYLES ─────
     const style = document.createElement('style');
@@ -13003,138 +13266,829 @@ async function handlePayment() {
     `;
     document.head.appendChild(style);
 
-    // ───── UPGRADED MOVING BOXES GAME (keyboard‑safe) ─────
-    function initMovingBoxes(canvasId) {
-        const canvas = document.getElementById(canvasId);
-        if (!canvas || window._gameInitialized) return;
-        window._gameInitialized = true;
-
-        const ctx = canvas.getContext('2d');
-        let size = 20, cellSize = 15;
-        function resizeCanvas() {
-            const rect = canvas.getBoundingClientRect();
-            const w = rect.width || 240, h = rect.height || 240;
-            canvas.width = w; canvas.height = h;
-            cellSize = Math.floor(w / size);
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        let snake = [{x: 10, y: 10}];
-        let direction = {x: 1, y: 0}, nextDirection = {x: 1, y: 0};
-        let food = {x: 15, y: 10};
-        let score = 0, highScore = parseInt(localStorage.getItem('movingboxes_high')) || 0;
-        let gameOver = false, paused = false, loopId = null, speed = 120;
-
-        const scoreSpan = document.getElementById('pw-game-score-display');
-        const highSpan = document.getElementById('pw-game-high-display');
-        if (highSpan) highSpan.textContent = highScore;
-
-        function placeFood() {
-            const occupied = new Set(snake.map(c => `${c.x},${c.y}`));
-            const free = [];
-            for (let i = 0; i < size; i++)
-                for (let j = 0; j < size; j++)
-                    if (!occupied.has(`${i},${j}`)) free.push({x: i, y: j});
-            food = free[Math.floor(Math.random() * free.length)];
-        }
-
-        function resetGame() {
-            snake = [{x: 10, y: 10}];
-            direction = {x: 1, y: 0}; nextDirection = {x: 1, y: 0};
-            score = 0; gameOver = false; speed = 120;
-            placeFood(); draw();
-            if (scoreSpan) scoreSpan.textContent = '0';
-        }
-
-        function update() {
-            if (gameOver || paused) return;
-            direction = {...nextDirection};
-            const head = {...snake[0]};
-            head.x += direction.x; head.y += direction.y;
-            if (head.x < 0) head.x = size - 1;
-            if (head.x >= size) head.x = 0;
-            if (head.y < 0) head.y = size - 1;
-            if (head.y >= size) head.y = 0;
-
-            if (snake.some((s, i) => i > 0 && s.x === head.x && s.y === head.y)) {
-                gameOver = true; draw(); return;
-            }
-            snake.unshift(head);
-            if (head.x === food.x && head.y === food.y) {
-                score++;
-                if (scoreSpan) scoreSpan.textContent = score;
-                if (score > highScore) {
-                    highScore = score;
-                    localStorage.setItem('movingboxes_high', String(highScore));
-                    if (highSpan) highSpan.textContent = highScore;
-                }
-                if (snake.length > 200) snake.pop();
-                placeFood();
-                if (speed > 60) speed -= 1;
-            } else {
-                snake.pop();
-            }
-        }
-
-        function draw() {
-            resizeCanvas();
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-            ctx.lineWidth = 1;
-            for (let i = 0; i <= size; i++) {
-                ctx.beginPath(); ctx.moveTo(i * cellSize, 0); ctx.lineTo(i * cellSize, canvas.height); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(0, i * cellSize); ctx.lineTo(canvas.width, i * cellSize); ctx.stroke();
-            }
-            snake.forEach((seg, idx) => {
-                const hue = 200 + (idx / snake.length) * 60;
-                const lightness = idx === 0 ? '70%' : '50%';
-                ctx.fillStyle = `hsl(${hue}, 80%, ${lightness})`;
-                ctx.shadowColor = 'rgba(45,212,191,0.2)';
-                ctx.shadowBlur = 8;
-                ctx.fillRect(seg.x * cellSize + 1, seg.y * cellSize + 1, cellSize - 2, cellSize - 2);
-                ctx.shadowBlur = 0;
-            });
-            ctx.fillStyle = '#facc15';
-            ctx.shadowColor = 'rgba(250,204,21,0.5)';
-            ctx.shadowBlur = 12;
-            ctx.beginPath();
-            ctx.arc(food.x * cellSize + cellSize/2, food.y * cellSize + cellSize/2, cellSize/2 - 2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            if (gameOver) {
-                ctx.fillStyle = 'rgba(0,0,0,0.5)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#f8fafc';
-                ctx.font = 'bold 20px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('💀 Game Over', canvas.width/2, canvas.height/2 - 16);
-                ctx.fillStyle = '#94a3b8';
-                ctx.font = '12px sans-serif';
-                ctx.fillText('Click or tap to restart', canvas.width/2, canvas.height/2 + 20);
-            }
-        }
-
-        // 🔒 KEYBOARD HANDLER – IGNORES INPUT FIELDS, NEVER BLOCKS TYPING
-        function handleKey(e) {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
-            e.preventDefault();
-            if (gameOver) { resetGame(); return; }
-            if (e.key === 'ArrowUp' && direction.y !== 1) nextDirection = {x: 0, y: -1};
-            else if (e.key === 'ArrowDown' && direction.y !== -1) nextDirection = {x: 0, y: 1};
-            else if (e.key === 'ArrowLeft' && direction.x !== 1) nextDirection = {x: -1, y: 0};
-            else if (e.key === 'ArrowRight' && direction.x !== -1) nextDirection = {x: 1, y: 0};
-        }
-
-        document.addEventListener('keydown', handleKey);
-        canvas.addEventListener('click', () => { if (gameOver) resetGame(); });
-
-        resetGame();
-        loopId = setInterval(update, speed);
+    // ───── FREE WIZARD ─────
+    // ───── WIZARD STATE (survives page refresh) ─────
+    const WIZARD_STATE_KEY = 'pw_wizard_state';
+    function saveWizardState() {
+        try {
+            localStorage.setItem(WIZARD_STATE_KEY, JSON.stringify({
+                freeStep,
+                selectedPlatform,
+                ts: Date.now()
+            }));
+        } catch (e) {}
+    }
+    function loadWizardState() {
+        try {
+            const raw = localStorage.getItem(WIZARD_STATE_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) { return null; }
+    }
+    function clearWizardState() {
+        try { localStorage.removeItem(WIZARD_STATE_KEY); } catch (e) {}
     }
 
-    // ───── BILLING MANAGER & ABOUT PAGE (preserved) ─────
+    function openFreeWizard() {
+        // Expire stale pending applications before doing anything else, so
+        // the user gets a clean reapply instead of a stale "Application
+        // received" screen.
+        sweepExpiredApplications();
+
+        // Priority 1: an existing application record drives the state
+        //   pending  → "Application received" screen
+        //   rejected → "Not approved" screen with a Reapply button
+        try {
+            const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+            const id = getApplicationId();
+            const existing = stored.find(a => a.id === id);
+
+            if (existing && (existing.status === 'pending' || existing.status === 'rejected')) {
+                selectedPlatform = existing.platform || null;
+                freeStep = 3;
+                document.getElementById('freeWizardModal').style.display = 'flex';
+                renderFreeStep();
+                return;
+            }
+        } catch (e) { /* fall through */ }
+
+        // Priority 2: restore an in-progress wizard from a previous session
+        const saved = loadWizardState();
+        if (saved && saved.freeStep && saved.freeStep > 1) {
+            freeStep = saved.freeStep;
+            selectedPlatform = saved.selectedPlatform || null;
+            document.getElementById('freeWizardModal').style.display = 'flex';
+            renderFreeStep();
+            return;
+        }
+
+        // Priority 3: fresh start at step 1
+        freeStep = 1;
+        selectedPlatform = null;
+        document.getElementById('freeWizardModal').style.display = 'flex';
+        renderFreeStep();
+        // Do NOT register yet — wait until the user actually submits the DM
+        // (so simply opening + closing the wizard doesn't create a false
+        //  "Pending review" badge).
+    }
+    function closeFreeWizard(force) {
+        // ───── Close guard ─────
+        // If the user is mid-application (step 2 with a platform selected)
+        // and this isn't a forced close, ask for confirmation first.
+        // Step 3 (submitted) closes without prompt — the work is already done.
+        if (!force && freeStep === 2 && selectedPlatform) {
+            let proceed = false;
+            try {
+                proceed = window.confirm('Close without sending the DM? Your progress will be lost.');
+            } catch (e) {
+                // Some environments (headless, tests) don't have confirm().
+                // Fail safe by proceeding rather than getting stuck.
+                proceed = true;
+            }
+            if (!proceed) return;
+        }
+
+        document.getElementById('freeWizardModal').style.display = 'none';
+        // Reset for next open
+        freeStep = 1;
+        selectedPlatform = null;
+        // Refresh the badge so the paywall card shows the correct state
+        updateFreePlanBadge();
+        // Re-check access with throttle (avoids spam if user toggles rapidly)
+        if (typeof throttledCheckAccess === 'function') throttledCheckAccess();
+        else checkAccess();
+    }
+
+    function renderFreeStep() {
+        saveWizardState();
+        const content = document.getElementById('freeWizardContent');
+        if (freeStep === 1) {
+            content.innerHTML = `
+                <h3 style="font-size:18px; font-weight:700; margin-bottom:10px;">Choose a platform</h3>
+                <p style="font-size:13px; color:#94a3b8; margin-bottom:16px;">We'll open your DM to our account there.</p>
+                <div style="position:relative; margin-bottom:16px;">
+                    <input type="text" id="platformSearch" role="combobox" aria-controls="platformList" aria-expanded="false" aria-autocomplete="list" aria-label="Search platforms" style="width:100%; padding:10px 14px; background:rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#f8fafc; font-size:14px; outline:none;" placeholder="Search platform..." oninput="filterPlatforms(this.value)">
+                    <div id="platformList" role="listbox" aria-label="Platform options" style="position:absolute; top:100%; left:0; width:100%; max-height:200px; overflow-y:auto; background:rgba(0,0,0,0.95); border:1px solid rgba(255,255,255,0.1); border-radius:12px; margin-top:4px; z-index:20; display:none;"></div>
+                </div>
+                <button id="nextFreeBtn" style="margin-top:16px; padding:12px; border-radius:40px; width:100%; border:1px solid rgba(255,255,255,0.2); background:transparent; color:#f8fafc; cursor:pointer; opacity:0.5; pointer-events:none;" disabled>Next →</button>
+            `;
+            const list = document.getElementById('platformList');
+            list.innerHTML = socials.map((s, idx) => `
+                <div class="dropdown-item" data-idx="${idx}" onpointerdown="selectPlatform(${idx})" style="display:flex; align-items:center; gap:10px; padding:8px 14px; cursor:pointer;">
+                    <img src="${s.icon}" alt="${s.name}" style="width:20px; height:20px;">
+                    <span style="font-size:13px;">${s.name}</span>
+                </div>
+            `).join('');
+            const searchInput = document.getElementById('platformSearch');
+            searchInput.addEventListener('focus', () => { list.style.display = 'block'; });
+            searchInput.addEventListener('blur', function() {
+                setTimeout(() => {
+                    if (!document.getElementById('platformList').contains(document.activeElement)) {
+                        list.style.display = 'none';
+                    }
+                }, 200);
+            });
+
+            // ───── KEYBOARD NAVIGATION ─────
+            // Arrow keys move a highlight through the dropdown, Enter selects,
+            // Escape dismisses. State lives on `list.dataset.hl` so it survives
+            // filterPlatforms() rebuilding the inner HTML.
+            searchInput.addEventListener('keydown', (e) => {
+                const items = list.querySelectorAll('.dropdown-item');
+                if (!items.length) return;
+                let hl = parseInt(list.dataset.hl || '-1', 10);
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    hl = Math.min(items.length - 1, hl + 1);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    hl = Math.max(0, hl - 1);
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (hl >= 0 && items[hl]) {
+                        const idx = parseInt(items[hl].dataset.idx, 10);
+                        if (!isNaN(idx)) selectPlatform(idx);
+                    }
+                    return;
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    list.style.display = 'none';
+                    return;
+                } else {
+                    // Any typing resets the highlight — the list will filter
+                    list.dataset.hl = '-1';
+                    return;
+                }
+
+                list.dataset.hl = String(hl);
+                items.forEach((el, i) => {
+                    el.style.background = i === hl ? 'rgba(45,212,191,0.15)' : '';
+                });
+                if (items[hl]) items[hl].scrollIntoView({ block: 'nearest' });
+            });
+        } else if (freeStep === 2) {
+            const id = getApplicationId();
+            const platform = selectedPlatform ? socials.find(s => s.name === selectedPlatform) : socials[0];
+            const isOther = platform.name === 'Other';
+
+            if (isOther) {
+                // ---- Other: organic video by email ----
+                content.innerHTML = `
+                    <h3 style="font-size:18px; font-weight:700; margin-bottom:10px;">Apply by email</h3>
+                    <p style="font-size:13px; color:#94a3b8; margin-bottom:16px;">Since no platform fit, we accept an organic (non-AI) video you create yourself. Record it, then send us the link or file by email.</p>
+
+                    <div style="background:rgba(250,204,21,0.08); border:1px solid rgba(250,204,21,0.3); border-radius:12px; padding:12px 14px; margin-bottom:16px;">
+                        <p style="font-size:12px; color:#facc15; margin:0; line-height:1.5;"><strong>Guidelines:</strong><br>• Video must be original, recorded by you<br>• No AI-generated content<br>• Any length is fine — short is fine<br>• We post it with your permission</p>
+                    </div>
+
+                    <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:16px; border-left:3px solid #2dd4bf;">
+                        <p style="color:#94a3b8; margin-bottom:6px;">Your email message:</p>
+                        <div id="appMessage" style="background:rgba(0,0,0,0.4); border-radius:8px; padding:12px; font-size:13px; color:#94a3b8; font-family:monospace; word-break:break-all; margin-bottom:12px; border:1px solid rgba(255,255,255,0.05);">Application ID: ${id}<br>I want free access.<br>I will attach an organic video I made.<br>I grant permission to post it on your channels.<br>This message wasn't edited.<br>I will not send it twice.</div>
+                        <button onclick="copyAndOpenDM()" style="background:#2dd4bf; color:#000; border:none; border-radius:40px; padding:12px; font-weight:700; cursor:pointer; width:100%; display:flex; align-items:center; justify-content:center; gap:8px;"><i class="fas fa-envelope"></i> Copy & Open Email</button>
+                        <p style="margin-top:10px; text-align:center; font-size:12px; color:#64748b;">Send to: <strong style="color:#94a3b8;">apply@try4ever.com</strong></p>
+                        <button onclick="finishFreeApplication()" style="margin-top:10px; background:transparent; color:#94a3b8; border:1px solid rgba(255,255,255,0.15); border-radius:40px; padding:10px; font-weight:600; cursor:pointer; width:100%; font-size:13px;">I've sent the email →</button>
+                        <button onclick="goBackToPlatformSelection()" style="margin-top:8px; background:transparent; color:#64748b; border:none; padding:8px; cursor:pointer; width:100%; font-size:12px;">← Choose a different option</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // ---- Normal DM path ----
+            content.innerHTML = `
+                <h3 style="font-size:18px; font-weight:700; margin-bottom:10px;">DM us on ${platform.name}</h3>
+                <p style="font-size:13px; color:#94a3b8; margin-bottom:16px;">Copy the message below, then click the button to open our DM on ${platform.name}. Paste the message there and send it.</p>
+                <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:16px; border-left:3px solid #2dd4bf; margin-top:20px;">
+                    <p style="color:#94a3b8; margin-bottom:6px;">Your application message:</p>
+                    <div id="appMessage" style="background:rgba(0,0,0,0.4); border-radius:8px; padding:12px; font-size:13px; color:#94a3b8; font-family:monospace; word-break:break-all; margin-bottom:12px; border:1px solid rgba(255,255,255,0.05);">Application ID: ${id}<br>I want free access.<br>This message wasn't edited.<br>I will not send it twice.</div>
+                    <button onclick="copyAndOpenDM()" style="background:#2dd4bf; color:#000; border:none; border-radius:40px; padding:12px; font-weight:700; cursor:pointer; width:100%; display:flex; align-items:center; justify-content:center; gap:8px;"><i class="fas fa-copy"></i> Copy & DM us on ${platform.name}</button>
+                    <a id="dmFallbackLink" href="${platform.dmUrl}" target="_blank" rel="noopener" style="display:none; margin-top:10px; text-align:center; font-size:13px; color:#2dd4bf; text-decoration:underline; word-break:break-all;">Open ${platform.name} DM manually →</a>
+                    <button onclick="finishFreeApplication()" style="margin-top:10px; background:transparent; color:#94a3b8; border:1px solid rgba(255,255,255,0.15); border-radius:40px; padding:10px; font-weight:600; cursor:pointer; width:100%; font-size:13px;">I've sent the DM →</button>
+                    <button onclick="goBackToPlatformSelection()" style="margin-top:8px; background:transparent; color:#64748b; border:none; padding:8px; cursor:pointer; width:100%; font-size:12px;">← Choose a different platform</button>
+                </div>
+            `;
+        } else if (freeStep === 3) {
+            const id = getApplicationId();
+            const platform = selectedPlatform ? socials.find(s => s.name === selectedPlatform) : null;
+            const platformLine = platform ? `You applied via <strong style="color:#f8fafc;">${platform.name}</strong>.` : 'Your application was submitted.';
+
+            // Detect rejected state from local record
+            let isRejected = false;
+            try {
+                const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+                const existing = stored.find(a => a.id === id);
+                if (existing && existing.status === 'rejected') isRejected = true;
+            } catch (e) {}
+
+            if (isRejected) {
+                content.innerHTML = `
+                    <div style="text-align:center; padding:20px;">
+                        <div style="font-size:48px;">⚠️</div>
+                        <h3 style="color:#f8fafc; font-size:20px; margin:10px 0;">Application not approved</h3>
+                        <p style="color:#94a3b8; font-size:13px; margin-bottom:20px;">${platformLine}<br>Your previous application was not approved. You can apply again with a different platform or a different approach.</p>
+                        <button onclick="reapplyFreeApplication()" style="background:#2dd4bf; color:#000; border:none; border-radius:40px; padding:12px 24px; font-weight:600; cursor:pointer; width:100%; margin-bottom:8px;">Apply again</button>
+                        <button onclick="closeFreeWizard()" style="background:transparent; color:#94a3b8; border:1px solid rgba(255,255,255,0.15); border-radius:40px; padding:10px; font-weight:600; cursor:pointer; width:100%; font-size:13px;">Close</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Pending state (default)
+            content.innerHTML = `
+                <div style="text-align:center; padding:20px;">
+                    <div style="font-size:48px;">📬</div>
+                    <h3 style="color:#f8fafc; font-size:20px; margin:10px 0;">Application received</h3>
+                    <p style="color:#94a3b8; font-size:13px; margin-bottom:20px;">${platformLine}<br>You've been added to the review queue. We'll respond to your DM when we get to it.</p>
+                    <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:12px; margin-bottom:16px; border-left:3px solid #2dd4bf; text-align:left; position:relative;">
+                        <p style="font-size:11px; color:#94a3b8; margin-bottom:4px;">Your application ID (keep for reference):</p>
+                        <p style="font-size:12px; color:#f8fafc; font-family:monospace; word-break:break-all; margin:0; padding-right:60px;">${id}</p>
+                        <button onclick="copyApplicationId()" style="position:absolute; top:10px; right:10px; background:rgba(45,212,191,0.15); border:1px solid #2dd4bf; color:#2dd4bf; border-radius:20px; padding:4px 10px; font-size:11px; cursor:pointer; font-weight:600;">Copy</button>
+                    </div>
+                    <button onclick="refreshApplicationStatus()" id="refreshStatusBtn" style="background:transparent; color:#94a3b8; border:1px solid rgba(255,255,255,0.15); border-radius:40px; padding:10px; font-weight:600; cursor:pointer; width:100%; font-size:13px; margin-bottom:8px;">↻ Refresh status</button>
+                    <button onclick="closeFreeWizard()" style="background:#2dd4bf; color:#000; border:none; border-radius:40px; padding:12px 24px; font-weight:600; cursor:pointer; width:100%;">Close</button>
+                    <button onclick="withdrawApplication()" style="margin-top:8px; background:transparent; color:#f43f5e; border:1px solid rgba(244,63,94,0.3); border-radius:40px; padding:10px; font-weight:600; cursor:pointer; width:100%; font-size:12px;">Withdraw application</button>
+                </div>
+            `;
+        }
+    }
+
+    function filterPlatforms(query) {
+        const list = document.getElementById('platformList');
+        const q = query.toLowerCase();
+        const filtered = socials.filter(s => s.name.toLowerCase().includes(q));
+        list.innerHTML = filtered.map(s => {
+            const idx = socials.indexOf(s);
+            return `
+                <div class="dropdown-item" data-idx="${idx}" onpointerdown="selectPlatform(${idx})" style="display:flex; align-items:center; gap:10px; padding:8px 14px; cursor:pointer;">
+                    <img src="${s.icon}" alt="${s.name}" style="width:20px; height:20px;">
+                    <span style="font-size:13px;">${s.name}</span>
+                </div>
+            `;
+        }).join('');
+        list.style.display = 'block';
+    }
+
+    function selectPlatform(idx) {
+        selectedPlatform = socials[idx].name;
+        const search = document.getElementById('platformSearch');
+        search.value = selectedPlatform;
+        const list = document.getElementById('platformList');
+        list.style.display = 'none';
+        const nextBtn = document.getElementById('nextFreeBtn');
+        nextBtn.style.opacity = '1';
+        nextBtn.style.pointerEvents = 'auto';
+        nextBtn.disabled = false;
+        saveWizardState();
+        // Do NOT register here — only on final submission (finishFreeApplication)
+    }
+
+    document.addEventListener('click', (e) => {
+        if (e.target.id === 'nextFreeBtn' && e.target.disabled === false) {
+            freeStep = 2;
+            renderFreeStep();
+        }
+    });
+
+    function copyAndOpenDM() {
+        const msg = document.getElementById('appMessage').innerText.replace(/\n/g, ' ');
+        const platform = socials.find(s => s.name === selectedPlatform) || socials[0];
+        const toast = (t) => (typeof UI !== 'undefined' && UI.toast) ? UI.toast(t) : alert(t);
+
+        const selectMessage = () => {
+            const el = document.getElementById('appMessage');
+            if (!el) return;
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        };
+
+        // ---- "Other" path: open email client with prefilled subject + body ----
+        if (platform.name === 'Other') {
+            const id = getApplicationId();
+            const subject = encodeURIComponent('Free access application — ' + id);
+            const body = encodeURIComponent(msg);
+            const mailtoUrl = `mailto:apply@try4ever.com?subject=${subject}&body=${body}`;
+
+            // Copy the message first, so if the mail client doesn't open,
+            // the user still has the text ready to paste.
+            const openMail = () => {
+                window.location.href = mailtoUrl;
+                toast('Email client opened — send the message to apply.');
+            };
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(msg).then(openMail).catch(() => {
+                    selectMessage();
+                    toast('Copy failed — message selected. Press Ctrl/Cmd + C.');
+                    openMail();
+                });
+            } else {
+                selectMessage();
+                toast('Message selected — press Ctrl/Cmd + C.');
+                openMail();
+            }
+            return;
+        }
+
+        // ---- Normal DM path: open the platform's DM page ----
+        const openDM = () => {
+            const w = window.open(platform.dmUrl, '_blank');
+            if (!w) {
+                // Popup blocked — give user a clickable fallback
+                const link = document.getElementById('dmFallbackLink');
+                if (link) link.style.display = 'block';
+                toast('Popup blocked — tap the fallback link below to open the DM.');
+            }
+        };
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(msg)
+                .then(openDM)
+                .catch(() => {
+                    selectMessage();
+                    toast('Copy failed. The message is selected — press Ctrl/Cmd + C, then send it.');
+                    openDM();
+                });
+        } else {
+            selectMessage();
+            toast('Message selected — press Ctrl/Cmd + C to copy.');
+            openDM();
+        }
+    }
+
+    function finishFreeApplication() {
+        registerApplication();
+        // The record now drives the state — the saved wizard snapshot is no
+        // longer needed and could confuse a future openFreeWizard() call.
+        clearWizardState();
+        freeStep = 3;
+        renderFreeStep();
+    }
+
+    function goBackToPlatformSelection() {
+        freeStep = 1;
+        selectedPlatform = null;
+        clearWizardState();
+        renderFreeStep();
+    }
+
+    function withdrawApplication() {
+        const id = getApplicationId();
+        try {
+            const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+            const filtered = stored.filter(a => a.id !== id);
+            localStorage.setItem('pw_applications', JSON.stringify(filtered));
+        } catch (e) {}
+
+        // Notify backend to remove if configured
+        if (API_BASE) {
+            fetch(`${API_BASE}/api/withdraw`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            }).catch(() => { /* ignore if backend offline */ });
+        }
+
+        // Wipe the saved wizard snapshot too — the record is gone, so a
+        // stale step-3 restore would incorrectly show "Application received".
+        clearWizardState();
+
+        // Also clear the pw_approved flag. If the user was previously approved
+        // and then withdrew their application, they shouldn't keep local
+        // access — the whole point of withdrawing is to reset the state.
+        try { localStorage.removeItem('pw_approved'); } catch (e) {}
+
+        // Update UI
+        updateFreePlanBadge();
+        // Reset wizard state
+        freeStep = 1;
+        selectedPlatform = null;
+        closeFreeWizard();
+
+        // Re-evaluate access immediately so the paywall reappears if needed
+        if (typeof throttledCheckAccess === 'function') throttledCheckAccess();
+
+        const toast = (t) => (typeof UI !== 'undefined' && UI.toast) ? UI.toast(t) : alert(t);
+        toast('Application withdrawn. You can apply again anytime.');
+    }
+
+    function reapplyFreeApplication() {
+        // Clear the old (rejected) application record for this browser
+        const id = getApplicationId();
+        try {
+            const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+            const filtered = stored.filter(a => a.id !== id);
+            localStorage.setItem('pw_applications', JSON.stringify(filtered));
+        } catch (e) {}
+
+        // Notify backend to remove if configured
+        if (API_BASE) {
+            fetch(`${API_BASE}/api/withdraw`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id })
+            }).catch(() => {});
+        }
+
+        // Restart the wizard at step 1
+        freeStep = 1;
+        selectedPlatform = null;
+        updateFreePlanBadge();
+        renderFreeStep();
+
+        const toast = (t) => (typeof UI !== 'undefined' && UI.toast) ? UI.toast(t) : alert(t);
+        toast('You can apply again with a new platform.');
+    }
+
+    function copyApplicationId() {
+        const id = getApplicationId();
+        const toast = (t) => (typeof UI !== 'undefined' && UI.toast) ? UI.toast(t) : alert(t);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(id)
+                .then(() => toast('Application ID copied.'))
+                .catch(() => toast('Copy failed. Please select and copy manually.'));
+        } else {
+            toast('Please select and copy the ID manually.');
+        }
+    }
+
+    // ───── REFRESH RATE LIMITING ─────
+    // Prevent the user from spamming the refresh button. Each click starts a
+    // 5-second cooldown; the button displays the remaining seconds and
+    // re-enables when the cooldown ends.
+    let _refreshCooldownUntil = 0;
+    let _refreshCooldownTimer = null;
+
+    function startRefreshCooldown(seconds) {
+        _refreshCooldownUntil = Date.now() + seconds * 1000;
+        if (_refreshCooldownTimer) clearInterval(_refreshCooldownTimer);
+
+        const btn = document.getElementById('refreshStatusBtn');
+        if (!btn) return;
+
+        const tick = () => {
+            const remaining = Math.ceil((_refreshCooldownUntil - Date.now()) / 1000);
+            if (remaining <= 0) {
+                clearInterval(_refreshCooldownTimer);
+                _refreshCooldownTimer = null;
+                btn.disabled = false;
+                btn.textContent = '↻ Refresh status';
+                return;
+            }
+            btn.disabled = true;
+            btn.textContent = `↻ Wait ${remaining}s`;
+        };
+        tick();
+        _refreshCooldownTimer = setInterval(tick, 250);
+    }
+
+    async function refreshApplicationStatus() {
+        const btn = document.getElementById('refreshStatusBtn');
+        const toast = (t) => (typeof UI !== 'undefined' && UI.toast) ? UI.toast(t) : alert(t);
+
+        // Rate limit guard — prevents backend hammering
+        if (Date.now() < _refreshCooldownUntil) {
+            const remaining = Math.ceil((_refreshCooldownUntil - Date.now()) / 1000);
+            toast(`Please wait ${remaining}s before refreshing again.`);
+            return;
+        }
+
+        // Offline guard — clean message instead of a network error
+        if (isOffline()) {
+            toast('You are offline. Please check your connection and try again.');
+            return;
+        }
+
+        // Start cooldown before we do anything else — a failed request
+        // still counts as an attempt.
+        startRefreshCooldown(5);
+
+        const id = getApplicationId();
+
+        try {
+            // ---- 1. Backend check (if configured) ----
+            if (API_BASE) {
+                try {
+                    const res = await fetch(`${API_BASE}/api/status?id=${id}`);
+                    if (res.ok) {
+                        const data = await res.json();
+
+                        // Sync local record with whatever the backend says.
+                        // This also mirrors `approved` into pw_approved so
+                        // the pre-paint gate skips the flash on next load.
+                        if (data.status) syncApplicationStatus(id, data.status);
+
+                        if (data.approved) {
+                            toast('Approved! Loading your access...');
+                            setTimeout(() => { closeFreeWizard(); grantAccess(); }, 500);
+                            return;
+                        }
+
+                        if (data.status === 'rejected') {
+                            toast('Not approved. You can apply again.');
+                            // Re-render step 3 so the rejected screen shows
+                            renderFreeStep();
+                            return;
+                        }
+                    }
+                } catch (e) { /* fall through */ }
+            }
+
+            // ---- 2. Local check (testing / offline) ----
+            if (isLocallyApproved()) {
+                toast('Approved! Loading your access...');
+                setTimeout(() => { closeFreeWizard(); grantAccess(); }, 500);
+                return;
+            }
+
+            // ---- 3. Local record could have been marked rejected ----
+            let localStatus = 'pending';
+            try {
+                const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+                const existing = stored.find(a => a.id === id);
+                if (existing) localStatus = existing.status || 'pending';
+            } catch (e) {}
+
+            if (localStatus === 'rejected') {
+                toast('Not approved. You can apply again.');
+                renderFreeStep();
+                return;
+            }
+
+            // ---- 4. Otherwise still pending ----
+            toast('Still pending. We\'ll approve as soon as we can.');
+            updateFreePlanBadge();
+        } finally {
+            // Do NOT re-enable the button here — the cooldown timer will do
+            // that when the 5 seconds elapse. This prevents a fast network
+            // from re-enabling the button before the cooldown ends.
+            void btn; // silence unused warnings
+        }
+    }
+
+    // ───── PAID MODAL WITH REAL STRIPE LOADING PROGRESS ─────
+    function updateStripeProgress(pct) {
+        const loadingPercent = document.getElementById('loading-percent');
+        const loadingBarFill = document.getElementById('loading-bar-fill');
+        const rounded = Math.round(pct);
+        if (loadingPercent) loadingPercent.textContent = rounded + '%';
+        if (loadingBarFill) {
+            loadingBarFill.style.width = pct + '%';
+            // Mirror to ARIA so screen readers get progress updates
+            loadingBarFill.setAttribute('aria-valuenow', String(rounded));
+            loadingBarFill.setAttribute('aria-valuetext', rounded + '% loaded');
+        }
+    }
+
+    function openPaidModal() {
+        const modal = document.getElementById('paidModal');
+        if (!modal) return;
+        modal.style.display = 'flex';
+        const loadContainer = document.getElementById('stripe-loading');
+        const payContent = document.getElementById('stripe-payment-content');
+        loadContainer.style.display = 'block';
+        payContent.style.display = 'none';
+        updateStripeProgress(0);
+
+        // If the user already clicked Subscribe and it's locked, don't
+        // create a new PaymentIntent — just re-render the previous state.
+        if (window._paidSubmitting) return;
+
+        // New token: any previous in-flight init will detect the mismatch and abort
+        _paidInitToken++;
+        initStripeWithProgress(_paidInitToken);
+    }
+
+    async function initStripeWithProgress(myToken) {
+        const errorEl = document.getElementById('payment-error');
+        const submitBtn = document.getElementById('paywall-submit-btn');
+
+        // Helper: is this init still the active one?
+        const isStale = () => myToken !== _paidInitToken;
+
+        // Helper: show a retry button below the error message
+        const showRetry = (msg) => {
+            errorEl.innerHTML = msg + ' <button id="payment-retry-btn" style="margin-left:8px;background:transparent;color:#2dd4bf;border:1px solid #2dd4bf;border-radius:20px;padding:4px 12px;font-size:12px;cursor:pointer;font-weight:600;">Retry</button>';
+            const retryBtn = document.getElementById('payment-retry-btn');
+            if (retryBtn) {
+                retryBtn.addEventListener('click', () => {
+                    // New token → invalidates the current (failing) attempt
+                    _paidInitToken++;
+                    updateStripeProgress(0);
+                    document.getElementById('stripe-loading').style.display = 'block';
+                    document.getElementById('stripe-payment-content').style.display = 'none';
+                    initStripeWithProgress(_paidInitToken);
+                });
+            }
+        };
+
+        try {
+            updateStripeProgress(10);
+
+            // Offline guard — the payment flow needs network to reach both
+            // Stripe and our worker.
+            if (isOffline()) {
+                showRetry('You are offline. Check your connection and try again.');
+                submitBtn.disabled = true;
+                document.getElementById('stripe-loading').style.display = 'none';
+                document.getElementById('stripe-payment-content').style.display = 'block';
+                return;
+            }
+
+            const userId = getUserId();
+
+            // 0. Reuse an existing clientSecret if we have one from a
+            //    previous attempt (e.g., user opened the modal, closed it,
+            //    reopened it — no need to create a second PaymentIntent).
+            if (clientSecret) {
+                updateStripeProgress(60);
+                // Fall through to Stripe.js load + element mount
+            } else {
+                // 1. Create PaymentIntent on server
+                let resp;
+                try {
+                    resp = await fetch(`${WORKER_URL}/api/create-payment-intent`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId })
+                    });
+                } catch (netErr) {
+                    if (isStale()) return;
+                    showRetry('Network error. Check your connection.');
+                    submitBtn.disabled = true;
+                    document.getElementById('stripe-loading').style.display = 'none';
+                    document.getElementById('stripe-payment-content').style.display = 'block';
+                    return;
+                }
+                if (isStale()) return;
+                if (!resp.ok) {
+                    showRetry('Could not start payment session.');
+                    submitBtn.disabled = true;
+                    document.getElementById('stripe-loading').style.display = 'none';
+                    document.getElementById('stripe-payment-content').style.display = 'block';
+                    return;
+                }
+                const data = await resp.json();
+                if (isStale()) return;
+                if (!data.clientSecret) {
+                    showRetry('Invalid response from server.');
+                    submitBtn.disabled = true;
+                    document.getElementById('stripe-loading').style.display = 'none';
+                    document.getElementById('stripe-payment-content').style.display = 'block';
+                    return;
+                }
+                clientSecret = data.clientSecret;
+                updateStripeProgress(35);
+            }
+
+            // Mark that we have a pending payment for this user (survives refresh)
+            try { localStorage.setItem('pw_paid_pending', 'true'); } catch (e) {}
+
+            // 2. Load Stripe.js if not already loaded
+            if (typeof Stripe === 'undefined') {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://js.stripe.com/v3/';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+            }
+            if (isStale()) return;
+            updateStripeProgress(60);
+
+            // 3. Create Elements instance
+            const stripe = Stripe(PUBLISHABLE_KEY);
+            const elements = stripe.elements({
+                appearance: {
+                    theme: 'night',
+                    variables: {
+                        colorPrimary: '#2dd4bf',
+                        colorBackground: '#0a0c12',
+                        colorText: '#f8fafc',
+                        fontFamily: 'system-ui, sans-serif'
+                    }
+                },
+                clientSecret
+            });
+            if (isStale()) return;
+            updateStripeProgress(80);
+
+            // 4. Create the payment element
+            const paymentElement = elements.create('payment', {
+                defaultValues: {
+                    billingDetails: { name: '', address: { line1: '', postal_code: '' } }
+                }
+            });
+
+            // 4a. Enable the submit button only when the form is complete
+            paymentElement.on('change', (event) => {
+                if (isStale()) return;
+                submitBtn.disabled = !event.complete;
+                if (event.complete) errorEl.textContent = '';
+            });
+
+            // 4b. Surface Stripe's inline validation errors
+            paymentElement.on('error', (event) => {
+                if (isStale()) return;
+                errorEl.textContent = (event.error && event.error.message) || 'Payment form error.';
+            });
+
+            // 5. When Stripe is fully ready, reveal the form
+            paymentElement.on('ready', () => {
+                if (isStale()) return;
+                updateStripeProgress(100);
+                setTimeout(() => {
+                    if (isStale()) return;
+                    document.getElementById('stripe-loading').style.display = 'none';
+                    document.getElementById('stripe-payment-content').style.display = 'block';
+                }, 250);
+            });
+
+            paymentElement.mount('#payment-element');
+            if (isStale()) {
+                try { elements.destroy(); } catch (e) {}
+                return;
+            }
+            elementsInstance = elements;
+            window._elementsInstance = elements;
+            // Start disabled; the 'change' event will enable it once the form is complete
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Subscribe — $20.73';
+        } catch (err) {
+            if (isStale()) return;
+            errorEl.textContent = 'Error loading payment: ' + err.message;
+            submitBtn.disabled = true;
+            document.getElementById('stripe-loading').style.display = 'none';
+            document.getElementById('stripe-payment-content').style.display = 'block';
+        }
+    }
+
+    function processPayment() {
+        handlePayment();
+    }
+
+    function closePaidModal() {
+        document.getElementById('paidModal').style.display = 'none';
+
+        // Invalidate any in-flight Stripe initialization so it aborts cleanly
+        _paidInitToken++;
+
+        // Reset the submit lock — a fresh open should be clickable again.
+        // If we reached "Subscribed" successfully, closePaidModal is called
+        // as part of the success flow, and by then we've already granted
+        // access, so unlocking here is safe.
+        window._paidSubmitting = false;
+
+        // Clean up Stripe Elements if mounted
+        if (elementsInstance) {
+            try { elementsInstance.destroy(); } catch (e) {}
+            elementsInstance = null;
+        }
+        if (window._elementsInstance) {
+            try { window._elementsInstance.destroy(); } catch (e) {}
+            window._elementsInstance = null;
+        }
+
+        // Clear the client secret so we don't reuse a stale one
+        clientSecret = null;
+
+        // Reset loading bar for next time
+        const loadingPercent = document.getElementById('loading-percent');
+        const loadingBarFill = document.getElementById('loading-bar-fill');
+        if (loadingPercent) loadingPercent.textContent = '0%';
+        if (loadingBarFill) loadingBarFill.style.width = '0%';
+
+        // Reset submit button state
+        const submitBtn = document.getElementById('paywall-submit-btn');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Subscribe — $20.73';
+        }
+
+        // Clear any lingering error/status messages
+        const errorEl = document.getElementById('payment-error');
+        const statusEl = document.getElementById('payment-status');
+        if (errorEl) errorEl.innerHTML = '';
+        if (statusEl) statusEl.textContent = '';
+
+        // If the user closed mid-payment (pending flag still set), show a
+        // small resume banner so they can pick up where they left off.
+        if (typeof maybeShowResumeBanner === 'function') {
+            setTimeout(maybeShowResumeBanner, 400);
+        }
+    }
+
+    // ───── EVENT BINDING ─────
+    // Note: paywall-submit-btn uses inline onclick="processPayment()" in HTML,
+    // so we do NOT bind it here to avoid double-firing.
+    //
+    // The paywall visibility is controlled solely by checkAccess() (called on
+    // window load below). This avoids a race condition where an old init()
+    // would re-show the paywall after checkAccess() had already hidden it.
+
+    // Preserve billing manager & about page (from old)
     async function openBillingManager() {
         const modal = document.getElementById('billing-manager-modal');
         const content = document.getElementById('billing-status-content');
@@ -13143,12 +14097,36 @@ async function handlePayment() {
         content.innerHTML = '<p style="color:#94a3b8;">Fetching status...</p>';
         try {
             const status = await window.__paywall.getStatus();
+            const expiresAt = getSubscriptionExpiry();
+            const daysLeft = getSubscriptionDaysLeft();
+
             if (status.active) {
-                content.innerHTML = `<p><strong>Plan:</strong> Monthly ($19/mo)</p><p><strong>Status:</strong> <span style="color:#4ade80;">Active</span></p>`;
+                let renewalLine = '';
+                if (expiresAt) {
+                    const dateStr = formatExpiryDate(expiresAt);
+                    renewalLine = `<p><strong>Renews on:</strong> ${dateStr}</p>`;
+                    if (daysLeft !== null && daysLeft <= 7) {
+                        renewalLine += `<p style="color:#f97316;font-size:0.85rem;">⚠️ Renews in ${daysLeft} day${daysLeft === 1 ? '' : 's'}</p>`;
+                    }
+                }
+                content.innerHTML = `
+                    <p><strong>Plan:</strong> Monthly ($19/mo)</p>
+                    <p><strong>Status:</strong> <span style="color:#4ade80;">Active</span></p>
+                    ${renewalLine}
+                `;
                 document.getElementById('cancel-subscription-btn').style.display = 'block';
                 document.getElementById('renew-subscription-btn').style.display = 'none';
             } else {
-                content.innerHTML = `<p><strong>Plan:</strong> None</p><p><strong>Status:</strong> <span style="color:#f43f5e;">Inactive</span></p>`;
+                // Was the user a past subscriber? Show a welcome-back line.
+                let pastLine = '';
+                if (expiresAt) {
+                    pastLine = `<p style="font-size:0.85rem;color:#94a3b8;">Last period ended on ${formatExpiryDate(expiresAt)}.</p>`;
+                }
+                content.innerHTML = `
+                    <p><strong>Plan:</strong> None</p>
+                    <p><strong>Status:</strong> <span style="color:#f43f5e;">Inactive</span></p>
+                    ${pastLine}
+                `;
                 document.getElementById('cancel-subscription-btn').style.display = 'none';
                 document.getElementById('renew-subscription-btn').style.display = 'block';
             }
@@ -13157,8 +14135,204 @@ async function handlePayment() {
         }
     }
 
+    // ───── ARIA ROLES FOR MODALS (runtime, no HTML edit) ─────
+    (function setModalAria() {
+        try {
+            [
+                { id: 'freeWizardModal', label: 'Free application wizard' },
+                { id: 'paidModal', label: 'Subscribe payment form' }
+            ].forEach(({ id, label }) => {
+                const outer = document.getElementById(id);
+                if (!outer) return;
+                const inner = outer.querySelector(':scope > div');
+                if (!inner) return;
+                inner.setAttribute('role', 'dialog');
+                inner.setAttribute('aria-modal', 'true');
+                inner.setAttribute('aria-label', label);
+            });
+
+            // Paywall overlay itself is also a dialog
+            const overlay = document.getElementById('paywall-overlay');
+            if (overlay) {
+                overlay.setAttribute('role', 'dialog');
+                overlay.setAttribute('aria-modal', 'true');
+                overlay.setAttribute('aria-label', 'Access options');
+            }
+
+            // ── Loading bar accessibility ──
+            // Screen readers should announce progress on the paid modal.
+            const loadingPercent = document.getElementById('loading-percent');
+            const loadingBarFill = document.getElementById('loading-bar-fill');
+            if (loadingBarFill) {
+                loadingBarFill.setAttribute('role', 'progressbar');
+                loadingBarFill.setAttribute('aria-valuemin', '0');
+                loadingBarFill.setAttribute('aria-valuemax', '100');
+            }
+            if (loadingPercent) {
+                loadingPercent.setAttribute('role', 'status');
+                loadingPercent.setAttribute('aria-live', 'polite');
+            }
+
+            // ── Error messaging for the paid form ──
+            const paymentError = document.getElementById('payment-error');
+            if (paymentError) {
+                paymentError.setAttribute('role', 'alert');
+                paymentError.setAttribute('aria-live', 'assertive');
+            }
+
+            // ── Status messaging (payment success) ──
+            const paymentStatus = document.getElementById('payment-status');
+            if (paymentStatus) {
+                paymentStatus.setAttribute('role', 'status');
+                paymentStatus.setAttribute('aria-live', 'polite');
+            }
+        } catch (e) { /* swallow */ }
+    })();
+
+    // ───── RESUME-PAYMENT BANNER ─────
+    // If the user closes the paid modal mid-flow (with pw_paid_pending set),
+    // show a small floating button so they can pick up where they left off.
+    function maybeShowResumeBanner() {
+        if (document.getElementById('pw-resume-banner')) return;
+        let pending = false;
+        try { pending = localStorage.getItem('pw_paid_pending') === 'true'; } catch (e) {}
+        if (!pending) return;
+        const paidMod = document.getElementById('paidModal');
+        if (paidMod && getComputedStyle(paidMod).display !== 'none') return;
+
+        const banner = document.createElement('div');
+        banner.id = 'pw-resume-banner';
+        banner.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:100002;background:rgba(45,212,191,0.95);color:#000;padding:12px 18px;border-radius:40px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 8px 24px rgba(45,212,191,0.4);display:flex;align-items:center;gap:8px;font-family:system-ui,sans-serif;';
+        banner.innerHTML = '💳 Resume payment';
+        banner.addEventListener('click', () => {
+            banner.remove();
+            openPaidModal();
+        });
+        document.body.appendChild(banner);
+
+        // Auto-dismiss after 45s so it doesn't linger forever
+        setTimeout(() => { if (banner.parentNode) banner.remove(); }, 45000);
+    }
+    window.maybeShowResumeBanner = maybeShowResumeBanner;
+
+    // ───── TRIAL WARNING BANNER ─────
+    // Shows when the user's trial is in its final 24 hours. Gives them a
+    // heads-up before the paywall hits so it feels like a warning, not a
+    // surprise. Dismissible for the rest of the day.
+    const TRIAL_WARN_DISMISS_KEY = 'pw_trial_warn_dismissed_at';
+
+    function maybeShowTrialWarningBanner() {
+        if (document.getElementById('pw-trial-warn-banner')) return;
+
+        const trialStart = getTrialStart();
+        if (!trialStart || !isTrialActive()) return;
+
+        // Only show within the last 24 hours
+        const hoursLeft = getTrialHoursLeft();
+        if (hoursLeft > 24) return;
+
+        // Skip if dismissed in the last 12 hours
+        try {
+            const dismissedAt = localStorage.getItem(TRIAL_WARN_DISMISS_KEY);
+            if (dismissedAt) {
+                const ts = parseInt(dismissedAt, 10);
+                if (!isNaN(ts) && (Date.now() - ts) < 12 * 60 * 60 * 1000) return;
+            }
+        } catch (e) {}
+
+        const banner = document.createElement('div');
+        banner.id = 'pw-trial-warn-banner';
+        banner.setAttribute('role', 'status');
+        banner.setAttribute('aria-live', 'polite');
+        banner.style.cssText = 'position:fixed;bottom:24px;left:24px;z-index:100002;background:rgba(15,18,28,0.96);border:1px solid rgba(250,204,21,0.5);color:#e2e8f0;padding:14px 18px;border-radius:16px;font-family:system-ui,sans-serif;font-size:13px;max-width:320px;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:flex;flex-direction:column;gap:8px;';
+
+        banner.innerHTML = `
+            <div style="font-weight:700;color:#facc15;font-size:14px;">⏳ Trial ends in ${hoursLeft} hour${hoursLeft === 1 ? '' : 's'}</div>
+            <div style="color:#94a3b8;line-height:1.5;">Subscribe for uninterrupted access, or apply for free before your trial ends.</div>
+            <div style="display:flex;gap:8px;margin-top:4px;">
+                <button id="pw-trial-warn-subscribe" style="flex:1;padding:8px 12px;border-radius:20px;border:none;background:#2dd4bf;color:#000;font-weight:700;cursor:pointer;font-size:12px;">Subscribe</button>
+                <button id="pw-trial-warn-apply" style="flex:1;padding:8px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:#e2e8f0;font-weight:600;cursor:pointer;font-size:12px;">Apply free</button>
+                <button id="pw-trial-warn-dismiss" style="padding:8px 10px;border-radius:20px;border:none;background:transparent;color:#64748b;cursor:pointer;font-size:14px;">✕</button>
+            </div>
+        `;
+        document.body.appendChild(banner);
+
+        document.getElementById('pw-trial-warn-subscribe').addEventListener('click', () => {
+            banner.remove();
+            openPaidModal();
+        });
+        document.getElementById('pw-trial-warn-apply').addEventListener('click', () => {
+            banner.remove();
+            openFreeWizard();
+        });
+        document.getElementById('pw-trial-warn-dismiss').addEventListener('click', () => {
+            banner.remove();
+            try { localStorage.setItem(TRIAL_WARN_DISMISS_KEY, String(Date.now())); } catch (e) {}
+        });
+    }
+    window.maybeShowTrialWarningBanner = maybeShowTrialWarningBanner;
+
+    // ───── RENEWAL REMINDER BANNER ─────
+    // For an active subscriber whose renewal is within 5 days, show a small
+    // dismissible banner so they get a heads-up before it lapses. This is a
+    // real churn-reduction feature — most users don't check their billing
+    // settings until they've already lost access.
+    const RENEWAL_DISMISS_KEY = 'pw_renewal_banner_dismissed_at';
+
+    function maybeShowRenewalBanner() {
+        // Skip if already showing
+        if (document.getElementById('pw-renewal-banner')) return;
+
+        // Skip if user is not a subscriber
+        const cached = getCachedStatus();
+        if (!cached || !cached.active) return;
+
+        // Skip if we don't know the renewal date
+        const expiresAt = getSubscriptionExpiry();
+        if (!expiresAt) return;
+
+        // Only show within 5 days
+        const daysLeft = getSubscriptionDaysLeft();
+        if (daysLeft === null || daysLeft > 5) return;
+
+        // Skip if the user already dismissed it recently (same-day)
+        try {
+            const dismissedAt = localStorage.getItem(RENEWAL_DISMISS_KEY);
+            if (dismissedAt) {
+                const ts = parseInt(dismissedAt, 10);
+                if (!isNaN(ts) && (Date.now() - ts) < 24 * 60 * 60 * 1000) return;
+            }
+        } catch (e) {}
+
+        const banner = document.createElement('div');
+        banner.id = 'pw-renewal-banner';
+        banner.setAttribute('role', 'status');
+        banner.setAttribute('aria-live', 'polite');
+        banner.style.cssText = 'position:fixed;bottom:24px;left:24px;z-index:100002;background:rgba(15,18,28,0.96);border:1px solid rgba(249,115,22,0.5);color:#e2e8f0;padding:14px 18px;border-radius:16px;font-family:system-ui,sans-serif;font-size:13px;max-width:320px;box-shadow:0 12px 40px rgba(0,0,0,0.6);display:flex;flex-direction:column;gap:8px;';
+
+        const dateStr = formatExpiryDate(expiresAt);
+        banner.innerHTML = `
+            <div style="font-weight:700;color:#f97316;font-size:14px;">⏳ Renews in ${daysLeft} day${daysLeft === 1 ? '' : 's'}</div>
+            <div style="color:#94a3b8;line-height:1.5;">Your subscription renews on ${dateStr}. We'll bill your saved payment method automatically.</div>
+            <div style="display:flex;gap:8px;margin-top:4px;">
+                <button id="pw-renewal-manage" style="flex:1;padding:8px 12px;border-radius:20px;border:none;background:#f97316;color:#000;font-weight:700;cursor:pointer;font-size:12px;">Manage</button>
+                <button id="pw-renewal-dismiss" style="flex:1;padding:8px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:#94a3b8;font-weight:600;cursor:pointer;font-size:12px;">Dismiss</button>
+            </div>
+        `;
+        document.body.appendChild(banner);
+
+        document.getElementById('pw-renewal-manage').addEventListener('click', () => {
+            banner.remove();
+            if (typeof openBillingManager === 'function') openBillingManager();
+        });
+        document.getElementById('pw-renewal-dismiss').addEventListener('click', () => {
+            banner.remove();
+            try { localStorage.setItem(RENEWAL_DISMISS_KEY, String(Date.now())); } catch (e) {}
+        });
+    }
+    window.maybeShowRenewalBanner = maybeShowRenewalBanner;
+
     document.getElementById('open-billing-manager')?.addEventListener('click', openBillingManager);
-    document.getElementById('open-movingboxes-game')?.addEventListener('click', () => window.__paywall.showFullPage());
     document.getElementById('billing-manager-modal')?.querySelector('.close-modal-btn')?.addEventListener('click', () => {
         document.getElementById('billing-manager-modal').style.display = 'none';
     });
@@ -13185,19 +14359,1159 @@ async function handlePayment() {
         document.getElementById('about-overlay').style.display = 'none';
     });
 
-    // ───── EVENT BINDING ─────
-    document.addEventListener('DOMContentLoaded', function() {
-        const submitBtn = document.getElementById('paywall-submit-btn');
-        if (submitBtn) submitBtn.addEventListener('click', handlePayment);
+    // ───── FAQ TOGGLE (if used in overlay) ─────
+    function toggleFaq(el) {
+        el.parentElement.classList.toggle('open');
+    }
 
-        // Auto‑show paywall if not subscribed
-        (async function init() {
-            const allowed = await window.__paywall.isAllowed();
-            if (!allowed) setTimeout(() => window.__paywall.showFullPage(), 500);
-        })();
+    // ============ EXPOSE FUNCTIONS FOR INLINE HANDLERS ============
+    // All functions called via inline HTML onclick/oninput must be on window
+    window.openFreeWizard = openFreeWizard;
+    window.closeFreeWizard = closeFreeWizard;
+    window.copyAndOpenDM = copyAndOpenDM;
+    window.finishFreeApplication = finishFreeApplication;
+    window.openPaidModal = openPaidModal;
+    window.closePaidModal = closePaidModal;
+    window.processPayment = processPayment;
+    window.filterPlatforms = filterPlatforms;
+    window.selectPlatform = selectPlatform;
+    window.toggleFaq = toggleFaq;
+    window.renderFreeStep = renderFreeStep;
+    window.goBackToPlatformSelection = goBackToPlatformSelection;
+    window.withdrawApplication = withdrawApplication;
+    window.copyApplicationId = copyApplicationId;
+    window.refreshApplicationStatus = refreshApplicationStatus;
+    if (typeof reapplyFreeApplication === 'function') {
+        window.reapplyFreeApplication = reapplyFreeApplication;
+    }
+
+    // ───── DEV / DEBUG RESET ─────
+    // Call `window.resetPaywall()` from the browser console to fully wipe
+    // the paywall state (trial, approval, application, paid-pending, wizard).
+    // Useful during testing; harmless in production because it requires
+    // console access.
+    window.resetPaywall = function() {
+        try {
+            [
+                'paywall_trial_start',
+                'paywall_sub_cache',
+                'paywall_userId',
+                'pw_app_id',
+                'pw_approved',
+                'pw_applications',
+                'pw_wizard_state',
+                'pw_paid_pending'
+            ].forEach(k => localStorage.removeItem(k));
+        } catch (e) {}
+        location.reload();
+    };
+
+    // ───── DIAGNOSTIC PANEL (dev only) ─────
+    // Opens with `?pwtest=1` in the URL, or by calling `window.pwTest()`.
+    // Lets you flip every state without a backend so you can verify the UX.
+    // Completely inert for normal users — nothing runs unless you open it.
+    function buildPwTestPanel() {
+        if (document.getElementById('pw-test-panel')) return;
+
+        const panel = document.createElement('div');
+        panel.id = 'pw-test-panel';
+        panel.style.cssText = 'position:fixed;top:12px;left:12px;z-index:100003;background:rgba(15,18,28,0.96);border:1px solid rgba(45,212,191,0.5);border-radius:16px;padding:16px 18px;font-family:system-ui,sans-serif;font-size:13px;color:#e2e8f0;max-width:300px;box-shadow:0 12px 40px rgba(0,0,0,0.7);';
+
+        const stateLine = () => {
+            let sub = 'no';
+            try {
+                const raw = localStorage.getItem(SUB_CACHE_KEY);
+                if (raw) {
+                    const cached = JSON.parse(raw);
+                    if (cached && cached.active) sub = 'active';
+                }
+            } catch (e) {}
+            let app = 'none';
+            try {
+                const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+                const id = getApplicationId();
+                const existing = stored.find(a => a.id === id);
+                if (existing) app = existing.status || 'pending';
+            } catch (e) {}
+            const approved = localStorage.getItem('pw_approved') === 'true' ? 'yes' : 'no';
+            const trialStart = localStorage.getItem(TRIAL_KEY);
+            let trial = 'none';
+            if (trialStart) {
+                const elapsed = Date.now() - parseInt(trialStart, 10);
+                const days = Math.floor(elapsed / (24 * 60 * 60 * 1000));
+                trial = days < 7 ? (7 - days) + 'd left' : 'expired';
+            }
+            const pendingPaid = localStorage.getItem('pw_paid_pending') === 'true' ? 'yes' : 'no';
+            const offline = isOffline() ? 'yes' : 'no';
+            return `<div style="font-size:11px;color:#94a3b8;line-height:1.7;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:10px;margin-bottom:10px;">
+                <strong style="color:#f8fafc;">App ID:</strong> ${getApplicationId()}<br>
+                <strong style="color:#f8fafc;">Sub:</strong> ${sub} &nbsp;·&nbsp; <strong style="color:#f8fafc;">Trial:</strong> ${trial}<br>
+                <strong style="color:#f8fafc;">Application:</strong> ${app} &nbsp;·&nbsp; <strong style="color:#f8fafc;">Approved flag:</strong> ${approved}<br>
+                <strong style="color:#f8fafc;">Paid pending:</strong> ${pendingPaid} &nbsp;·&nbsp; <strong style="color:#f8fafc;">Offline:</strong> ${offline}
+            </div>`;
+        };
+
+        const btnStyle = 'display:block;width:100%;margin:4px 0;padding:8px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#e2e8f0;cursor:pointer;font-size:12px;font-weight:600;text-align:left;';
+        const dangerStyle = 'display:block;width:100%;margin:4px 0;padding:8px 12px;border-radius:20px;border:1px solid rgba(244,63,94,0.4);background:rgba(244,63,94,0.1);color:#f43f5e;cursor:pointer;font-size:12px;font-weight:600;text-align:left;';
+
+        panel.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <strong style="color:#2dd4bf;font-size:14px;">🧪 Paywall Test Panel</strong>
+                <button id="pw-test-close" style="background:none;border:none;color:#94a3b8;font-size:16px;cursor:pointer;">✕</button>
+            </div>
+            <div id="pw-test-state">${stateLine()}</div>
+            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin:8px 0 4px;">Application</div>
+            <button style="${btnStyle}" onclick="pwTestSetApp('pending')">Set pending → open wizard</button>
+            <button style="${btnStyle}" onclick="pwTestSetApp('rejected')">Set rejected → open wizard</button>
+            <button style="${btnStyle}" onclick="pwTestSetApp(null)">Clear application</button>
+            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin:8px 0 4px;">Subscription</div>
+            <button style="${btnStyle}" onclick="pwTestSetSub(true)">Activate subscription</button>
+            <button style="${btnStyle}" onclick="pwTestSetSub(false)">Deactivate subscription</button>
+            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin:8px 0 4px;">Trial</div>
+            <button style="${btnStyle}" onclick="pwTestSetTrial('fresh')">Fresh trial (7 days)</button>
+            <button style="${btnStyle}" onclick="pwTestSetTrial('expiring')">Expiring (1 day left)</button>
+            <button style="${btnStyle}" onclick="pwTestSetTrial('expired')">Expired</button>
+            <button style="${btnStyle}" onclick="pwTestSetTrial(null)">No trial record</button>
+            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin:8px 0 4px;">Paid flow</div>
+            <button style="${btnStyle}" onclick="pwTestSetPaidPending()">Set paid-pending flag</button>
+            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin:8px 0 4px;">Reset</div>
+            <button style="${dangerStyle}" onclick="resetPaywall()">🗑 Wipe all state & reload</button>
+        `;
+
+        document.body.appendChild(panel);
+
+        document.getElementById('pw-test-close').addEventListener('click', () => panel.remove());
+
+        // Refresh the state block every second
+        const refresh = setInterval(() => {
+            const el = document.getElementById('pw-test-state');
+            if (!el || !panel.parentNode) { clearInterval(refresh); return; }
+            el.innerHTML = stateLine();
+        }, 1000);
+    }
+
+    // ── Test helpers (only called from the panel) ──
+    window.pwTestSetApp = function(status) {
+        const id = getApplicationId();
+        let stored = [];
+        try { stored = JSON.parse(localStorage.getItem('pw_applications') || '[]'); } catch (e) {}
+        stored = stored.filter(a => a.id !== id);
+        if (status) {
+            stored.push({ id, platform: 'Instagram', status, createdAt: Date.now() });
+        }
+        localStorage.setItem('pw_applications', JSON.stringify(stored));
+        // Close everything and re-open the wizard so the state renders
+        const wiz = document.getElementById('freeWizardModal');
+        if (wiz) wiz.style.display = 'none';
+        freeStep = 1;
+        selectedPlatform = null;
+        clearWizardState();
+        openFreeWizard();
+    };
+    window.pwTestSetSub = function(active) {
+        if (active) {
+            localStorage.setItem(SUB_CACHE_KEY, JSON.stringify({ active: true, timestamp: Date.now() }));
+        } else {
+            localStorage.removeItem(SUB_CACHE_KEY);
+        }
+        if (typeof throttledCheckAccess === 'function') throttledCheckAccess();
+        else checkAccess();
+    };
+    window.pwTestSetTrial = function(mode) {
+        if (mode === null) {
+            localStorage.removeItem(TRIAL_KEY);
+        } else if (mode === 'fresh') {
+            localStorage.setItem(TRIAL_KEY, Date.now().toString());
+        } else if (mode === 'expiring') {
+            localStorage.setItem(TRIAL_KEY, (Date.now() - 6 * 24 * 60 * 60 * 1000).toString());
+        } else if (mode === 'expired') {
+            localStorage.setItem(TRIAL_KEY, (Date.now() - 8 * 24 * 60 * 60 * 1000).toString());
+        }
+        if (typeof throttledCheckAccess === 'function') throttledCheckAccess();
+        else checkAccess();
+    };
+    window.pwTestSetPaidPending = function() {
+        localStorage.setItem('pw_paid_pending', 'true');
+        maybeResumePaidFlow();
+    };
+
+    // ── Openers ──
+    window.pwTest = function() { buildPwTestPanel(); };
+
+    // Auto-open if ?pwtest=1 is present
+    try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('pwtest') === '1') {
+            // Slight delay so the rest of the boot finishes first
+            setTimeout(buildPwTestPanel, 1500);
+        }
+    } catch (e) { /* swallow */ }
+    window.reapplyFreeApplication = reapplyFreeApplication;
+
+    // ============ STATUS CHECK (to hide paywall if approved) ============
+    // NOTE: Backend URL is a placeholder. For now, we use localStorage as a
+    // fallback so the client side is complete and testable. When the Vercel
+    // backend is ready, set API_BASE to the real URL and the fetch calls
+    // will take over automatically.
+
+    const API_BASE = ''; // Leave empty to use local mode. Set to Vercel URL later.
+
+    // Local approval flag (for testing / until backend is live)
+    function isLocallyApproved() {
+        return localStorage.getItem('pw_approved') === 'true';
+    }
+
+    function setLocallyApproved(value) {
+        if (value) localStorage.setItem('pw_approved', 'true');
+        else localStorage.removeItem('pw_approved');
+    }
+
+    // Expose for admin/debug: call `window.approveMe()` in console to test approved state
+    // These no longer force a reload — the UI reacts immediately instead.
+    window.approveMe = function() {
+        setLocallyApproved(true);
+        reactToStatusChange('approved');
+    };
+    window.revokeMe = function() {
+        setLocallyApproved(false);
+        // Also clear the local application record so the wizard lets them reapply
+        try {
+            const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+            const id = getApplicationId();
+            const filtered = stored.filter(a => a.id !== id);
+            localStorage.setItem('pw_applications', JSON.stringify(filtered));
+        } catch (e) {}
+        updateFreePlanBadge();
+        throttledCheckAccess();
+    };
+
+    function updateFreePlanBadge() {
+        const badge = document.getElementById('freePlanBadge');
+        const btn = document.querySelector('#freePlanCard .btn--free');
+        if (!badge) return;
+
+        let status = 'none'; // none | pending | rejected
+        try {
+            const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+            const id = getApplicationId();
+            const existing = stored.find(a => a.id === id);
+            if (existing) status = existing.status || 'pending';
+        } catch (e) {}
+
+        // Reset styles first
+        badge.style.background = '#facc15';
+        badge.style.color = '#000';
+        badge.textContent = 'Pending review';
+
+        if (status === 'pending') {
+            badge.style.display = 'block';
+            badge.style.background = '#facc15';
+            badge.textContent = 'Pending review';
+            if (btn) btn.textContent = 'View application →';
+        } else if (status === 'rejected') {
+            badge.style.display = 'block';
+            badge.style.background = '#f43f5e';
+            badge.style.color = '#fff';
+            badge.textContent = 'Not approved';
+            if (btn) btn.textContent = 'Apply again →';
+        } else {
+            badge.style.display = 'none';
+            if (btn) btn.textContent = 'Apply Now';
+        }
+    }
+
+    function grantAccess() {
+        // Hide the paywall
+        const overlay = document.getElementById('paywall-overlay');
+        if (overlay) overlay.style.display = 'none';
+
+        // ───── Proper modal cleanup ─────
+        // We call the close functions instead of just setting display:none so
+        // that:
+        //   - Stripe Elements are destroyed (prevents memory leak + duplicate
+        //     listeners if the user re-opens the modal)
+        //   - The pending-paid flag is cleared
+        //   - The resume banner is dismissed
+        //   - Focus is returned to the previously focused element
+        // The `true` arg on closeFreeWizard bypasses the confirmation prompt
+        // (grantAccess should never prompt — we're celebrating, not warning).
+        try {
+            if (typeof closePaidModal === 'function') {
+                const paidMod = document.getElementById('paidModal');
+                if (paidMod && getComputedStyle(paidMod).display !== 'none') {
+                    closePaidModal();
+                }
+            }
+        } catch (e) { /* swallow */ }
+
+        try {
+            if (typeof closeFreeWizard === 'function') {
+                const freeWiz = document.getElementById('freeWizardModal');
+                if (freeWiz && getComputedStyle(freeWiz).display !== 'none') {
+                    closeFreeWizard(true);
+                }
+            }
+        } catch (e) { /* swallow */ }
+
+        // Remove the resume-payment banner if it's showing
+        try {
+            const banner = document.getElementById('pw-resume-banner');
+            if (banner) banner.remove();
+        } catch (e) {}
+
+        // Clear the pending-paid flag — the user has access now
+        try { localStorage.removeItem('pw_paid_pending'); } catch (e) {}
+
+        // Keep the pre-paint state attribute in sync so future page loads
+        // don't flash the paywall for this user.
+        document.documentElement.setAttribute('data-paywall-state', 'granted');
+    }
+
+    // ───── ADAPTIVE HEADER ─────
+    // Sets the paywall header based on the user's actual state:
+    //   - trial still active but paywall showing (rare) → "Trial: X days left"
+    //   - trial expired                                 → "Your trial has ended"
+    //   - never had a trial                             → "Get full access"
+    //   - previous subscriber, lapsed                   → "Welcome back"
+    //   - pending application                           → "Your application is being reviewed"
+    // ───── LAPSED SUBSCRIBER TRACKING ─────
+    // When a subscription expires locally, remember the timestamp so we can
+    // distinguish "never subscribed" from "subscription just lapsed". A lapsed
+    // subscriber who returns within 30 days gets a warmer welcome-back state.
+    const LAPSED_AT_KEY = 'pw_lapsed_at';
+    function markSubscriptionLapsed() {
+        try {
+            if (!localStorage.getItem(LAPSED_AT_KEY)) {
+                localStorage.setItem(LAPSED_AT_KEY, String(Date.now()));
+            }
+        } catch (e) {}
+    }
+    function clearLapsedMark() {
+        try { localStorage.removeItem(LAPSED_AT_KEY); } catch (e) {}
+    }
+    function isLapsedSubscriber() {
+        try {
+            const raw = localStorage.getItem(LAPSED_AT_KEY);
+            if (!raw) return false;
+            const ts = parseInt(raw, 10);
+            if (isNaN(ts)) return false;
+            // Only "lapsed" if it happened in the last 30 days
+            return (Date.now() - ts) < 30 * 24 * 60 * 60 * 1000;
+        } catch (e) { return false; }
+    }
+    function getLapsedDaysAgo() {
+        try {
+            const raw = localStorage.getItem(LAPSED_AT_KEY);
+            if (!raw) return null;
+            const ts = parseInt(raw, 10);
+            if (isNaN(ts)) return null;
+            return Math.max(0, Math.floor((Date.now() - ts) / (24 * 60 * 60 * 1000)));
+        } catch (e) { return null; }
+    }
+
+    function updatePaywallHeader() {
+        const titleEl = document.getElementById('pwHeaderTitle');
+        const subtitleEl = document.getElementById('pwHeaderSubtitle');
+        if (!titleEl || !subtitleEl) return;
+
+        // Pending application takes priority — reassure the user
+        let hasPendingApp = false;
+        try {
+            const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+            const id = getApplicationId();
+            const existing = stored.find(a => a.id === id);
+            if (existing && existing.status === 'pending') hasPendingApp = true;
+        } catch (e) {}
+
+        if (hasPendingApp) {
+            titleEl.textContent = 'Your application is being reviewed';
+            subtitleEl.textContent = 'You can still subscribe for instant access.';
+            return;
+        }
+
+        // Lapsed subscriber — warm, personal, action-oriented
+        if (isLapsedSubscriber()) {
+            const days = getLapsedDaysAgo();
+            const whenText = days === 0 ? 'today' : (days === 1 ? 'yesterday' : `${days} days ago`);
+            titleEl.textContent = 'Welcome back';
+            subtitleEl.textContent = `Your subscription ended ${whenText}. Resubscribe to pick up where you left off.`;
+            return;
+        }
+
+        const trialStart = getTrialStart();
+        const trialActive = isTrialActive();
+
+        // Trial still running — the paywall showing here means they got here
+        // via a specific action (e.g., clicking a paid feature).
+        if (trialStart && trialActive) {
+            const days = getTrialDaysLeft();
+            const hours = getTrialHoursLeft();
+            titleEl.textContent = 'Your trial is still active';
+            subtitleEl.textContent = days >= 1
+                ? `${days} day${days === 1 ? '' : 's'} left. Upgrade anytime for uninterrupted access.`
+                : `${hours} hour${hours === 1 ? '' : 's'} left. Upgrade to keep access.`;
+            return;
+        }
+
+        // Trial expired
+        if (trialStart && !trialActive) {
+            titleEl.textContent = 'Your trial has ended';
+            subtitleEl.textContent = 'Choose how to continue.';
+            return;
+        }
+
+        // No trial on record — never used the app, or trial was wiped
+        titleEl.textContent = 'Get full access';
+        subtitleEl.textContent = 'Subscribe for instant access, or apply for free.';
+    }
+
+    // Call this whenever checkStatus() transitions from active to inactive
+    function detectLapseTransition() {
+        try {
+            const cached = getCachedStatus();
+            const wasActive = cached && cached.active;
+            if (!wasActive) return;
+            const expiresAt = getSubscriptionExpiry();
+            if (expiresAt && expiresAt < Date.now()) {
+                // Active → expired transition
+                markSubscriptionLapsed();
+            }
+        } catch (e) {}
+    }
+
+    // ───── TRIAL COUNTDOWN BADGE (on the free plan card) ─────
+    // Adds a small live badge to the free plan card during an active trial
+    // so the user sees the clock ticking. Updates once a minute.
+    let _trialBadgeTimer = null;
+    function updateTrialBadge() {
+        const freeCard = document.getElementById('freePlanCard');
+        if (!freeCard) return;
+
+        // Ensure the badge element exists
+        let badge = document.getElementById('pwTrialBadge');
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.id = 'pwTrialBadge';
+            badge.style.cssText = 'display:none;margin-top:10px;text-align:center;font-size:11px;font-weight:700;color:#facc15;letter-spacing:0.3px;';
+            freeCard.appendChild(badge);
+        }
+
+        const trialStart = getTrialStart();
+        if (!trialStart || !isTrialActive()) {
+            badge.style.display = 'none';
+            return;
+        }
+
+        const days = getTrialDaysLeft();
+        const hours = getTrialHoursLeft();
+        badge.style.display = 'block';
+        if (days >= 1) {
+            badge.textContent = `⏳ ${days} day${days === 1 ? '' : 's'} of trial left`;
+        } else {
+            badge.textContent = `⏳ ${hours} hour${hours === 1 ? '' : 's'} of trial left`;
+        }
+
+        // Color the badge red when time is nearly up
+        if (days === 0 && hours <= 6) {
+            badge.style.color = '#f43f5e';
+        } else if (days <= 1) {
+            badge.style.color = '#f97316';
+        } else {
+            badge.style.color = '#facc15';
+        }
+    }
+    function startTrialBadgeTimer() {
+        if (_trialBadgeTimer) return;
+        updateTrialBadge();
+        _trialBadgeTimer = setInterval(updateTrialBadge, 60000); // once a minute
+    }
+
+    // ───── ADAPTIVE PAID CARD ─────
+    // For an active subscriber who somehow sees the paywall (e.g. grace period,
+    // or the sub is about to lapse), update the paid card to reflect reality:
+    // show the renewal date, change the CTA from "Subscribe" to "Extend", etc.
+    function updatePaidPlanCard() {
+        const ribbon = document.getElementById('paidPlanRibbon');
+        const subEl = document.getElementById('paidPlanSub');
+        const btn = document.getElementById('paidPlanBtn');
+        const footer = document.getElementById('paidPlanFooter');
+        if (!btn) return;
+
+        const status = getCachedStatus();
+        const isActive = status && status.active;
+        const expiresAt = getSubscriptionExpiry();
+        const daysLeft = getSubscriptionDaysLeft();
+
+        if (isActive && expiresAt) {
+            const daysText = daysLeft !== null ? `${daysLeft} day${daysLeft === 1 ? '' : 's'} left` : '';
+            if (ribbon) ribbon.textContent = 'Active';
+            if (subEl) subEl.textContent = daysText ? `Renews in ${daysText}` : 'Active subscription';
+            if (btn) btn.textContent = 'Manage subscription';
+            if (footer) footer.textContent = 'Already subscribed · manage from Settings';
+
+            // Change button behavior for active subscribers
+            btn.onclick = function() {
+                if (typeof openBillingManager === 'function') openBillingManager();
+                else openPaidModal();
+            };
+        } else {
+            const lapsed = isLapsedSubscriber();
+            if (ribbon) ribbon.textContent = lapsed ? 'Welcome back' : 'Instant';
+            if (subEl) subEl.textContent = lapsed ? 'Resubscribe to continue' : 'No waiting';
+            if (btn) btn.textContent = lapsed ? 'Resubscribe – $19/mo' : 'Subscribe – $19/mo';
+            if (footer) footer.textContent = 'Secure billing · cancel in one click';
+            btn.onclick = function() { openPaidModal(); };
+        }
+    }
+
+    function denyAccess() {
+        const overlay = document.getElementById('paywall-overlay');
+        if (overlay) overlay.style.display = 'flex';
+        document.documentElement.setAttribute('data-paywall-state', 'gated');
+        // Refresh the header + countdown badge + paid card every time we show the paywall
+        updatePaywallHeader();
+        updateTrialBadge();
+        updatePaidPlanCard();
+        startTrialBadgeTimer();
+    }
+
+    // ───── LIVE STATUS REACTION ─────
+    // Called whenever the application's status changes (locally or from another
+    // tab). Updates every piece of UI that depends on the status.
+    function reactToStatusChange(newStatus) {
+        if (!newStatus) return;
+
+        // Always refresh the paywall card badge
+        updateFreePlanBadge();
+
+        const wizardEl = document.getElementById('freeWizardModal');
+        const wizardOpen = wizardEl && getComputedStyle(wizardEl).display !== 'none';
+        const toast = (t) => (typeof UI !== 'undefined' && UI.toast) ? UI.toast(t) : null;
+
+        if (newStatus === 'approved') {
+            // Close the wizard and grant access regardless of what step the user is on
+            if (wizardOpen) {
+                freeStep = 1;
+                selectedPlatform = null;
+                wizardEl.style.display = 'none';
+            }
+            // Also clear any saved wizard snapshot — the application is done
+            clearWizardState();
+            grantAccess();
+            toast('🎉 Application approved!');
+        } else if (newStatus === 'rejected') {
+            // Clear local approval — this is critical because otherwise a
+            // stale pw_approved flag could keep granting access until the
+            // next server check.
+            try { localStorage.removeItem('pw_approved'); } catch (e) {}
+
+            // If the wizard is open, re-render to the "Not approved" screen
+            if (wizardOpen) {
+                freeStep = 3;
+                renderFreeStep();
+            }
+            toast('Application was not approved.');
+
+            // Re-evaluate access immediately — the user should lose access
+            // now, not on the next poll.
+            setTimeout(() => {
+                if (typeof throttledCheckAccess === 'function') throttledCheckAccess();
+                else checkAccess();
+            }, 300);
+        } else if (newStatus === 'pending') {
+            // Status is pending again — could mean the user was un-rejected.
+            // Clear any leftover local approval since pending ≠ approved.
+            try { localStorage.removeItem('pw_approved'); } catch (e) {}
+
+            // If the wizard is open and showing step 3, re-render in case it
+            // was showing a "Not approved" screen.
+            if (wizardOpen && freeStep === 3) {
+                renderFreeStep();
+            }
+            // No toast for pending — it's the default state
+        }
+    }
+
+    // Sync the backend's status for this application back to localStorage,
+    // so the local record stays truthful (approved/rejected/pending).
+    // Also fires reactToStatusChange() if the status actually changed.
+    function syncApplicationStatus(id, backendStatus) {
+        if (!backendStatus) return;
+        try {
+            const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+            const idx = stored.findIndex(a => a.id === id);
+            if (idx === -1) return;
+
+            const oldStatus = stored[idx].status;
+            const changed = oldStatus !== backendStatus;
+
+            stored[idx].status = backendStatus;
+            stored[idx].updatedAt = Date.now();
+            if (backendStatus === 'approved') {
+                // Server-confirmed approval timestamp. Presence of this
+                // field is what makes the local approval "backed".
+                stored[idx].serverVerifiedAt = Date.now();
+            } else {
+                // Clear the verification stamp if the backend no longer
+                // confirms approval.
+                delete stored[idx].serverVerifiedAt;
+            }
+            localStorage.setItem('pw_applications', JSON.stringify(stored));
+
+            // Mirror approved status to the pw_approved flag so the
+            // pre-paint gate hides the paywall on next load without a flash.
+            if (backendStatus === 'approved') {
+                localStorage.setItem('pw_approved', 'true');
+            } else if (backendStatus === 'rejected') {
+                localStorage.removeItem('pw_approved');
+            }
+
+            // Fire the reaction only if the status actually changed
+            if (changed) reactToStatusChange(backendStatus);
+        } catch (e) { /* ignore */ }
+    }
+
+    // ───── TAMPER DETECTION ─────
+    // A user with devtools can set `pw_approved = 'true'` directly. That
+    // alone would grant access forever. To make this harder, we require
+    // that a local approval be *backed by a matching application record*
+    // whose `status` is `approved`. If the flag exists but no record backs
+    // it, we treat the flag as tampered and clear it.
+    function isLocallyApprovedWithBacking() {
+        try {
+            if (localStorage.getItem('pw_approved') !== 'true') return false;
+            const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+            const id = getApplicationId();
+            const existing = stored.find(a => a.id === id);
+            if (!existing) return false;
+            if (existing.status !== 'approved') {
+                // Flag set but record says something else → tampered
+                localStorage.removeItem('pw_approved');
+                return false;
+            }
+            // Also require the record to have a serverVerified timestamp
+            // (written by the backend on successful approval). This is a
+            // future-proofing hook — if the record lacks it we still allow
+            // local testing to work by checking `createdAt` as a fallback.
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // ───── SERVER-FIRST VERIFICATION ─────
+    // On load and on every checkAccess when we're online + backend is
+    // configured, we must confirm with the backend before trusting any
+    // local approval. If the backend is reachable and says "no", we clear
+    // local approval and deny — even if pw_approved is 'true'.
+    async function verifyFreeApprovalWithServer() {
+        const id = getApplicationId();
+        if (!API_BASE) return { verified: null }; // no backend configured
+        if (isOffline()) return { verified: null }; // offline → can't verify
+
+        try {
+            const res = await fetch(`${API_BASE}/api/status?id=${id}`, {
+                // Short timeout so a slow backend doesn't block the UI
+                signal: (typeof AbortController !== 'undefined')
+                    ? (() => { const c = new AbortController(); setTimeout(() => c.abort(), 8000); return c.signal; })()
+                    : undefined
+            });
+            if (!res.ok) return { verified: null }; // backend reachable but returned error
+            const data = await res.json();
+
+            // Sync local record with whatever the backend says
+            if (data.status) syncApplicationStatus(id, data.status);
+
+            // If backend explicitly denies, clear local approval regardless
+            // of what's in localStorage.
+            if (data.status === 'rejected' || data.status === 'none') {
+                localStorage.removeItem('pw_approved');
+                return { verified: false };
+            }
+
+            return {
+                verified: !!data.approved,
+                status: data.status,
+                expiresAt: data.expiresAt || null
+            };
+        } catch (e) {
+            // Network failure during verification → return null so callers
+            // can fall back to cached state.
+            return { verified: null };
+        }
+    }
+
+    async function checkAccess() {
+        // Expire stale pending applications first so the badge is correct
+        if (typeof sweepExpiredApplications === 'function') sweepExpiredApplications();
+
+        const id = getApplicationId();
+
+        // 1. App-level access (trial, active sub, etc.)
+        let allowed = false;
+        try {
+            allowed = await window.__paywall.isAllowed();
+        } catch (e) {
+            const cached = getCachedStatus();
+            allowed = !!(cached && cached.active);
+        }
+        if (allowed) { grantAccess(); return; }
+
+        // 2. Server verification (authoritative when reachable).
+        //    This runs BEFORE we trust any local approval.
+        const serverCheck = await verifyFreeApprovalWithServer();
+
+        if (serverCheck.verified === true) {
+            // Backend confirmed the approval — grant access
+            grantAccess();
+            return;
+        }
+
+        if (serverCheck.verified === false) {
+            // Backend explicitly denied — do NOT trust local approval
+            updateFreePlanBadge();
+            denyAccess();
+            return;
+        }
+
+        // serverCheck.verified === null means either:
+        //   - no backend configured (dev mode)
+        //   - we're offline
+        //   - the backend errored out
+        // In any of those cases, we fall back to local approval, but ONLY
+        // if it's properly backed by a matching application record.
+        if (isLocallyApprovedWithBacking()) {
+            grantAccess();
+            return;
+        }
+
+        // 3. Cached "active" from a previous successful checkStatus() call
+        //    during an offline window — trust it as a grace period.
+        const cached = getCachedStatus();
+        if (cached && cached.active) {
+            grantAccess();
+            return;
+        }
+
+        // 5. No access — check for a lapse transition before showing the paywall
+        detectLapseTransition();
+
+        // 5a. Show the paywall
+        updateFreePlanBadge();
+        denyAccess();
+    }
+
+    // Register application (sends to backend if available, otherwise stores locally)
+    function registerApplication() {
+        const id = getApplicationId();
+        const platform = selectedPlatform || 'pending';
+
+        // Always store locally so we can inspect/review
+        try {
+            const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+            const existing = stored.find(a => a.id === id);
+            if (existing) {
+                existing.platform = platform;
+                existing.updatedAt = Date.now();
+            } else {
+                stored.push({ id, platform, status: 'pending', createdAt: Date.now() });
+            }
+            localStorage.setItem('pw_applications', JSON.stringify(stored));
+        } catch (e) {}
+
+        // Stamp an expiry on the record. Pending applications are valid for
+        // 7 days — after that, the review queue has effectively been abandoned
+        // and the user is free to reapply with a fresh record.
+        try {
+            const stored2 = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+            const rec = stored2.find(a => a.id === id);
+            if (rec && !rec.expiresAt) {
+                rec.expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000;
+                localStorage.setItem('pw_applications', JSON.stringify(stored2));
+            }
+        } catch (e) {}
+
+        // Send to backend if configured
+        if (API_BASE) {
+            fetch(`${API_BASE}/api/apply`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, platform })
+            }).catch(() => { /* ignore if backend offline */ });
+        }
+
+        // Update the free plan card badge to reflect "pending" state
+        updateFreePlanBadge();
+    }
+
+    // ───── APPLICATION EXPIRY ─────
+    // A pending application whose `expiresAt` has passed is treated as if
+    // it never existed. Called from openFreeWizard and checkAccess so it runs
+    // at every relevant entry point.
+    function sweepExpiredApplications() {
+        try {
+            const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+            const now = Date.now();
+            let changed = false;
+            const next = stored.filter(a => {
+                if (a.status === 'pending' && a.expiresAt && a.expiresAt < now) {
+                    changed = true;
+                    return false; // drop it
+                }
+                return true;
+            });
+            if (changed) {
+                localStorage.setItem('pw_applications', JSON.stringify(next));
+                updateFreePlanBadge();
+            }
+        } catch (e) { /* swallow */ }
+    }
+    window.sweepExpiredApplications = sweepExpiredApplications;
+
+    // ============ STRIPE REDIRECT RETURN HANDLER ============
+    // If the user went through a 3DS flow, Stripe redirects back to our site
+    // with `payment_intent` and `payment_intent_client_secret` in the URL.
+    // We must verify the payment server-side and grant access, then clean the URL.
+    async function handleStripeRedirectReturn() {
+        const params = new URLSearchParams(window.location.search);
+        const paymentIntentId = params.get('payment_intent');
+        if (!paymentIntentId) return false;
+
+        try {
+            const userId = getUserId();
+            const verifyRes = await fetch(`${WORKER_URL}/api/confirm-subscription`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, paymentIntentId })
+            });
+            if (verifyRes.ok) {
+                const data = await verifyRes.json();
+                if (data.active) {
+                    localStorage.setItem(SUB_CACHE_KEY, JSON.stringify({ active: true, timestamp: Date.now() }));
+                    // Clean the URL so a refresh doesn't retrigger
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    return true;
+                }
+            }
+        } catch (e) { /* fall through */ }
+
+        // Clean the URL even if verification failed, to avoid loop
+        window.history.replaceState({}, document.title, window.location.pathname);
+        return false;
+    }
+
+    // ============ ESC KEY HANDLER ============
+    // Closes child modals (free wizard, paid modal) when ESC is pressed.
+    // The main paywall overlay is NOT closable with ESC — it's a gate.
+    document.addEventListener('keydown', function(e) {
+        if (e.key !== 'Escape') return;
+        const paidModal = document.getElementById('paidModal');
+        if (paidModal && paidModal.style.display !== 'none') {
+            closePaidModal();
+            return;
+        }
+        const freeWiz = document.getElementById('freeWizardModal');
+        if (freeWiz && freeWiz.style.display !== 'none') {
+            closeFreeWizard();
+            return;
+        }
     });
 
-    console.log('[Paywall] Fully integrated with Stripe Payment Element and Moving Boxes.');
+    // ============ BACKDROP CLICK HANDLER ============
+    // Clicking the dim backdrop (outside the modal box) closes child modals.
+    document.addEventListener('click', function(e) {
+        // Paid modal
+        const paidModal = document.getElementById('paidModal');
+        if (paidModal && e.target === paidModal) {
+            closePaidModal();
+            return;
+        }
+        // Free wizard modal
+        const freeWiz = document.getElementById('freeWizardModal');
+        if (freeWiz && e.target === freeWiz) {
+            closeFreeWizard();
+            return;
+        }
+    });
+
+    // ============ BODY SCROLL LOCK ============
+    // Prevents the page behind from scrolling when any modal/overlay is open.
+    // Uses a MutationObserver so we don't have to touch every open/close fn.
+    (function initBodyScrollLock() {
+        const targets = ['paywall-overlay', 'freeWizardModal', 'paidModal']
+            .map(id => document.getElementById(id))
+            .filter(Boolean);
+
+        function syncLock() {
+            const anyOpen = targets.some(el => el && getComputedStyle(el).display !== 'none');
+            document.body.style.overflow = anyOpen ? 'hidden' : '';
+        }
+
+        targets.forEach(el => {
+            const obs = new MutationObserver(syncLock);
+            obs.observe(el, { attributes: true, attributeFilter: ['style'] });
+        });
+
+        // Initial sync (in case something is already visible)
+        syncLock();
+    })();
+
+    // ============ FOCUS MANAGEMENT + TRAP ============
+    // When a modal opens, move focus inside it and keep Tab cycling inside
+    // so keyboard users aren't stuck on the page behind. When it closes,
+    // return focus to the trigger.
+    (function initFocusManagement() {
+        let lastFocused = null;
+        let activeModal = null;
+
+        const modals = ['freeWizardModal', 'paidModal']
+            .map(id => document.getElementById(id))
+            .filter(Boolean);
+
+        const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
+
+        function getFocusable(modal) {
+            return Array.from(modal.querySelectorAll(FOCUSABLE))
+                .filter(el => el.offsetParent !== null || el === document.activeElement);
+        }
+
+        // Global Tab handler — keeps focus cycling inside the active modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key !== 'Tab' || !activeModal) return;
+            const focusable = getFocusable(activeModal);
+            if (focusable.length === 0) {
+                e.preventDefault();
+                return;
+            }
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            const current = document.activeElement;
+
+            if (e.shiftKey) {
+                if (current === first || !activeModal.contains(current)) {
+                    e.preventDefault();
+                    last.focus();
+                }
+            } else {
+                if (current === last || !activeModal.contains(current)) {
+                    e.preventDefault();
+                    first.focus();
+                }
+            }
+        });
+
+        modals.forEach(modal => {
+            const obs = new MutationObserver(() => {
+                const isOpen = getComputedStyle(modal).display !== 'none';
+                if (isOpen) {
+                    lastFocused = document.activeElement;
+                    activeModal = modal;
+                    const focusable = getFocusable(modal);
+                    if (focusable.length) setTimeout(() => focusable[0].focus(), 50);
+                } else if (activeModal === modal) {
+                    activeModal = null;
+                    if (lastFocused && typeof lastFocused.focus === 'function') {
+                        lastFocused.focus();
+                        lastFocused = null;
+                    }
+                }
+            });
+            obs.observe(modal, { attributes: true, attributeFilter: ['style'] });
+        });
+    })();
+
+    // ───── PAID-FLOW CRASH RECOVERY ─────
+    // If the user started a payment and the tab crashed / phone rang / browser
+    // was closed before the flow completed, `pw_paid_pending` is still set.
+    // On next load, reopen the paid modal so they can finish.
+    function maybeResumePaidFlow() {
+        // Skip if there's nothing pending
+        let pending = false;
+        try { pending = localStorage.getItem('pw_paid_pending') === 'true'; } catch (e) {}
+        if (!pending) return false;
+
+        // Skip if the user already has an active subscription (the flag
+        // was set but the flow actually succeeded and we forgot to clear it).
+        let activeSub = false;
+        try {
+            const raw = localStorage.getItem(SUB_CACHE_KEY);
+            if (raw) {
+                const cached = JSON.parse(raw);
+                if (cached && cached.active && (Date.now() - cached.timestamp) < 3 * 24 * 60 * 60 * 1000) {
+                    activeSub = true;
+                }
+            }
+        } catch (e) {}
+        if (activeSub) {
+            try { localStorage.removeItem('pw_paid_pending'); } catch (e) {}
+            return false;
+        }
+
+        // Reopen the paid modal — openPaidModal will pick up the pending flag
+        // and continue where the user left off (Stripe will reuse the same
+        // PaymentIntent if the clientSecret is still valid; otherwise it
+        // creates a new one).
+        try {
+            openPaidModal();
+            const toast = (t) => (typeof UI !== 'undefined' && UI.toast) ? UI.toast(t) : null;
+            toast('Resuming your payment…');
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // Call on load
+    window.addEventListener('load', async function() {
+        // 0. Pre-paint gate may have marked the document as "granted" based
+        //    on cached state. If we're online and have a backend, we MUST
+        //    confirm before we let that stand. If verification fails, we
+        //    reset to gated so the paywall appears.
+        try {
+            if (API_BASE && !isOffline()) {
+                const preGranted = document.documentElement.getAttribute('data-paywall-state') === 'granted';
+                if (preGranted) {
+                    const serverCheck = await verifyFreeApprovalWithServer();
+                    // If the backend explicitly denies, undo the pre-grant.
+                    if (serverCheck.verified === false) {
+                        document.documentElement.setAttribute('data-paywall-state', 'gated');
+                        const overlay = document.getElementById('paywall-overlay');
+                        if (overlay) overlay.style.display = 'flex';
+                    }
+                }
+            }
+        } catch (e) { /* swallow — checkAccess will do the full job */ }
+
+        // 1. Handle Stripe redirect return (3DS)
+        const handled = await handleStripeRedirectReturn();
+        if (handled) {
+            grantAccess();
+            return;
+        }
+
+        // 2. Try to resume a paid flow that was interrupted
+        try { maybeResumePaidFlow(); } catch (e) {}
+
+        // 3. Full access check
+        await checkAccess();
+
+        // 4. If the user is a subscriber whose renewal is close, nudge them
+        setTimeout(() => {
+            if (typeof maybeShowRenewalBanner === 'function') maybeShowRenewalBanner();
+        }, 2500);
+
+        // 5. If the user is in the final day of their trial, warn them
+        //    before the paywall hits
+        setTimeout(() => {
+            if (typeof maybeShowTrialWarningBanner === 'function') maybeShowTrialWarningBanner();
+        }, 3500);
+    });
+
+    // Throttled re-check (to avoid hammering the backend)
+    let _lastCheck = 0;
+    function throttledCheckAccess() {
+        const now = Date.now();
+        if (now - _lastCheck < 5000) return;
+        _lastCheck = now;
+        checkAccess();
+    }
+
+        // Re-check when the user returns to the tab
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                throttledCheckAccess();
+                // Give the banners a chance to appear when the user returns —
+                // they might have crossed into a warning window while away.
+                setTimeout(() => {
+                    if (typeof maybeShowRenewalBanner === 'function') maybeShowRenewalBanner();
+                    if (typeof maybeShowTrialWarningBanner === 'function') maybeShowTrialWarningBanner();
+                }, 1500);
+            }
+        });
+        window.addEventListener('focus', throttledCheckAccess);
+
+    // ───── CROSS-TAB SYNC ─────
+    // If the user has the app open in two tabs and the approval happens
+    // in one (or the backend response lands in one), the other tab reacts
+    // immediately without waiting for its next poll.
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'pw_applications') {
+            // Status was changed in another tab — re-evaluate everything
+            try {
+                const stored = JSON.parse(e.newValue || '[]');
+                const id = getApplicationId();
+                const existing = stored.find(a => a.id === id);
+                if (existing) reactToStatusChange(existing.status);
+            } catch (err) {}
+        }
+        if (e.key === 'pw_approved') {
+            // Approval flag toggled in another tab
+            if (e.newValue === 'true') {
+                grantAccess();
+            } else if (e.newValue === null) {
+                // Flag removed — re-check to decide
+                throttledCheckAccess();
+            }
+        }
+        if (e.key === 'pw_wizard_state') {
+            // Another tab updated the wizard — no reaction needed here.
+            // We deliberately do NOT sync wizard steps across tabs because
+            // each tab is its own UI context. This branch exists only to
+            // document the decision.
+        }
+    });
+
+    // ───── POLLING (only when the user has an active application) ─────
+    // The user sitting on the "Application received" screen will see their
+    // access unlock in real time if the admin approves them.
+    //
+    // Uses setTimeout recursion (NOT setInterval) so the backoff actually
+    // changes the timing. When the backend is down, polling slows down
+    // progressively instead of hammering every 15s.
+    const POLL_MIN = 15000;   // 15 seconds
+    const POLL_MAX = 120000;  // 2 minutes
+    let _pollTimer = null;
+    let _pollBackoff = POLL_MIN;
+
+    function hasActiveApplication() {
+        try {
+            const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+            const id = getApplicationId();
+            const existing = stored.find(a => a.id === id);
+            return existing && existing.status === 'pending';
+        } catch (e) { return false; }
+    }
+
+    function shouldPollNow() {
+        // Only poll if there's something to poll for
+        if (!hasActiveApplication() && !isLocallyApproved()) return false;
+        // Only poll when a modal or the paywall is actually visible
+        const overlay = document.getElementById('paywall-overlay');
+        const wizard = document.getElementById('freeWizardModal');
+        const overlayOpen = overlay && getComputedStyle(overlay).display !== 'none';
+        const wizardOpen = wizard && getComputedStyle(wizard).display !== 'none';
+        return overlayOpen || wizardOpen;
+    }
+
+    function startApprovalPolling() {
+        if (_pollTimer) return;
+        const tick = async () => {
+            if (shouldPollNow()) {
+                try {
+                    await checkAccess();
+                    _pollBackoff = POLL_MIN; // reset on success
+                } catch (e) {
+                    _pollBackoff = Math.min(_pollBackoff * 2, POLL_MAX);
+                }
+            }
+            // Always schedule the next tick, even if we skipped this one.
+            // Otherwise polling would permanently stop after the first skip.
+            _pollTimer = setTimeout(tick, _pollBackoff);
+        };
+        // First tick shortly after load, then whatever backoff says
+        _pollTimer = setTimeout(tick, 2000);
+    }
+    startApprovalPolling();
 })();
 </script>
 <!-- ===== HIGGS READER INTEGRATION (Extraction Engine) ===== -->
