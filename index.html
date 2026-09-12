@@ -5506,16 +5506,6 @@ function renewSubscription() {
     }
   }
 
-  // Open/close via class toggle (CSS uses .is-open { display:flex })
-  function _openBillingModalEl() {
-    const m = document.getElementById('billing-manager-modal');
-    if (m) m.classList.add('is-open');
-  }
-  function _closeBillingModalEl() {
-    const m = document.getElementById('billing-manager-modal');
-    if (m) m.classList.remove('is-open');
-  }
-
   async function boot() {
     if (!(await window.__paywall.isAllowed())) {
       showFullPage();
@@ -15814,7 +15804,12 @@ document.addEventListener('input', function(e) {
 });
 
 // ----- Dock button click (restart onboarding) -----
-document.getElementById('dock-add').addEventListener('click', function() {
+document.getElementById('dock-add').addEventListener('click', async function() {
+    // Gate: block if user has no access
+    if (window.__paywall && !(await window.__paywall.isAllowed())) {
+        window.__paywall.showFullPage();
+        return;
+    }
     const nonRootCount = (State.nodes || []).filter(n => n.id !== 'root').length;
     if (nonRootCount <= 1) {
         // Make Brain: always open the intro wizard
