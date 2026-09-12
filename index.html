@@ -3383,7 +3383,6 @@ tr { break-inside: avoid; }
                 <div id="action-panel" style="display: none;">
                     <div id="selected-folder-title"></div>
                     <div class="action-grid">
-                        <button id="btn-add-category-from-action" class="btn-primary" style="grid-column: span 2;">➕ Add Category / Book</button>
 						<button id="btn-quiz-mode" class="btn-primary" style="grid-column: span 1;">📝 Multiple Choice</button>
                         <button id="btn-fill-blank" class="btn-primary" style="grid-column: span 1;">📝 Fill in the Blank</button>
 						<button id="btn-adjust-understanding" class="btn-primary">📊 Set Understanding</button>
@@ -3422,18 +3421,6 @@ tr { break-inside: avoid; }
         </div>
     </div>
 
-<!-- ═══════════════ BILLING MANAGER MODAL ═══════════════ -->
-<div id="billing-manager-modal" class="pw-modal" role="dialog" aria-modal="true">
-  <div class="pw-modal-inner">
-    <button class="pw-close-x" onclick="closeBillingManager()" aria-label="Close">✕</button>
-    <h3>💳 Subscription</h3>
-    <div id="billing-status-content">
-      <p>Loading status…</p>
-    </div>
-    <button id="cancel-subscription-btn" class="pw-btn-danger" style="display:none;">Cancel Subscription</button>
-    <button id="renew-subscription-btn" class="pw-btn-primary" style="display:none; margin-top:8px;">Renew Subscription</button>
-  </div>
-</div>
 
     <!-- ========== MODALS (all identical to original, for 3D version) ========== -->
     
@@ -3532,7 +3519,6 @@ tr { break-inside: avoid; }
         </div>
         <div style="margin: 20px 0; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px;">
             <button id="open-billing-manager" class="btn-primary" style="width:100%;">💳 Manage Billing</button>
-            <button id="open-movingboxes-game" class="btn-secondary" style="width:100%;">📦 Play Moving Boxes</button>
         </div>
         <button class="close-modal-btn btn-secondary" style="width: 100%;">Close</button>
     </div>
@@ -3823,23 +3809,452 @@ tr { break-inside: avoid; }
         </div>
     </div>
 </div>
-<!-- ═══════════════ PAYWALL OVERLAY ═══════════════ -->
+<!-- ═══════════════════════════════════════════════════════════
+     PAYWALL — 404-STYLE (replaces document.body on trigger)
+     ═══════════════════════════════════════════════════════════ -->
+
+<template id="paywall-template">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #030408;
+    --surface: rgba(12, 14, 20, 0.96);
+    --text: #f8fafc;
+    --text-dim: #94a3b8;
+    --text-mute: #64748b;
+    --accent: #2dd4bf;
+    --accent-hover: #14b8a6;
+    --warn: #facc15;
+    --danger: #f43f5e;
+    --success: #4ade80;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.15);
+    --font-ui: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+    --font-mono: "Fira Code", monospace;
+  }
+  html, body {
+    font-family: var(--font-ui);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+  }
+  #paywall-overlay {
+    position: fixed; inset: 0;
+    z-index: 999990;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    display: block;
+    padding: 40px 24px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .pw-shell {
+    width: 100%; max-width: 1080px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px 44px 36px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
+    animation: pwFadeIn 0.35s ease;
+  }
+  @keyframes pwFadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .pw-header { text-align: center; margin-bottom: 32px; }
+  .pw-header h1 {
+    font-size: 26px; font-weight: 800;
+    letter-spacing: -0.3px; margin-bottom: 6px;
+  }
+  .pw-header p { font-size: 14px; color: var(--text-dim); }
+  #paywall-trial-status {
+    background: rgba(45, 212, 191, 0.1);
+    border: 1px solid rgba(45, 212, 191, 0.2);
+    border-radius: 40px; padding: 0.4rem 1rem;
+    font-size: 0.75rem; color: var(--accent);
+    font-weight: 600; text-align: center;
+    margin: 0 auto 20px;
+    width: fit-content;
+    display: flex; align-items: center; gap: 8px;
+    justify-content: center;
+  }
+  .pw-plans {
+    display: flex; gap: 20px;
+    justify-content: center; align-items: stretch;
+    padding: 4px 0 28px;
+  }
+  .pw-card {
+    position: relative; border-radius: 18px; padding: 28px 24px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+  .pw-card-free {
+    flex: 0 0 280px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--border);
+  }
+  .pw-card-free:hover {
+    border-color: rgba(45, 212, 191, 0.25);
+    transform: translateY(-2px);
+  }
+  .pw-card-paid {
+    flex: 0 0 380px;
+    background: linear-gradient(160deg,
+      rgba(45, 212, 191, 0.10) 0%,
+      rgba(12, 14, 20, 0.9) 60%);
+    border: 1.5px solid rgba(45, 212, 191, 0.7);
+    transform: scale(1.02);
+    box-shadow:
+      0 0 0 1px rgba(45, 212, 191, 0.1),
+      0 0 48px rgba(45, 212, 191, 0.12),
+      0 20px 48px rgba(0, 0, 0, 0.5);
+  }
+  .pw-card-paid:hover {
+    transform: scale(1.035);
+    box-shadow:
+      0 0 0 1px rgba(45, 212, 191, 0.2),
+      0 0 64px rgba(45, 212, 191, 0.2),
+      0 24px 56px rgba(0, 0, 0, 0.6);
+  }
+  .pw-ribbon {
+    position: absolute;
+    top: -11px; left: 50%; transform: translateX(-50%);
+    background: var(--accent); color: #000;
+    font-size: 11px; font-weight: 800;
+    letter-spacing: 0.5px; text-transform: uppercase;
+    padding: 5px 16px; border-radius: 20px;
+    white-space: nowrap;
+  }
+  .pw-plan-name {
+    font-size: 15px; font-weight: 600;
+    color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 12px;
+  }
+  .pw-card-paid .pw-plan-name { color: var(--accent); }
+  .pw-price {
+    font-size: 42px; font-weight: 800;
+    line-height: 1; letter-spacing: -1px;
+    margin-bottom: 6px;
+  }
+  .pw-price span {
+    font-size: 14px; font-weight: 500;
+    color: var(--text-dim); letter-spacing: 0;
+  }
+  .pw-tagline { font-size: 13px; color: var(--text-dim); margin-bottom: 22px; }
+  .pw-features {
+    list-style: none; margin-bottom: 24px;
+    border-top: 1px solid var(--border); padding-top: 18px;
+  }
+  .pw-features li {
+    display: flex; align-items: center;
+    font-size: 13px; color: #cbd5e1; padding: 7px 0;
+  }
+  .pw-features li i {
+    margin-right: 10px; font-size: 12px;
+    color: var(--accent); flex-shrink: 0;
+    width: 14px; text-align: center;
+  }
+  .pw-features li.dim { color: var(--text-mute); }
+  .pw-features li.dim i { color: var(--text-mute); }
+  .pw-cta {
+    display: block; width: 100%; padding: 14px;
+    border-radius: 40px; font-size: 14px; font-weight: 700;
+    font-family: inherit; text-align: center;
+    cursor: pointer; border: none;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .pw-cta-free {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: var(--text);
+  }
+  .pw-cta-free:hover {
+    border-color: var(--accent);
+    background: rgba(45, 212, 191, 0.06);
+  }
+  .pw-cta-paid {
+    background: var(--accent); color: #000;
+    box-shadow: 0 4px 16px rgba(45, 212, 191, 0.25);
+  }
+  .pw-cta-paid:hover {
+    background: var(--accent-hover);
+    box-shadow: 0 6px 20px rgba(45, 212, 191, 0.35);
+  }
+  .pw-cta-paid:disabled { opacity: 0.5; cursor: not-allowed; }
+  .pw-fine {
+    font-size: 11px; color: var(--text-mute);
+    text-align: center; margin-top: 12px;
+  }
+  .pw-trust {
+    display: flex; justify-content: center;
+    gap: 36px; flex-wrap: wrap;
+    padding: 24px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .pw-trust-item {
+    display: flex; align-items: center;
+    gap: 8px; font-size: 13px; color: var(--text-dim);
+  }
+  .pw-trust-item i { color: var(--accent); font-size: 14px; }
+  .pw-trust-item.pw-game-link { cursor: pointer; }
+  .pw-trust-item.pw-game-link:hover { color: var(--accent); }
+  .pw-faq-section { padding: 32px 0 8px; }
+  .pw-faq-section h2 {
+    text-align: center; font-size: 18px;
+    font-weight: 700; margin-bottom: 20px;
+  }
+  .faq-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 18px;
+    margin-bottom: 8px;
+  }
+  .faq-item:hover { border-color: var(--border-strong); }
+  .faq-question {
+    display: flex; justify-content: space-between;
+    align-items: center; font-size: 14px;
+    font-weight: 600; cursor: pointer;
+  }
+  .faq-question i { color: var(--text-dim); font-size: 12px; transition: transform 0.25s; }
+  .faq-item.open .faq-question i { transform: rotate(180deg); }
+  .faq-answer {
+    display: none; margin-top: 10px;
+    font-size: 13px; color: var(--text-dim); line-height: 1.6;
+  }
+  .faq-item.open .faq-answer { display: block; }
+  .pw-bottom { text-align: center; padding: 28px 0 0; }
+  .pw-bottom h3 {
+    font-size: 16px; font-weight: 600;
+    color: var(--text-dim); margin-bottom: 16px;
+  }
+  .pw-bottom .pw-cta {
+    display: inline-block; width: auto;
+    padding: 12px 28px; margin: 0 6px;
+  }
+  .pw-modal {
+    position: fixed; inset: 0; z-index: 999991;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: none; justify-content: center; align-items: center;
+    padding: 20px;
+  }
+  .pw-modal-inner {
+    background: rgba(12, 14, 20, 0.98);
+    border: 1px solid var(--border);
+    border-radius: 20px; padding: 28px 26px;
+    max-width: 460px; width: 100%;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    position: relative;
+    animation: pwFadeIn 0.25s ease;
+  }
+  .pw-modal-inner h3 { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+  .pw-modal-inner p {
+    font-size: 13px; color: var(--text-dim);
+    line-height: 1.6; margin-bottom: 16px;
+  }
+  .pw-close-x {
+    position: absolute; top: 12px; right: 16px;
+    background: none; border: none;
+    color: var(--text-dim); font-size: 20px;
+    cursor: pointer; line-height: 1; padding: 4px;
+    z-index: 2;
+  }
+  .pw-close-x:hover { color: var(--text); }
+  .pw-dropdown-wrap { position: relative; margin-bottom: 16px; }
+  .pw-dropdown-input {
+    width: 100%; padding: 12px 14px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border);
+    border-radius: 12px; color: var(--text);
+    font-size: 14px; font-family: inherit;
+    outline: none;
+  }
+  .pw-dropdown-input:focus { border-color: var(--accent); }
+  .pw-dropdown-list {
+    position: absolute;
+    top: calc(100% + 4px); left: 0; width: 100%;
+    max-height: 220px; overflow-y: auto;
+    background: rgba(12, 14, 20, 0.98);
+    border: 1px solid var(--border);
+    border-radius: 12px; z-index: 20;
+    display: none;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  }
+  .pw-dropdown-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; cursor: pointer;
+    font-size: 13px; color: var(--text);
+  }
+  .pw-dropdown-item:hover,
+  .pw-dropdown-item.hl { background: rgba(45, 212, 191, 0.1); }
+  .pw-dropdown-item img { width: 18px; height: 18px; flex-shrink: 0; }
+  .pw-copy-block {
+    background: rgba(0, 0, 0, 0.3);
+    border-left: 3px solid var(--accent);
+    border-radius: 12px; padding: 16px; margin-top: 16px;
+    position: relative;
+  }
+  .pw-copy-label {
+    font-size: 11px; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .pw-copy-message {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px; padding: 12px;
+    font-family: var(--font-mono); font-size: 12px;
+    color: #cbd5e1; line-height: 1.6;
+    margin-bottom: 12px;
+    word-break: break-word; white-space: pre-wrap;
+  }
+  .pw-btn-primary {
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; width: 100%; padding: 12px;
+    background: var(--accent); color: #000;
+    border: none; border-radius: 40px;
+    font-size: 13px; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+  }
+  .pw-btn-primary:hover { background: var(--accent-hover); }
+  .pw-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .pw-btn-secondary {
+    display: block; width: 100%; padding: 10px;
+    background: transparent; color: var(--text-dim);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 40px; font-size: 12px;
+    font-weight: 600; font-family: inherit;
+    cursor: pointer; margin-top: 8px;
+  }
+  .pw-btn-secondary:hover { border-color: var(--text-dim); color: var(--text); }
+  .pw-btn-danger {
+    display: block; width: 100%; padding: 10px;
+    background: transparent; color: var(--danger);
+    border: 1px solid rgba(244, 63, 94, 0.3);
+    border-radius: 40px; font-size: 12px;
+    font-weight: 600; font-family: inherit;
+    cursor: pointer; margin-top: 8px;
+  }
+  .pw-btn-danger:hover { background: rgba(244, 63, 94, 0.08); }
+  .pw-loading { text-align: center; padding: 24px 0; }
+  .pw-loading-pct {
+    font-size: 28px; font-weight: 800;
+    color: var(--accent); margin-bottom: 12px;
+    font-family: var(--font-mono);
+  }
+  .pw-loading-track {
+    height: 5px; background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px; overflow: hidden; margin-bottom: 12px;
+  }
+  .pw-loading-fill {
+    height: 100%; width: 0%;
+    background: var(--accent);
+    transition: width 0.15s linear;
+    box-shadow: 0 0 12px var(--accent);
+  }
+  .pw-loading-sub { font-size: 12px; color: var(--text-dim); }
+  .pw-price-box {
+    background: rgba(255, 255, 255, 0.025);
+    border-radius: 14px; padding: 16px;
+    margin: 16px 0; font-size: 13px;
+  }
+  .pw-price-row {
+    display: flex; justify-content: space-between;
+    padding: 5px 0; color: var(--text-dim);
+  }
+  .pw-price-row.total {
+    border-top: 1px solid var(--border);
+    margin-top: 10px; padding-top: 12px;
+    font-size: 15px; font-weight: 700; color: var(--text);
+  }
+  #payment-element {
+    padding: 24px 0; min-height: 60px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    margin-bottom: 12px; text-align: center;
+    color: var(--text-dim); font-size: 13px;
+  }
+  #payment-error { color: #f87171; font-size: 12px; min-height: 16px; margin-bottom: 4px; }
+  #payment-status { color: var(--success); font-size: 13px; margin-top: 10px; text-align: center; }
+  .loader {
+    display: inline-block; width: 18px; height: 18px;
+    border: 2px solid #030408;
+    border-top-color: transparent; border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle; margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #toast-container {
+    position: fixed; bottom: 24px; right: 24px;
+    z-index: 999999; display: flex;
+    flex-direction: column; gap: 10px;
+    pointer-events: none;
+  }
+  .toast {
+    background: rgba(15, 18, 28, 0.96);
+    backdrop-filter: blur(20px);
+    border-left: 3px solid var(--accent);
+    padding: 12px 18px; border-radius: 12px;
+    font-size: 13px; font-weight: 600;
+    color: var(--text);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    max-width: 320px;
+  }
+  @media (max-width: 800px) {
+    #paywall-overlay { padding: 24px 16px; }
+    .pw-shell { padding: 28px 20px 24px; border-radius: 20px; }
+    .pw-plans {
+      flex-wrap: nowrap; overflow-x: auto;
+      scrollbar-width: none; justify-content: flex-start;
+      padding-bottom: 16px; margin: 0 -20px;
+      padding-left: 20px; padding-right: 20px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .pw-plans::-webkit-scrollbar { display: none; }
+    .pw-card-free { flex: 0 0 240px; }
+    .pw-card-paid { flex: 0 0 300px; }
+    .pw-header h1 { font-size: 22px; }
+    .pw-price { font-size: 34px; }
+  }
+  @media (max-width: 480px) {
+    #paywall-overlay { padding: 16px 12px; }
+    .pw-shell { padding: 22px 16px 20px; border-radius: 16px; }
+    .pw-plans { gap: 12px; margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+    .pw-card-free { flex: 0 0 220px; padding: 20px 16px; }
+    .pw-card-paid { flex: 0 0 280px; padding: 20px 16px; }
+    .pw-header h1 { font-size: 20px; }
+    .pw-price { font-size: 30px; }
+    .pw-bottom .pw-cta { display: block; width: 100%; margin: 6px 0; }
+    .pw-trust { flex-direction: column; gap: 10px; align-items: center; }
+    .pw-modal-inner { padding: 20px 16px; border-radius: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+  button:focus-visible, input:focus-visible, [role="button"]:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+</style>
+
 <div id="paywall-overlay" role="dialog" aria-labelledby="pwHeaderTitle" aria-modal="true">
   <div class="pw-shell">
-
     <div id="paywall-trial-status" style="display:none;">
       <i class="fas fa-hourglass-half"></i>
       <span>Trial ends in <strong id="trial-days-left">7</strong> days</span>
     </div>
-
     <div class="pw-header">
       <h1 id="pwHeaderTitle">Your trial has ended</h1>
       <p id="pwHeaderSubtitle">Choose how to continue.</p>
     </div>
-
     <div class="pw-plans">
-
-      <!-- FREE PLAN -->
       <div class="pw-card pw-card-free" id="freePlanCard">
         <div class="pw-ribbon" id="freePlanBadge" style="display:none; background:#facc15;">Pending review</div>
         <div class="pw-plan-name">Free</div>
@@ -3851,11 +4266,9 @@ tr { break-inside: avoid; }
           <li><i class="fas fa-check"></i> DM us to apply</li>
           <li class="dim"><i class="fas fa-times"></i> Manual review</li>
         </ul>
-        <button class="pw-cta pw-cta-free" id="freePlanBtn" onclick="openFreeWizard()">Apply Now</button>
+        <button class="pw-cta pw-cta-free" id="freePlanBtn">Apply Now</button>
         <div class="pw-fine">Adds to review queue</div>
       </div>
-
-      <!-- PAID PLAN -->
       <div class="pw-card pw-card-paid" id="paidPlanCard">
         <div class="pw-ribbon" id="paidPlanRibbon">Instant</div>
         <div class="pw-plan-name">Subscribe</div>
@@ -3867,61 +4280,50 @@ tr { break-inside: avoid; }
           <li><i class="fas fa-check"></i> Instant activation</li>
           <li><i class="fas fa-check"></i> Cancel anytime</li>
         </ul>
-        <button class="pw-cta pw-cta-paid" id="paidPlanBtn" onclick="openPaidModal()">Subscribe – $19/mo</button>
+        <button class="pw-cta pw-cta-paid" id="paidPlanBtn">Subscribe – $19/mo</button>
         <div class="pw-fine" id="paidPlanFooter">Secure billing · cancel in one click</div>
       </div>
-
     </div>
-
     <div class="pw-trust">
       <div class="pw-trust-item"><i class="fas fa-lock"></i> Secure billing</div>
       <div class="pw-trust-item"><i class="fas fa-rotate-left"></i> Cancel anytime</div>
       <div class="pw-trust-item"><i class="fas fa-shield-alt"></i> 7-day free trial</div>
-      <div class="pw-trust-item pw-game-link" onclick="openGameModal()">
-        <i class="fas fa-gamepad"></i> Take a break
-      </div>
     </div>
-
     <div class="pw-faq-section">
       <h2>Frequently Asked Questions</h2>
       <div class="faq-item">
-        <div class="faq-question" onclick="toggleFaq(this)">How does the free application work? <i class="fas fa-chevron-down"></i></div>
+        <div class="faq-question" data-faq>How does the free application work? <i class="fas fa-chevron-down"></i></div>
         <div class="faq-answer">You select a platform, copy your application ID, and DM us on that platform. We'll review your account and respond with next steps.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-question" onclick="toggleFaq(this)">How long does review take? <i class="fas fa-chevron-down"></i></div>
+        <div class="faq-question" data-faq>How long does review take? <i class="fas fa-chevron-down"></i></div>
         <div class="faq-answer">We add you to the review queue. We can't guarantee a timeframe — it depends on our current workload. We'll respond to your DM when we get to it.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-question" onclick="toggleFaq(this)">Can I cancel my subscription anytime? <i class="fas fa-chevron-down"></i></div>
+        <div class="faq-question" data-faq>Can I cancel my subscription anytime? <i class="fas fa-chevron-down"></i></div>
         <div class="faq-answer">Yes. You can cancel in one click from your account settings, and you'll keep access until the end of the billing period.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-question" onclick="toggleFaq(this)">What if I don't have social media? <i class="fas fa-chevron-down"></i></div>
+        <div class="faq-question" data-faq>What if I don't have social media? <i class="fas fa-chevron-down"></i></div>
         <div class="faq-answer">Choose "Other" — we'll accept an organic video you create yourself and provide instructions via email.</div>
       </div>
     </div>
-
     <div class="pw-bottom">
       <h3>Still undecided? Get access now.</h3>
-      <button class="pw-cta pw-cta-paid" onclick="openPaidModal()">Subscribe – $19/mo</button>
-      <button class="pw-cta pw-cta-free" onclick="openFreeWizard()">Apply for Free</button>
+      <button class="pw-cta pw-cta-paid" id="pwBottomPaid">Subscribe – $19/mo</button>
+      <button class="pw-cta pw-cta-free" id="pwBottomFree">Apply for Free</button>
     </div>
-
   </div>
 </div>
 
-<!-- ═══════════════ FREE WIZARD MODAL (new) ═══════════════ -->
 <div id="freeWizardModal" class="pw-modal" role="dialog" aria-modal="true">
   <div class="pw-modal-inner">
     <div id="freeWizardContent"></div>
   </div>
 </div>
 
-<!-- ═══════════════ PAID MODAL — Stripe Payment Element ═══════════════ -->
 <div id="paidModal" class="pw-modal" role="dialog" aria-modal="true">
   <div class="pw-modal-inner">
-
     <div id="stripe-loading">
       <div class="pw-loading">
         <div class="pw-loading-pct" id="loading-percent">0%</div>
@@ -3931,7 +4333,6 @@ tr { break-inside: avoid; }
         <div class="pw-loading-sub">Loading secure payment…</div>
       </div>
     </div>
-
     <div id="stripe-payment-content" style="display:none;">
       <h3 style="text-align:center; margin-bottom:14px;">Subscribe — $19/mo</h3>
       <div class="pw-price-box">
@@ -3939,39 +4340,1167 @@ tr { break-inside: avoid; }
         <div class="pw-price-row"><span>Tax (9.1%)</span><span>$1.73</span></div>
         <div class="pw-price-row total"><span>Total</span><span>$20.73</span></div>
       </div>
-
       <div id="payment-element">Stripe Payment Element mounts here</div>
-
       <div id="payment-error"></div>
-      <button id="paywall-submit-btn" class="pw-btn-primary" disabled>
-        Subscribe — $20.73
-      </button>
+      <button id="paywall-submit-btn" class="pw-btn-primary" disabled>Subscribe — $20.73</button>
       <div id="payment-status"></div>
-      <button class="pw-btn-secondary" onclick="closePaidModal()" style="margin-top:16px;">Cancel</button>
+      <button class="pw-btn-secondary" id="pwPaidCancel" style="margin-top:16px;">Cancel</button>
     </div>
-
   </div>
 </div>
 
-<!-- ═══════════════ MOVING BOXES GAME MODAL (new) ═══════════════ -->
-<div id="pw-game-modal" class="pw-modal" role="dialog" aria-modal="true">
-  <div class="pw-modal-inner" style="max-width:340px;">
-    <button class="pw-close-x" onclick="closeGameModal()" aria-label="Close">✕</button>
-    <h3>📦 Moving Boxes</h3>
-    <p style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">Arrow keys or swipe · Eat the yellow dot</p>
-    <div id="game-container">
-      <div class="pw-game-header">
-        <span>📦 Moving Boxes</span>
-        <div class="pw-game-stats">
-          <span>🏆 <span id="pw-game-score-display">0</span></span>
-          <span>👑 <span id="pw-game-high-display">0</span></span>
+<div id="toast-container"></div>
+</template>
+<style id="pw-billing-css">
+  /* Standalone billing manager — lives in app body, not inside the paywall template */
+  #billing-manager-modal {
+    position: fixed; inset: 0; z-index: 999991;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: none; justify-content: center; align-items: center;
+    padding: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  }
+  #billing-manager-modal.is-open { display: flex; }
+  #billing-manager-modal .billing-inner {
+    background: rgba(12, 14, 20, 0.98);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px; padding: 28px 26px;
+    max-width: 460px; width: 100%;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    position: relative;
+    color: #f8fafc;
+  }
+  #billing-manager-modal h3 {
+    font-size: 18px; font-weight: 700;
+    margin: 0 0 10px 0;
+  }
+  #billing-manager-modal .billing-close {
+    position: absolute; top: 12px; right: 16px;
+    background: none; border: none;
+    color: #94a3b8; font-size: 20px;
+    cursor: pointer; padding: 4px; z-index: 2;
+    line-height: 1;
+  }
+  #billing-manager-modal .billing-close:hover { color: #f8fafc; }
+  #billing-status-content {
+    margin-bottom: 16px; font-size: 13px;
+    color: #94a3b8; line-height: 1.7;
+  }
+  #billing-status-content p { margin: 0 0 6px 0; }
+  #billing-status-content strong { color: #f8fafc; }
+  #billing-status-content .billing-active { color: #4ade80; }
+  #billing-status-content .billing-inactive { color: #f43f5e; }
+  #billing-manager-modal .billing-btn-primary {
+    display: block; width: 100%; padding: 12px;
+    background: #2dd4bf; color: #000;
+    border: none; border-radius: 40px;
+    font-size: 13px; font-weight: 700;
+    font-family: inherit; cursor: pointer;
+    text-align: center;
+    transition: background 0.15s;
+  }
+  #billing-manager-modal .billing-btn-primary:hover { background: #14b8a6; }
+  #billing-manager-modal .billing-btn-danger {
+    display: block; width: 100%; padding: 10px;
+    background: transparent; color: #f43f5e;
+    border: 1px solid rgba(244, 63, 94, 0.3);
+    border-radius: 40px; font-size: 12px;
+    font-weight: 600; font-family: inherit;
+    cursor: pointer; margin-top: 8px;
+    transition: background 0.15s;
+  }
+  #billing-manager-modal .billing-btn-danger:hover { background: rgba(244, 63, 94, 0.08); }
+</style>
+<!-- ═══════════════════════════════════════════════════════════
+     STANDALONE BILLING MANAGER (app-level, works with or without paywall)
+     ═══════════════════════════════════════════════════════════ -->
+<div id="billing-manager-modal" role="dialog" aria-modal="true" aria-labelledby="billing-modal-title">
+  <div class="billing-inner">
+    <button class="billing-close" id="billing-manager-close" aria-label="Close">✕</button>
+    <h3 id="billing-modal-title">💳 Subscription</h3>
+    <div id="billing-status-content"><p>Loading status…</p></div>
+    <button id="cancel-subscription-btn" class="billing-btn-danger" style="display:none;">Cancel Subscription</button>
+    <button id="renew-subscription-btn" class="billing-btn-primary" style="display:none; margin-top:8px;">Renew Subscription</button>
+  </div>
+</div>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   PAYWALL — 404-STYLE
+   - On trigger: replaces document.body.innerHTML with paywall markup
+   - App HTML disappears from DevTools
+   - On success: location.reload() → clean app re-boot
+   ═══════════════════════════════════════════════════════════════ */
+(function() {
+  'use strict';
+
+  const WORKER_URL      = 'https://brain-paywall.kennateklu.workers.dev';
+  const PUBLISHABLE_KEY = 'pk_live_51U06siR4dJL97DpZ0uQuPpLFU0pIVDejXI7VJA6oQIE7Yrkl9hOyaNVqFi5UmiNoGpqnO1zmVXMillPUIDmkDSqB00gfqAAvXi';
+  const TRIAL_KEY       = 'paywall_trial_start';
+  const SUB_CACHE_KEY   = 'paywall_sub_cache';
+  const SUB_EXPIRES_KEY = 'pw_sub_expires_at';
+  const WIZARD_STATE_KEY = 'pw_wizard_state';
+  const TRIAL_DAYS      = 7;
+  const CACHE_TTL_MS    = 3 * 24 * 60 * 60 * 1000;
+  const REFRESH_COOLDOWN_S = 5;
+
+  let _paywallActive = false;
+  let freeStep = 1;
+  let selectedPlatform = null;
+
+  // ── Toast ──
+  function _toast(msg) {
+    const c = document.getElementById('toast-container');
+    if (!c) return;
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.textContent = msg;
+    c.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+
+  // ── IDs ──
+  let _cachedUserId = null;
+  function getUserId() {
+    if (_cachedUserId) return _cachedUserId;
+    try {
+      let u = localStorage.getItem('paywall_userId');
+      if (!u) {
+        u = (crypto && crypto.randomUUID)
+          ? crypto.randomUUID()
+          : 'u_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
+        localStorage.setItem('paywall_userId', u);
+      }
+      _cachedUserId = u;
+      return u;
+    } catch (e) {
+      return 'fallback_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+    }
+  }
+  function getApplicationId() {
+    let id = localStorage.getItem('pw_app_id');
+    if (!id) {
+      id = 'APP-' + Math.random().toString(36).substring(2, 10).toUpperCase()
+              + '-' + Date.now().toString(36).toUpperCase();
+      localStorage.setItem('pw_app_id', id);
+    }
+    return id;
+  }
+
+  // ── Socials ──
+  const socials = [
+    { name: "Instagram",   icon: "https://cdn.simpleicons.org/instagram",  dmUrl: "https://www.instagram.com/try4ever/" },
+    { name: "Twitter / X", icon: "https://cdn.simpleicons.org/x",          dmUrl: "https://twitter.com/messages/compose?recipient_id=try4ever" },
+    { name: "TikTok",      icon: "https://cdn.simpleicons.org/tiktok",     dmUrl: "https://www.tiktok.com/@try4ever" },
+    { name: "Facebook",    icon: "https://cdn.simpleicons.org/facebook",   dmUrl: "https://www.facebook.com/try4ever" },
+    { name: "LinkedIn",    icon: "https://cdn.simpleicons.org/linkedin",   dmUrl: "https://www.linkedin.com/in/try4ever" },
+    { name: "Snapchat",    icon: "https://cdn.simpleicons.org/snapchat",   dmUrl: "https://www.snapchat.com/add/try4ever" },
+    { name: "Pinterest",   icon: "https://cdn.simpleicons.org/pinterest",  dmUrl: "https://www.pinterest.com/try4ever/" },
+    { name: "Reddit",      icon: "https://cdn.simpleicons.org/reddit",     dmUrl: "https://www.reddit.com/user/try4ever" },
+    { name: "Discord",     icon: "https://cdn.simpleicons.org/discord",    dmUrl: "https://discord.com/users/try4ever" },
+    { name: "Telegram",    icon: "https://cdn.simpleicons.org/telegram",   dmUrl: "https://t.me/try4ever" },
+    { name: "WhatsApp",    icon: "https://cdn.simpleicons.org/whatsapp",   dmUrl: "https://wa.me/1234567890" },
+    { name: "Threads",     icon: "https://cdn.simpleicons.org/threads",    dmUrl: "https://www.threads.net/@try4ever" },
+    { name: "Mastodon",    icon: "https://cdn.simpleicons.org/mastodon",   dmUrl: "https://mastodon.social/@try4ever" },
+    { name: "Bluesky",     icon: "https://cdn.simpleicons.org/bluesky",    dmUrl: "https://bsky.app/profile/try4ever" },
+    { name: "YouTube",     icon: "https://cdn.simpleicons.org/youtube",    dmUrl: "https://www.youtube.com/@try4ever" },
+    { name: "Twitch",      icon: "https://cdn.simpleicons.org/twitch",     dmUrl: "https://www.twitch.tv/try4ever" },
+    { name: "Other",       icon: "https://cdn.simpleicons.org/whatever",   dmUrl: "mailto:apply@try4ever.com" }
+  ];
+
+  // ── Trial ──
+  function getTrialStart() {
+    const v = localStorage.getItem(TRIAL_KEY);
+    return v ? parseInt(v, 10) : null;
+  }
+  function startTrial() {
+    if (!getTrialStart()) localStorage.setItem(TRIAL_KEY, Date.now().toString());
+  }
+  function isTrialActive() {
+    const s = getTrialStart();
+    return s && Date.now() - s < TRIAL_DAYS * 24 * 60 * 60 * 1000;
+  }
+  function getTrialDaysLeft() {
+    const s = getTrialStart();
+    if (!s) return TRIAL_DAYS;
+    const rem = TRIAL_DAYS * 24 * 60 * 60 * 1000 - (Date.now() - s);
+    return Math.max(0, Math.ceil(rem / (24 * 60 * 60 * 1000)));
+  }
+  function getTrialHoursLeft() {
+    const s = getTrialStart();
+    if (!s) return 0;
+    const rem = TRIAL_DAYS * 24 * 60 * 60 * 1000 - (Date.now() - s);
+    return Math.max(0, Math.ceil(rem / (60 * 60 * 1000)));
+  }
+
+  // ── Subscription cache ──
+  function getCachedStatus() {
+    try {
+      const raw = localStorage.getItem(SUB_CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+  function setCachedStatus(status) {
+    try {
+      localStorage.setItem(SUB_CACHE_KEY, JSON.stringify({
+        active: !!status.active, key: status.key || null, timestamp: Date.now()
+      }));
+    } catch (e) {}
+  }
+  async function checkStatus() {
+    const userId = getUserId();
+    try {
+      const res = await fetch(`${WORKER_URL}/api/status?userId=${encodeURIComponent(userId)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCachedStatus(data);
+        return data;
+      }
+    } catch (e) {}
+    const cached = getCachedStatus();
+    if (cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
+      return { active: cached.active };
+    }
+    return { active: false };
+  }
+  function getSubscriptionExpiry() {
+    try {
+      const r = localStorage.getItem(SUB_EXPIRES_KEY);
+      return r ? parseInt(r, 10) : null;
+    } catch (e) { return null; }
+  }
+  function setSubscriptionExpiry(ts) {
+    try {
+      if (ts) localStorage.setItem(SUB_EXPIRES_KEY, String(ts));
+      else localStorage.removeItem(SUB_EXPIRES_KEY);
+    } catch (e) {}
+  }
+  function getSubscriptionDaysLeft() {
+    const e = getSubscriptionExpiry();
+    if (!e) return null;
+    return Math.max(0, Math.ceil((e - Date.now()) / (24 * 60 * 60 * 1000)));
+  }
+  function isLocallyApproved() {
+    return localStorage.getItem('pw_approved') === 'true';
+  }
+  function isLocallyApprovedWithBacking() {
+    try {
+      if (localStorage.getItem('pw_approved') !== 'true') return false;
+      const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+      const existing = stored.find(a => a.id === getApplicationId());
+      if (!existing || existing.status !== 'approved') {
+        localStorage.removeItem('pw_approved');
+        return false;
+      }
+      return true;
+    } catch (e) { return false; }
+  }
+
+  // ── Wizard state ──
+  function saveWizardState() {
+    try { localStorage.setItem(WIZARD_STATE_KEY, JSON.stringify({ freeStep, selectedPlatform, ts: Date.now() })); } catch (e) {}
+  }
+  function loadWizardState() {
+    try { const r = localStorage.getItem(WIZARD_STATE_KEY); return r ? JSON.parse(r) : null; } catch (e) { return null; }
+  }
+  function clearWizardState() {
+    try { localStorage.removeItem(WIZARD_STATE_KEY); } catch (e) {}
+  }
+  function sweepExpiredApplications() {
+    try {
+      const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+      const now = Date.now();
+      const next = stored.filter(a => !(a.status === 'pending' && a.expiresAt && a.expiresAt < now));
+      if (next.length !== stored.length) {
+        localStorage.setItem('pw_applications', JSON.stringify(next));
+        updateFreePlanBadge();
+      }
+    } catch (e) {}
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // SHOW PAYWALL — replace body
+  // ═══════════════════════════════════════════════════════════════
+  function showFullPage() {
+    if (_paywallActive) return;
+    _paywallActive = true;
+
+    const tpl = document.getElementById('paywall-template');
+    if (!tpl) { console.warn('[Paywall] template missing'); return; }
+
+    // Replace body with paywall markup
+    document.body.innerHTML = tpl.innerHTML;
+
+    // Wire up everything
+    wireUp();
+
+    updatePaywallHeader();
+    updatePaidPlanCard();
+    updateFreePlanBadge();
+
+    const daysSpan = document.getElementById('trial-days-left');
+    if (daysSpan) daysSpan.textContent = getTrialDaysLeft();
+  }
+
+  function wireUp() {
+    const $ = id => document.getElementById(id);
+    const onSubmit = $('paywall-submit-btn'); if (onSubmit) onSubmit.addEventListener('click', handlePayment);
+    const onFree = $('freePlanBtn'); if (onFree) onFree.addEventListener('click', openFreeWizard);
+    const onPaid = $('paidPlanBtn'); if (onPaid) onPaid.addEventListener('click', openPaidModal);
+    const onBottomPaid = $('pwBottomPaid'); if (onBottomPaid) onBottomPaid.addEventListener('click', openPaidModal);
+    const onBottomFree = $('pwBottomFree'); if (onBottomFree) onBottomFree.addEventListener('click', openFreeWizard);
+    const onPaidCancel = $('pwPaidCancel'); if (onPaidCancel) onPaidCancel.addEventListener('click', closePaidModal);
+    const onBillingClose = $('pwBillingClose'); if (onBillingClose) onBillingClose.addEventListener('click', closeBillingManager);
+    const onCancelSub = $('cancel-subscription-btn'); if (onCancelSub) onCancelSub.addEventListener('click', cancelSubscription);
+    const onRenewSub = $('renew-subscription-btn'); if (onRenewSub) onRenewSub.addEventListener('click', renewSubscription);
+
+    document.querySelectorAll('[data-faq]').forEach(el => {
+      el.addEventListener('click', () => el.parentElement.classList.toggle('open'));
+    });
+
+    // Modal click-outside + ESC
+    ['paidModal','freeWizardModal','billing-manager-modal','pw-game-modal'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener('click', e => {
+        if (e.target !== el) return;
+        if (id === 'paidModal') closePaidModal();
+        else if (id === 'freeWizardModal') closeFreeWizard();
+        else if (id === 'billing-manager-modal') closeBillingManager();
+        else if (id === 'pw-game-modal') closeGameModal();
+      });
+    });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || !_paywallActive) return;
+    const paid = document.getElementById('paidModal');
+    if (paid && paid.style.display === 'flex') { closePaidModal(); return; }
+    const fw = document.getElementById('freeWizardModal');
+    if (fw && fw.style.display === 'flex') { closeFreeWizard(); return; }
+    const bm = document.getElementById('billing-manager-modal');
+    if (bm && bm.style.display === 'flex') { closeBillingManager(); return; }
+    const gm = document.getElementById('pw-game-modal');
+    if (gm && gm.style.display === 'flex') { closeGameModal(); return; }
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // HEADER + CARDS
+  // ═══════════════════════════════════════════════════════════════
+  function updateFreePlanBadge() {
+    const badge = document.getElementById('freePlanBadge');
+    const btn = document.getElementById('freePlanBtn');
+    if (!badge || !btn) return;
+    let status = 'none';
+    try {
+      const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+      const existing = stored.find(a => a.id === getApplicationId());
+      if (existing) status = existing.status || 'pending';
+    } catch (e) {}
+    badge.style.background = '#facc15';
+    badge.style.color = '#000';
+    badge.textContent = 'Pending review';
+    if (status === 'pending') { badge.style.display = 'block'; btn.textContent = 'View application →'; }
+    else if (status === 'rejected') {
+      badge.style.display = 'block';
+      badge.style.background = 'var(--danger)';
+      badge.style.color = '#fff';
+      badge.textContent = 'Not approved';
+      btn.textContent = 'Apply again →';
+    } else if (status === 'approved') {
+      badge.style.display = 'block';
+      badge.style.background = 'var(--success)';
+      badge.style.color = '#000';
+      badge.textContent = 'Approved';
+      btn.textContent = 'Continue →';
+    } else { badge.style.display = 'none'; btn.textContent = 'Apply Now'; }
+  }
+
+  function updatePaywallHeader() {
+    const titleEl = document.getElementById('pwHeaderTitle');
+    const subtitleEl = document.getElementById('pwHeaderSubtitle');
+    const trialBadge = document.getElementById('paywall-trial-status');
+    if (!titleEl || !subtitleEl) return;
+    let hasPending = false;
+    try {
+      const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+      const existing = stored.find(a => a.id === getApplicationId());
+      if (existing && existing.status === 'pending') hasPending = true;
+    } catch (e) {}
+    if (hasPending) {
+      titleEl.textContent = 'Your application is being reviewed';
+      subtitleEl.textContent = 'You can still subscribe for instant access.';
+      if (trialBadge) trialBadge.style.display = 'none';
+      return;
+    }
+    const trialStart = getTrialStart();
+    const trialActive = isTrialActive();
+    if (trialStart && trialActive) {
+      const days = getTrialDaysLeft();
+      const hours = getTrialHoursLeft();
+      titleEl.textContent = 'Your trial is still active';
+      subtitleEl.textContent = days >= 1
+        ? `${days} day${days === 1 ? '' : 's'} left. Upgrade anytime for uninterrupted access.`
+        : `${hours} hour${hours === 1 ? '' : 's'} left. Upgrade to keep access.`;
+      if (trialBadge) {
+        trialBadge.style.display = 'flex';
+        const span = document.getElementById('trial-days-left');
+        if (span) span.textContent = days >= 1 ? days : hours + 'h';
+      }
+      return;
+    }
+    if (trialStart && !trialActive) {
+      titleEl.textContent = 'Your trial has ended';
+      subtitleEl.textContent = 'Choose how to continue.';
+      if (trialBadge) trialBadge.style.display = 'none';
+      return;
+    }
+    titleEl.textContent = 'Get full access';
+    subtitleEl.textContent = 'Subscribe for instant access, or apply for free.';
+    if (trialBadge) trialBadge.style.display = 'none';
+  }
+
+  function updatePaidPlanCard() {
+    const ribbon = document.getElementById('paidPlanRibbon');
+    const subEl = document.getElementById('paidPlanSub');
+    const btn = document.getElementById('paidPlanBtn');
+    const footer = document.getElementById('paidPlanFooter');
+    if (!btn) return;
+    const cached = getCachedStatus();
+    const isActive = !!(cached && cached.active);
+    const expiresAt = getSubscriptionExpiry();
+    const daysLeft = getSubscriptionDaysLeft();
+    if (isActive && expiresAt) {
+      const daysText = daysLeft !== null ? `${daysLeft} day${daysLeft === 1 ? '' : 's'} left` : '';
+      if (ribbon) ribbon.textContent = 'Active';
+      if (subEl) subEl.textContent = daysText ? `Renews in ${daysText}` : 'Active subscription';
+      if (btn) btn.textContent = 'Manage subscription';
+      if (footer) footer.textContent = 'Already subscribed';
+    } else {
+      if (ribbon) ribbon.textContent = 'Instant';
+      if (subEl) subEl.textContent = 'No waiting';
+      if (btn) btn.textContent = 'Subscribe – $19/mo';
+      if (footer) footer.textContent = 'Secure billing · cancel in one click';
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // FREE WIZARD
+  // ═══════════════════════════════════════════════════════════════
+  function openFreeWizard() {
+    sweepExpiredApplications();
+    try {
+      const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+      const existing = stored.find(a => a.id === getApplicationId());
+      if (existing) {
+        if (existing.status === 'approved') {
+          localStorage.setItem('pw_approved', 'true');
+          location.reload();
+          return;
+        }
+        if (existing.status === 'pending' || existing.status === 'rejected') {
+          selectedPlatform = existing.platform || null;
+          freeStep = 3;
+          document.getElementById('freeWizardModal').style.display = 'flex';
+          renderFreeStep();
+          return;
+        }
+      }
+    } catch (e) {}
+    const saved = loadWizardState();
+    if (saved && saved.freeStep && saved.freeStep > 1) {
+      freeStep = saved.freeStep;
+      selectedPlatform = saved.selectedPlatform || null;
+      document.getElementById('freeWizardModal').style.display = 'flex';
+      renderFreeStep();
+      return;
+    }
+    freeStep = 1;
+    selectedPlatform = null;
+    document.getElementById('freeWizardModal').style.display = 'flex';
+    renderFreeStep();
+  }
+
+  async function _confirm(msg) {
+    try {
+      const r = window.confirm ? window.confirm(msg) : true;
+      return await Promise.resolve(r);
+    } catch (e) { return true; }
+  }
+
+  async function closeFreeWizard(force) {
+    if (!force && freeStep === 2 && selectedPlatform) {
+      const proceed = await _confirm('Close without sending the DM? Your progress will be lost.');
+      if (!proceed) return;
+    }
+    const el = document.getElementById('freeWizardModal');
+    if (el) el.style.display = 'none';
+    freeStep = 1;
+    selectedPlatform = null;
+    updateFreePlanBadge();
+  }
+
+  function renderFreeStep() {
+    saveWizardState();
+    const content = document.getElementById('freeWizardContent');
+    if (!content) return;
+
+    if (freeStep === 1) {
+      content.innerHTML = `
+        <h3>Choose a platform</h3>
+        <p>We'll open your DM to our account there.</p>
+        <div class="pw-dropdown-wrap">
+          <input type="text" id="platformSearch" class="pw-dropdown-input"
+                 role="combobox" aria-controls="platformList"
+                 placeholder="Search platform..." oninput="__pw_filterPlatforms(this.value)">
+          <div id="platformList" class="pw-dropdown-list" role="listbox"></div>
         </div>
-      </div>
-      <canvas id="pw-movingboxes-canvas" width="240" height="240"></canvas>
-    </div>
-    <button class="pw-btn-secondary" onclick="closeGameModal()">Close</button>
-  </div>
-</div>
+        <button id="nextFreeBtn" class="pw-btn-primary" disabled>Next →</button>
+        <button class="pw-btn-secondary" onclick="__pw_closeFreeWizard()">Cancel</button>
+      `;
+      const list = document.getElementById('platformList');
+      list.innerHTML = socials.map((s, idx) => `
+        <div class="pw-dropdown-item" data-idx="${idx}" onpointerdown="__pw_selectPlatform(${idx})">
+          <img src="${s.icon}" alt="${s.name}"><span>${s.name}</span>
+        </div>
+      `).join('');
+      const searchInput = document.getElementById('platformSearch');
+      searchInput.addEventListener('focus', () => { list.style.display = 'block'; });
+      searchInput.addEventListener('blur', function() {
+        setTimeout(() => {
+          if (!document.getElementById('platformList').contains(document.activeElement)) {
+            list.style.display = 'none';
+          }
+        }, 200);
+      });
+    } else if (freeStep === 2) {
+      const id = getApplicationId();
+      const platform = selectedPlatform ? socials.find(s => s.name === selectedPlatform) : socials[0];
+      const isOther = platform.name === 'Other';
+
+      if (isOther) {
+        content.innerHTML = `
+          <h3>Apply by email</h3>
+          <p>Since no platform fit, we accept an organic (non-AI) video you create yourself. Record it, then send us the link or file by email.</p>
+          <div style="background:rgba(250,204,21,0.08); border:1px solid rgba(250,204,21,0.3); border-radius:12px; padding:12px 14px; margin-bottom:16px;">
+            <p style="font-size:12px; color:#facc15; margin:0; line-height:1.5;">
+              <strong>Guidelines:</strong><br>
+              • Video must be original, recorded by you<br>
+              • No AI-generated content<br>
+              • Any length is fine — short is fine<br>
+              • We post it with your permission
+            </p>
+          </div>
+          <div class="pw-copy-block">
+            <div class="pw-copy-label">Your email message</div>
+            <div class="pw-copy-message" id="appMessage">Application ID: ${id}
+I want free access.
+I will attach an organic video I made.
+I grant permission to post it on your channels.
+This message wasn't edited.
+I will not send it twice.</div>
+            <button class="pw-btn-primary" onclick="__pw_copyAndOpenDM()">
+              <i class="fas fa-envelope"></i> Copy & Open Email
+            </button>
+            <p style="margin-top:10px; text-align:center; font-size:12px; color:#64748b;">
+              Send to: <strong style="color:#94a3b8;">apply@try4ever.com</strong>
+            </p>
+            <button class="pw-btn-secondary" onclick="__pw_finishFreeApplication()">I've sent the email →</button>
+            <button class="pw-btn-secondary" onclick="__pw_goBack()" style="margin-top:8px;">← Choose a different option</button>
+          </div>
+        `;
+        return;
+      }
+
+      content.innerHTML = `
+        <h3>DM us on ${platform.name}</h3>
+        <p>Copy the message below, then click the button to open our DM on ${platform.name}. Paste the message there and send it.</p>
+        <div class="pw-copy-block">
+          <div class="pw-copy-label">Your application message</div>
+          <div class="pw-copy-message" id="appMessage">Application ID: ${id}
+I want free access.
+This message wasn't edited.
+I will not send it twice.</div>
+          <button class="pw-btn-primary" onclick="__pw_copyAndOpenDM()">
+            <i class="fas fa-copy"></i> Copy & DM us on ${platform.name}
+          </button>
+          <a id="dmFallbackLink" href="${platform.dmUrl}" target="_blank" rel="noopener"
+             style="display:none; margin-top:10px; text-align:center; font-size:13px; color:var(--accent); text-decoration:underline; word-break:break-all;">
+            Open ${platform.name} DM manually →
+          </a>
+          <button class="pw-btn-secondary" onclick="__pw_finishFreeApplication()">I've sent the DM →</button>
+          <button class="pw-btn-secondary" onclick="__pw_goBack()" style="margin-top:8px;">← Choose a different platform</button>
+        </div>
+      `;
+    } else if (freeStep === 3) {
+      const id = getApplicationId();
+      const platform = selectedPlatform ? socials.find(s => s.name === selectedPlatform) : null;
+      const platformLine = platform ? `You applied via <strong style="color:var(--text);">${platform.name}</strong>.` : 'Your application was submitted.';
+      let isRejected = false;
+      try {
+        const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+        const existing = stored.find(a => a.id === id);
+        if (existing && existing.status === 'rejected') isRejected = true;
+      } catch (e) {}
+      if (isRejected) {
+        content.innerHTML = `
+          <div style="text-align:center; padding:20px;">
+            <div style="font-size:48px;">⚠️</div>
+            <h3>Application not approved</h3>
+            <p>${platformLine}<br>Your previous application was not approved. You can apply again with a different platform or a different approach.</p>
+            <button class="pw-btn-primary" onclick="__pw_reapply()" style="margin-bottom:8px;">Apply again</button>
+            <button class="pw-btn-secondary" onclick="__pw_closeFreeWizard()">Close</button>
+          </div>
+        `;
+        return;
+      }
+      content.innerHTML = `
+        <div style="text-align:center; padding:20px;">
+          <div style="font-size:48px;">📬</div>
+          <h3>Application received</h3>
+          <p>${platformLine}<br>You've been added to the review queue. We'll respond to your DM when we get to it.</p>
+          <div class="pw-copy-block" style="text-align:left;">
+            <div class="pw-copy-label">Your application ID (keep for reference)</div>
+            <div class="pw-copy-message" style="padding-right:64px;">${id}</div>
+            <button onclick="__pw_copyAppId()" style="position:absolute; bottom:24px; right:12px; background:rgba(45,212,191,0.15); border:1px solid var(--accent); color:var(--accent); border-radius:20px; padding:4px 10px; font-size:11px; cursor:pointer; font-weight:600;">Copy</button>
+          </div>
+          <button class="pw-btn-secondary" id="refreshStatusBtn" onclick="__pw_refreshStatus()" style="margin-bottom:8px;">↻ Refresh status</button>
+          <button class="pw-btn-primary" onclick="__pw_closeFreeWizard()">Close</button>
+          <button class="pw-btn-danger" onclick="__pw_withdraw()">Withdraw application</button>
+        </div>
+      `;
+    }
+  }
+
+  function filterPlatforms(q) {
+    const list = document.getElementById('platformList');
+    if (!list) return;
+    const lower = q.toLowerCase();
+    const filtered = socials.filter(s => s.name.toLowerCase().includes(lower));
+    list.innerHTML = filtered.map(s => {
+      const idx = socials.indexOf(s);
+      return `<div class="pw-dropdown-item" data-idx="${idx}" onpointerdown="__pw_selectPlatform(${idx})"><img src="${s.icon}" alt="${s.name}"><span>${s.name}</span></div>`;
+    }).join('');
+    list.style.display = 'block';
+  }
+
+  function selectPlatform(idx) {
+    if (idx < 0 || idx >= socials.length) return;
+    selectedPlatform = socials[idx].name;
+    const s = document.getElementById('platformSearch');
+    if (s) s.value = selectedPlatform;
+    const l = document.getElementById('platformList');
+    if (l) l.style.display = 'none';
+    const n = document.getElementById('nextFreeBtn');
+    if (n) { n.disabled = false; n.style.opacity = '1'; n.style.pointerEvents = 'auto'; }
+    saveWizardState();
+  }
+
+  function copyAndOpenDM() {
+    const msgEl = document.getElementById('appMessage');
+    if (!msgEl) return;
+    const msg = msgEl.innerText;
+    const platform = socials.find(s => s.name === selectedPlatform) || socials[0];
+    const selectMsg = () => {
+      const range = document.createRange();
+      range.selectNodeContents(msgEl);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    };
+    if (platform.name === 'Other') {
+      const id = getApplicationId();
+      const subject = encodeURIComponent('Free access application — ' + id);
+      const body = encodeURIComponent(msg);
+      const url = `mailto:apply@try4ever.com?subject=${subject}&body=${body}`;
+      const open = () => { window.location.href = url; _toast('Email client opened.'); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(msg).then(open).catch(() => { selectMsg(); _toast('Copy failed — message selected.'); open(); });
+      } else { selectMsg(); _toast('Message selected — press Ctrl/Cmd + C.'); open(); }
+      return;
+    }
+    const openDM = () => {
+      const w = window.open(platform.dmUrl, '_blank');
+      if (!w) {
+        const link = document.getElementById('dmFallbackLink');
+        if (link) link.style.display = 'block';
+        _toast('Popup blocked — tap the fallback link.');
+      }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(msg).then(openDM).catch(() => { selectMsg(); _toast('Copy failed.'); openDM(); });
+    } else { selectMsg(); _toast('Message selected — press Ctrl/Cmd + C.'); openDM(); }
+  }
+
+  function registerApplication() {
+    const id = getApplicationId();
+    const platform = selectedPlatform || 'pending';
+    try {
+      const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+      const existing = stored.find(a => a.id === id);
+      if (existing) {
+        existing.platform = platform;
+        existing.updatedAt = Date.now();
+      } else {
+        stored.push({ id, platform, status: 'pending', createdAt: Date.now(), expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000 });
+      }
+      localStorage.setItem('pw_applications', JSON.stringify(stored));
+    } catch (e) {}
+    updateFreePlanBadge();
+  }
+
+  function finishFreeApplication() {
+    registerApplication();
+    clearWizardState();
+    freeStep = 3;
+    renderFreeStep();
+  }
+  function goBack() {
+    freeStep = 1;
+    selectedPlatform = null;
+    clearWizardState();
+    renderFreeStep();
+  }
+  function withdrawApplication() {
+    const id = getApplicationId();
+    try {
+      const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+      localStorage.setItem('pw_applications', JSON.stringify(stored.filter(a => a.id !== id)));
+    } catch (e) {}
+    clearWizardState();
+    try { localStorage.removeItem('pw_approved'); } catch (e) {}
+    updateFreePlanBadge();
+    freeStep = 1;
+    selectedPlatform = null;
+    closeFreeWizard(true);
+    _toast('Application withdrawn.');
+  }
+  function reapplyFreeApplication() {
+    const id = getApplicationId();
+    try {
+      const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+      localStorage.setItem('pw_applications', JSON.stringify(stored.filter(a => a.id !== id)));
+    } catch (e) {}
+    try { localStorage.removeItem('pw_approved'); } catch (e) {}
+    freeStep = 1;
+    selectedPlatform = null;
+    updateFreePlanBadge();
+    renderFreeStep();
+    _toast('You can apply again.');
+  }
+  function copyApplicationId() {
+    const id = getApplicationId();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(id).then(() => _toast('Application ID copied.')).catch(() => _toast('Copy failed.'));
+    } else { _toast('Please copy manually.'); }
+  }
+
+  let _refreshCooldownUntil = 0;
+  let _refreshCooldownTimer = null;
+  function startRefreshCooldown(seconds) {
+    _refreshCooldownUntil = Date.now() + seconds * 1000;
+    if (_refreshCooldownTimer) clearInterval(_refreshCooldownTimer);
+    const btn = document.getElementById('refreshStatusBtn');
+    if (!btn) return;
+    const tick = () => {
+      const remaining = Math.ceil((_refreshCooldownUntil - Date.now()) / 1000);
+      if (remaining <= 0) {
+        clearInterval(_refreshCooldownTimer);
+        _refreshCooldownTimer = null;
+        btn.disabled = false;
+        btn.textContent = '↻ Refresh status';
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = `↻ Wait ${remaining}s`;
+    };
+    tick();
+    _refreshCooldownTimer = setInterval(tick, 250);
+  }
+
+  async function refreshApplicationStatus() {
+    if (Date.now() < _refreshCooldownUntil) {
+      const remaining = Math.ceil((_refreshCooldownUntil - Date.now()) / 1000);
+      _toast(`Please wait ${remaining}s.`);
+      return;
+    }
+    startRefreshCooldown(REFRESH_COOLDOWN_S);
+    try {
+      const id = getApplicationId();
+      const res = await fetch(`${WORKER_URL}/api/application-status?id=${encodeURIComponent(id)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.status) {
+          const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+          const existing = stored.find(a => a.id === id);
+          if (existing) {
+            existing.status = data.status;
+            localStorage.setItem('pw_applications', JSON.stringify(stored));
+            if (data.status === 'approved') localStorage.setItem('pw_approved', 'true');
+          }
+        }
+      }
+    } catch (e) {}
+    const id = getApplicationId();
+    let status = 'pending';
+    try {
+      const stored = JSON.parse(localStorage.getItem('pw_applications') || '[]');
+      const existing = stored.find(a => a.id === id);
+      if (existing) status = existing.status || 'pending';
+    } catch (e) {}
+    if (status === 'approved' || isLocallyApproved()) {
+      _toast('Approved! Loading access…');
+      setTimeout(() => location.reload(), 500);
+      return;
+    }
+    if (status === 'rejected') {
+      _toast('Not approved. You can apply again.');
+      renderFreeStep();
+      return;
+    }
+    _toast("Still pending. We'll approve as soon as we can.");
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // PAID MODAL — Stripe
+  // ═══════════════════════════════════════════════════════════════
+  let elementsInstance = null;
+  let clientSecret = null;
+  let _paidInitToken = 0;
+
+  function updateStripeProgress(pct) {
+    const p = document.getElementById('loading-percent');
+    const b = document.getElementById('loading-bar-fill');
+    const r = Math.round(pct);
+    if (p) p.textContent = r + '%';
+    if (b) b.style.width = pct + '%';
+  }
+
+  async function openPaidModal() {
+    const cached = getCachedStatus();
+    if (cached && cached.active) {
+      openBillingManager();
+      return;
+    }
+    document.getElementById('paidModal').style.display = 'flex';
+    document.getElementById('stripe-loading').style.display = 'block';
+    document.getElementById('stripe-payment-content').style.display = 'none';
+    updateStripeProgress(0);
+    _paidInitToken++;
+    await mountPaymentElement(_paidInitToken);
+  }
+
+  async function mountPaymentElement(myToken) {
+    const isStale = () => myToken !== _paidInitToken;
+    const modal = document.getElementById('paidModal');
+    if (!modal) return;
+    const errorEl = modal.querySelector('#payment-error');
+    const submitBtn = modal.querySelector('#paywall-submit-btn');
+    let pct = 0;
+    const loadingTimer = setInterval(() => {
+      if (isStale()) { clearInterval(loadingTimer); return; }
+      pct = Math.min(85, pct + 8 + Math.random() * 8);
+      updateStripeProgress(pct);
+    }, 150);
+    try {
+      const userId = getUserId();
+      const resp = await fetch(`${WORKER_URL}/api/create-payment-intent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+      if (!resp.ok) throw new Error('Failed to create PaymentIntent');
+      const data = await resp.json();
+      clientSecret = data.clientSecret;
+      if (typeof Stripe === 'undefined') {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://js.stripe.com/v3/';
+          s.onload = resolve;
+          s.onerror = () => reject(new Error('Stripe.js failed to load'));
+          document.head.appendChild(s);
+        });
+      }
+      if (isStale()) { clearInterval(loadingTimer); return; }
+      const stripe = Stripe(PUBLISHABLE_KEY);
+      const elements = stripe.elements({
+        appearance: {
+          theme: 'night',
+          variables: {
+            colorPrimary: '#2dd4bf',
+            colorBackground: '#0a0c12',
+            colorText: '#f8fafc',
+            fontFamily: 'system-ui, sans-serif'
+          }
+        },
+        clientSecret
+      });
+      const paymentElement = elements.create('payment', {
+        defaultValues: { billingDetails: { name: '', address: { line1: '', postal_code: '' } } }
+      });
+      clearInterval(loadingTimer);
+      updateStripeProgress(100);
+      document.getElementById('stripe-loading').style.display = 'none';
+      document.getElementById('stripe-payment-content').style.display = 'block';
+      const pe = document.getElementById('payment-element');
+      if (pe) pe.innerHTML = '';
+      paymentElement.mount('#payment-element');
+      elementsInstance = elements;
+      if (errorEl) errorEl.textContent = '';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Subscribe — $20.73';
+    } catch (err) {
+      clearInterval(loadingTimer);
+      if (isStale()) return;
+      updateStripeProgress(100);
+      document.getElementById('stripe-loading').style.display = 'none';
+      document.getElementById('stripe-payment-content').style.display = 'block';
+      const pe = document.getElementById('payment-element');
+      if (pe) pe.textContent = 'Secure payment unavailable.';
+      if (errorEl) errorEl.textContent = 'Payment system unavailable. You can still activate in demo mode.';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Activate (demo mode)';
+      submitBtn.dataset.demo = 'true';
+    }
+  }
+
+  function closePaidModal() {
+    const modal = document.getElementById('paidModal');
+    if (modal) modal.style.display = 'none';
+    _paidInitToken++;
+    updateStripeProgress(0);
+    const btn = document.getElementById('paywall-submit-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Subscribe — $20.73'; delete btn.dataset.demo; }
+    const err = document.getElementById('payment-error');
+    const st = document.getElementById('payment-status');
+    if (err) err.textContent = '';
+    if (st) st.textContent = '';
+    if (elementsInstance) { try { elementsInstance.destroy(); } catch (e) {} elementsInstance = null; }
+    clientSecret = null;
+  }
+
+  async function handlePayment() {
+    const submitBtn = document.getElementById('paywall-submit-btn');
+    const modal = document.getElementById('paidModal');
+    if (!submitBtn || !modal) return;
+    if (submitBtn.dataset.demo === 'true') {
+      const errorEl = modal.querySelector('#payment-error');
+      if (errorEl) errorEl.textContent = '';
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="loader"></span> Activating…';
+      setTimeout(() => {
+        setCachedStatus({ active: true });
+        setSubscriptionExpiry(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        const statusEl = document.getElementById('payment-status');
+        if (statusEl) statusEl.textContent = '✅ Subscription active!';
+        _toast('🎉 Subscription activated (demo)');
+        setTimeout(() => location.reload(), 1200);
+      }, 1000);
+      return;
+    }
+    if (!elementsInstance || !clientSecret) return;
+    const errorEl = modal.querySelector('#payment-error');
+    const statusEl = modal.querySelector('#payment-status');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="loader"></span> Processing…';
+    if (errorEl) errorEl.textContent = '';
+    if (statusEl) statusEl.textContent = '';
+    const stripe = Stripe(PUBLISHABLE_KEY);
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements: elementsInstance,
+      confirmParams: { return_url: window.location.origin + window.location.pathname },
+      redirect: 'if_required'
+    });
+    if (error) {
+      if (errorEl) errorEl.textContent = error.message || 'Payment failed.';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Subscribe — $20.73';
+      return;
+    }
+    try {
+      const userId = getUserId();
+      const verifyRes = await fetch(`${WORKER_URL}/api/confirm-subscription`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, paymentIntentId: paymentIntent.id })
+      });
+      if (!verifyRes.ok) throw new Error('Server verification failed');
+      const data = await verifyRes.json();
+      if (!data.active) throw new Error('Subscription not active');
+      if (statusEl) statusEl.textContent = '✅ Subscription active!';
+      submitBtn.textContent = '✅ Subscribed';
+      setCachedStatus({ active: true });
+      setSubscriptionExpiry(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      setTimeout(() => { location.reload(); }, 1500);
+    } catch (err) {
+      if (errorEl) errorEl.textContent = 'Verification failed. Please contact support.';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Subscribe — $20.73';
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // BILLING MANAGER
+  // ═══════════════════════════════════════════════════════════════
+  async function openBillingManager() {
+    const modal = document.getElementById('billing-manager-modal');
+    const content = document.getElementById('billing-status-content');
+    if (!modal || !content) return;
+    modal.style.display = 'flex';
+    content.innerHTML = '<p>Fetching status…</p>';
+    try {
+      const status = await checkStatus();
+      if (status.active) {
+        const expiry = getSubscriptionExpiry();
+        const daysLeft = getSubscriptionDaysLeft();
+        const expiryText = expiry ? new Date(expiry).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'unknown';
+        const daysText = daysLeft !== null ? `${daysLeft} day${daysLeft === 1 ? '' : 's'} left` : '';
+        content.innerHTML = `
+          <p><strong>Plan:</strong> Monthly ($19/mo)</p>
+          <p><strong>Status:</strong> <span class="billing-active">Active</span></p>
+          ${daysText ? `<p><strong>Renews:</strong> ${expiryText} (${daysText})</p>` : ''}
+        `;
+        document.getElementById('cancel-subscription-btn').style.display = 'block';
+        document.getElementById('renew-subscription-btn').style.display = 'none';
+      } else {
+        content.innerHTML = `
+          <p><strong>Plan:</strong> None</p>
+          <p><strong>Status:</strong> <span class="billing-inactive">Inactive</span></p>
+        `;
+        document.getElementById('cancel-subscription-btn').style.display = 'none';
+        document.getElementById('renew-subscription-btn').style.display = 'block';
+      }
+    } catch (e) {
+      content.innerHTML = '<p style="color:var(--danger);">Error loading subscription. Please try again.</p>';
+    }
+  }
+  function closeBillingManager() {
+    const modal = document.getElementById('billing-manager-modal');
+    if (modal) modal.style.display = 'none';
+  }
+  async function cancelSubscription() {
+    const confirmed = await _confirm('Cancel your subscription? You will lose access immediately.');
+    if (!confirmed) return;
+    const userId = getUserId();
+    try {
+      const res = await fetch(`${WORKER_URL}/api/cancel?userId=${encodeURIComponent(userId)}`, { method: 'POST' });
+      if (res.ok) {
+        try { localStorage.removeItem(SUB_CACHE_KEY); localStorage.removeItem(SUB_EXPIRES_KEY); } catch (e) {}
+        _toast('Subscription cancelled.');
+        openBillingManager();
+      } else { _toast('Cancellation failed.'); }
+    } catch (e) { _toast('Cancellation failed. Check your connection.'); }
+  }
+  function renewSubscription() {
+    closeBillingManager();
+    openPaidModal();
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // PUBLIC API
+  // ═══════════════════════════════════════════════════════════════
+  window.__paywall = {
+    isAllowed: async function() {
+      const status = await checkStatus();
+      if (status.active) return true;
+      const hasContent = window.State
+        && Array.isArray(window.State.nodes)
+        && window.State.nodes.some(n => n.id !== 'root');
+      if (hasContent && !getTrialStart()) { startTrial(); return true; }
+      if (!getTrialStart()) return true;
+      return isTrialActive();
+    },
+    getStatus: checkStatus,
+    showFullPage: showFullPage,
+    showPanel: function() { showFullPage(); },
+    close: function() { location.reload(); },
+    startTrial: startTrial,
+    isTrialActive: isTrialActive
+  };
+
+  // Globals for inline onclick handlers in the template
+  window.__pw_filterPlatforms = filterPlatforms;
+  window.__pw_selectPlatform = selectPlatform;
+  window.__pw_copyAndOpenDM = copyAndOpenDM;
+  window.__pw_finishFreeApplication = finishFreeApplication;
+  window.__pw_goBack = goBack;
+  window.__pw_closeFreeWizard = closeFreeWizard;
+  window.__pw_copyAppId = copyApplicationId;
+  window.__pw_refreshStatus = refreshApplicationStatus;
+  window.__pw_withdraw = withdrawApplication;
+  window.__pw_reapply = reapplyFreeApplication;
+
+  window.pwTestOpenBilling = openBillingManager;
+  window.resetPaywall = function() {
+    try {
+      ['paywall_trial_start','paywall_sub_cache','paywall_userId','pw_app_id','pw_approved','pw_applications','pw_wizard_state','pw_paid_pending','pw_sub_expires_at'].forEach(k => localStorage.removeItem(k));
+    } catch (e) {}
+    location.reload();
+  };
+
+  // ═══════════════════════════════════════════════════════════════
+  // BOOT
+  // ═══════════════════════════════════════════════════════════════
+  // Wires the standalone billing manager that lives in the app body.
+  // Runs on every load (whether or not the paywall fires).
+  function wireBilling() {
+    const closeBtn = document.getElementById('billing-manager-close');
+    if (closeBtn && !closeBtn.dataset.wired) {
+      closeBtn.dataset.wired = '1';
+      closeBtn.addEventListener('click', closeBillingManager);
+    }
+    const cancelBtn = document.getElementById('cancel-subscription-btn');
+    if (cancelBtn && !cancelBtn.dataset.wired) {
+      cancelBtn.dataset.wired = '1';
+      cancelBtn.addEventListener('click', cancelSubscription);
+    }
+    const renewBtn = document.getElementById('renew-subscription-btn');
+    if (renewBtn && !renewBtn.dataset.wired) {
+      renewBtn.dataset.wired = '1';
+      renewBtn.addEventListener('click', renewSubscription);
+    }
+    const settingsBtn = document.getElementById('open-billing-manager');
+    if (settingsBtn && !settingsBtn.dataset.wired) {
+      settingsBtn.dataset.wired = '1';
+      settingsBtn.addEventListener('click', openBillingManager);
+    }
+    const modal = document.getElementById('billing-manager-modal');
+    if (modal && !modal.dataset.wired) {
+      modal.dataset.wired = '1';
+      modal.addEventListener('click', e => {
+        if (e.target === modal) closeBillingManager();
+      });
+    }
+  }
+
+  // Open/close via class toggle (CSS uses .is-open { display:flex })
+  function _openBillingModalEl() {
+    const m = document.getElementById('billing-manager-modal');
+    if (m) m.classList.add('is-open');
+  }
+  function _closeBillingModalEl() {
+    const m = document.getElementById('billing-manager-modal');
+    if (m) m.classList.remove('is-open');
+  }
+
+  async function boot() {
+    if (!(await window.__paywall.isAllowed())) {
+      showFullPage();
+      return;
+    }
+    wireBilling();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+
+  console.log('[Paywall] 404-style ready. Worker:', WORKER_URL);
+})();
+</script>
 <script>
 (function() {
     'use strict';
@@ -7402,19 +8931,11 @@ renderFolders: () => {
         }
     }
 
-    // Add New button with liquid glass
-    let html = `
-        <div class="folder-item add-new-btn liquid-glass" data-action="add" onclick="UI.showModal('upload-hub-modal')" style="border:1px dashed var(--accent); cursor:pointer; margin-bottom:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-weight:500; color:var(--accent);"><i class="fas fa-plus-circle"></i> Add New <span style="font-weight:700;">Category</span> or <span style="font-weight:700;">Book</span></span>
-                <span style="color:var(--accent);">+</span>
-            </div>
-        </div>
-    `;
+    let html = '';
 
     // Folder list
     if (children.length === 0) {
-        html += `<div class="liquid-glass" style="padding:1rem; text-align:center;">No folders found. Click above to add one.</div>`;
+        html += `<div class="liquid-glass" style="padding:1rem; text-align:center;">No folders yet. Use "Make Brain" or "Swap Brain" in the dock to build your knowledge map.</div>`;
     } else {
         for (let c of children) {
             const icon = c.type === 'category' ? '<i class="fas fa-folder"></i>' : (c.type === 'book' ? '<i class="fas fa-book"></i>' : '<i class="fas fa-file-alt"></i>');
@@ -7422,7 +8943,6 @@ renderFolders: () => {
             const percent = Math.round(c.understanding);
             const actionButtons = `
                 <div class="folder-actions">
-                    <button data-action="add-child" data-id="${c.id}" title="Add sub-category or book"><i class="fas fa-plus-circle"></i><span> Add</span></button>
                     <button data-action="rename" data-id="${c.id}" title="Rename"><i class="fas fa-i-cursor"></i><span> Rename</span></button>
                     <button data-action="copy" data-id="${c.id}" title="Copy name"><i class="fas fa-copy"></i><span> Copy Name</span></button>
                     <button data-action="quiz" data-id="${c.id}" title="Quiz (full topic)"><i class="fas fa-question"></i><span> Quiz</span></button>
@@ -7459,10 +8979,6 @@ renderFolders: () => {
             e.stopPropagation();
             const action = btn.dataset.action;
             const id = btn.dataset.id;
-            if (action === 'add') {
-                UI.showModal('upload-hub-modal');
-                return;
-            }
             const node = State.nodes.find(n => n.id === id);
             if (!node) return;
             switch(action) {
@@ -7487,10 +9003,6 @@ renderFolders: () => {
                     break;
                 case 'details':
                     Core.showRichDetails(id);
-                    break;
-                case 'add-child':
-                    window._uploadTargetParent = id;
-                    UI.showModal('upload-hub-modal');
                     break;
             }
         });
@@ -10371,24 +11883,7 @@ document.getElementById('content-textarea')?.addEventListener('input', () => {
 document.getElementById('btn-rename').addEventListener('click', Core.rename);
 document.getElementById('btn-delete').addEventListener('click', Core.deleteFolder);
 // Add Category/Book from Action Panel
-document.getElementById('btn-add-category-from-action')?.addEventListener('click', () => {
-    const folderId = document.getElementById('selected-folder-title').dataset.id;
-    if (folderId) {
-        // Store the current focus as the target parent for the upload modal
-        window._uploadTargetParent = folderId;
-    } else {
-        window._uploadTargetParent = null;
-    }
-    UI.showModal('upload-hub-modal');
-});
-// --- ADD NEW CATEGORY OR BOOK BUTTON ---
-document.addEventListener('click', async (e) => {
-    const addBtn = e.target.closest('.add-new-btn');
-    if (addBtn) {
-        e.stopPropagation();
-        UI.showModal('upload-hub-modal');
-    }
-});
+// // (Add New button removed — dock handles brain creation)
 document.getElementById('btn-scores').addEventListener('click', Core.openScoresModal);
 document.getElementById('btn-adjust-understanding').addEventListener('click', Core.editUnderstanding);
 // --- FILE MANAGEMENT MODAL ---
@@ -13861,7 +15356,7 @@ I will not send it twice.</div>
     const modal = document.getElementById('billing-manager-modal');
     const content = document.getElementById('billing-status-content');
     if (!modal || !content) return;
-    modal.style.display = 'flex';
+    modal.classList.add('is-open');
     content.innerHTML = '<p>Fetching status…</p>';
 
     try {
@@ -13895,7 +15390,7 @@ I will not send it twice.</div>
 
   function closeBillingManager() {
     const modal = document.getElementById('billing-manager-modal');
-    if (modal) modal.style.display = 'none';
+    if (modal) modal.classList.remove('is-open');
   }
 
   async function cancelSubscription() {
