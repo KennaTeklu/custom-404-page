@@ -3843,177 +3843,688 @@ tr { break-inside: avoid; }
   })();
 </script>
 <style>
+  /* ══════════════════════════════════════════════
+     PAYWALL — CLEAN CSS
+     ══════════════════════════════════════════════ */
+
   html[data-paywall-state="granted"] #paywall-overlay { display: none !important; }
 
-  /* ── FAQ accordion (corrected selectors to match HTML) ── */
-  .faq-answer { display: none; margin-top: 8px; font-size: 13px; color: #94a3b8; line-height: 1.5; }
-  .faq-item.open .faq-answer { display: block; }
-  .faq-question i { transition: transform 0.3s; }
-  .faq-item.open .faq-question i { transform: rotate(180deg); }
+  /* ── Overlay ── */
+  #paywall-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+    overflow-y: auto;
+  }
 
-  /* ── Preference: reduced motion ── */
+  .pw-shell {
+    width: 100%;
+    max-width: 1080px;
+    background: rgba(12, 14, 20, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    padding: 40px 44px 36px;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7);
+    animation: pwFadeIn 0.35s ease;
+  }
+
+  @keyframes pwFadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .pw-header { text-align: center; margin-bottom: 32px; }
+  .pw-header h1 {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+    color: #f8fafc;
+  }
+  .pw-header p { font-size: 14px; color: #94a3b8; }
+
+  /* ── Plans row ── */
+  .pw-plans {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: stretch;
+    padding: 4px 0 28px;
+  }
+
+  .pw-card {
+    position: relative;
+    border-radius: 18px;
+    padding: 28px 24px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+
+  .pw-card-free {
+    flex: 0 0 280px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .pw-card-free:hover {
+    border-color: rgba(45, 212, 191, 0.25);
+    transform: translateY(-2px);
+  }
+
+  .pw-card-paid {
+    flex: 0 0 380px;
+    background: linear-gradient(160deg, rgba(45, 212, 191, 0.10) 0%, rgba(12, 14, 20, 0.9) 60%);
+    border: 1.5px solid rgba(45, 212, 191, 0.7);
+    transform: scale(1.02);
+    box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.1),
+                0 0 48px rgba(45, 212, 191, 0.12),
+                0 20px 48px rgba(0, 0, 0, 0.5);
+  }
+  .pw-card-paid:hover {
+    transform: scale(1.035);
+    box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.2),
+                0 0 64px rgba(45, 212, 191, 0.2),
+                0 24px 56px rgba(0, 0, 0, 0.6);
+  }
+
+  .pw-ribbon {
+    position: absolute;
+    top: -11px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2dd4bf;
+    color: #000;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 5px 16px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  .pw-plan-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+  .pw-card-paid .pw-plan-name { color: #2dd4bf; }
+
+  .pw-price {
+    font-size: 42px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -1px;
+    color: #f8fafc;
+    margin-bottom: 6px;
+  }
+  .pw-price span {
+    font-size: 14px;
+    font-weight: 500;
+    color: #94a3b8;
+    letter-spacing: 0;
+  }
+
+  .pw-tagline {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-bottom: 22px;
+  }
+
+  .pw-features {
+    list-style: none;
+    margin-bottom: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 18px;
+  }
+  .pw-features li {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    color: #cbd5e1;
+    padding: 7px 0;
+  }
+  .pw-features li i {
+    margin-right: 10px;
+    font-size: 12px;
+    color: #2dd4bf;
+    flex-shrink: 0;
+    width: 14px;
+    text-align: center;
+  }
+  .pw-features li.dim { color: #64748b; }
+  .pw-features li.dim i { color: #64748b; }
+
+  .pw-cta {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    border-radius: 40px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    border: none;
+  }
+  .pw-cta-free {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #f8fafc;
+  }
+  .pw-cta-free:hover {
+    border-color: #2dd4bf;
+    background: rgba(45, 212, 191, 0.06);
+  }
+  .pw-cta-paid {
+    background: #2dd4bf;
+    color: #000;
+    box-shadow: 0 4px 16px rgba(45, 212, 191, 0.25);
+  }
+  .pw-cta-paid:hover {
+    background: #14b8a6;
+    box-shadow: 0 6px 20px rgba(45, 212, 191, 0.35);
+  }
+
+  .pw-fine {
+    font-size: 11px;
+    color: #64748b;
+    text-align: center;
+    margin-top: 12px;
+  }
+
+  /* ── Trust row ── */
+  .pw-trust {
+    display: flex;
+    justify-content: center;
+    gap: 36px;
+    flex-wrap: wrap;
+    padding: 24px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .pw-trust-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #94a3b8;
+  }
+  .pw-trust-item i { color: #2dd4bf; font-size: 14px; }
+
+  /* ── FAQ ── */
+  .pw-faq-section { padding: 32px 0 8px; }
+  .pw-faq-section h2 {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #f8fafc;
+  }
+  .faq-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 8px;
+    transition: border-color 0.2s ease;
+  }
+  .faq-item:hover { border-color: rgba(255, 255, 255, 0.15); }
+  .faq-question {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #f8fafc;
+    cursor: pointer;
+  }
+  .faq-question i {
+    color: #94a3b8;
+    font-size: 12px;
+    transition: transform 0.25s ease;
+  }
+  .faq-item.open .faq-question i { transform: rotate(180deg); }
+  .faq-answer {
+    display: none;
+    margin-top: 10px;
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.6;
+  }
+  .faq-item.open .faq-answer { display: block; }
+
+  /* ── Bottom CTA ── */
+  .pw-bottom {
+    text-align: center;
+    padding: 28px 0 0;
+  }
+  .pw-bottom h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #94a3b8;
+    margin-bottom: 16px;
+  }
+  .pw-bottom .pw-cta {
+    display: inline-block;
+    width: auto;
+    padding: 12px 28px;
+    margin: 0 6px;
+  }
+
+  /* ── Modals ── */
+  .pw-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100001;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+  .pw-modal-inner {
+    background: rgba(12, 14, 20, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 28px 26px;
+    max-width: 460px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    animation: pwFadeIn 0.25s ease;
+  }
+  .pw-modal-inner h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #f8fafc;
+  }
+  .pw-modal-inner p {
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  /* ── Platform dropdown ── */
+  .pw-dropdown-wrap { position: relative; margin-bottom: 16px; }
+  .pw-dropdown-input {
+    width: 100%;
+    padding: 12px 14px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    color: #f8fafc;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .pw-dropdown-input:focus { border-color: #2dd4bf; }
+  .pw-dropdown-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    width: 100%;
+    max-height: 220px;
+    overflow-y: auto;
+    background: rgba(12, 14, 20, 0.98);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    z-index: 20;
+    display: none;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  }
+  .pw-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: background 0.1s;
+    font-size: 13px;
+    color: #f8fafc;
+  }
+  .pw-dropdown-item:hover,
+  .pw-dropdown-item.hl { background: rgba(45, 212, 191, 0.1); }
+  .pw-dropdown-item img { width: 18px; height: 18px; flex-shrink: 0; }
+
+  /* ── Copy block ── */
+  .pw-copy-block {
+    background: rgba(0, 0, 0, 0.3);
+    border-left: 3px solid #2dd4bf;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 16px;
+  }
+  .pw-copy-label {
+    font-size: 11px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .pw-copy-message {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: "Fira Code", monospace;
+    font-size: 12px;
+    color: #cbd5e1;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  .pw-btn-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px;
+    background: #2dd4bf;
+    color: #000;
+    border: none;
+    border-radius: 40px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .pw-btn-primary:hover { background: #14b8a6; }
+
+  .pw-btn-secondary {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 40px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .pw-btn-secondary:hover { border-color: #94a3b8; color: #f8fafc; }
+
+  .pw-btn-danger {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    color: #f43f5e;
+    border: 1px solid rgba(244, 63, 94, 0.3);
+    border-radius: 40px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+  .pw-btn-danger:hover { background: rgba(244, 63, 94, 0.08); }
+
+  /* ── Paid modal loading ── */
+  .pw-loading { text-align: center; padding: 24px 0; }
+  .pw-loading-pct {
+    font-size: 28px;
+    font-weight: 800;
+    color: #2dd4bf;
+    margin-bottom: 12px;
+    font-family: "Fira Code", monospace;
+  }
+  .pw-loading-track {
+    height: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .pw-loading-fill {
+    height: 100%;
+    width: 0%;
+    background: #2dd4bf;
+    transition: width 0.15s linear;
+    box-shadow: 0 0 12px #2dd4bf;
+  }
+  .pw-loading-sub { font-size: 12px; color: #94a3b8; }
+
+  /* ── Price box ── */
+  .pw-price-box {
+    background: rgba(255, 255, 255, 0.025);
+    border-radius: 14px;
+    padding: 16px;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+  .pw-price-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    color: #94a3b8;
+  }
+  .pw-price-row.total {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: 10px;
+    padding-top: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 800px) {
+    .pw-shell { padding: 28px 20px; }
+    .pw-plans {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+      justify-content: flex-start;
+      padding-bottom: 20px;
+      margin: 0 -20px;
+      padding-left: 20px;
+      padding-right: 20px;
+    }
+    .pw-plans::-webkit-scrollbar { display: none; }
+    .pw-card-free { flex: 0 0 240px; }
+    .pw-card-paid { flex: 0 0 300px; }
+    .pw-header h1 { font-size: 22px; }
+    .pw-price { font-size: 34px; }
+  }
+
+  /* ── Preferences ── */
   @media (prefers-reduced-motion: reduce) {
-    #paywall-overlay, #paywall-overlay *,
-    #freeWizardModal, #freeWizardModal *,
-    #paidModal, #paidModal * {
+    *, *::before, *::after {
       transition: none !important;
       animation: none !important;
     }
   }
-
-  /* ── Preference: increased contrast ── */
   @media (prefers-contrast: more) {
-    #paywall-overlay { background: #000 !important; border: 2px solid #fff !important; }
-    #paywall-overlay h2 { color: #fff !important; }
-    #paywall-overlay p { color: #e0e0e0 !important; }
-    #paywall-overlay .btn, #paywall-overlay button { border-width: 2px !important; }
-    #freeWizardModal > div, #paidModal > div { background: #000 !important; border: 2px solid #fff !important; }
-    #freeWizardModal input, #freeWizardModal textarea, #paidModal input {
-      background: #fff !important; color: #000 !important; border: 2px solid #000 !important;
-    }
+    .pw-shell { background: #000 !important; border: 2px solid #fff !important; }
+    .pw-header h1, .pw-price, .pw-plan-name { color: #fff !important; }
+    .pw-header p, .pw-tagline, .pw-features li { color: #e0e0e0 !important; }
   }
-
-  /* ── Preference: forced colors (Windows high-contrast mode) ── */
   @media (forced-colors: active) {
-    #paywall-overlay, #freeWizardModal > div, #paidModal > div {
+    .pw-shell, .pw-modal-inner {
       border: 2px solid ButtonBorder !important;
       background: Canvas !important;
       color: CanvasText !important;
     }
-    #paywall-overlay button, #freeWizardModal button, #paidModal button {
-      border: 1px solid ButtonBorder !important;
-      background: ButtonFace !important;
-      color: ButtonText !important;
-    }
   }
 
-  /* ── Focus visibility (keyboard users) ── */
-  #paywall-overlay button:focus-visible,
-  #paywall-overlay input:focus-visible,
-  #freeWizardModal button:focus-visible,
-  #freeWizardModal input:focus-visible,
-  #freeWizardModal textarea:focus-visible,
-  #paidModal button:focus-visible,
-  #paidModal input:focus-visible {
-    outline: 2px solid #2dd4bf !important;
-    outline-offset: 2px !important;
+  /* ── Focus ── */
+  button:focus-visible,
+  input:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid #2dd4bf;
+    outline-offset: 2px;
+  }
+
+  /* ── Toast ── */
+  #toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 100010;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+  }
+  .toast {
+    background: rgba(15, 18, 28, 0.96);
+    backdrop-filter: blur(20px);
+    border-left: 3px solid #2dd4bf;
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #f8fafc;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    max-width: 320px;
+  }
+  @keyframes slideIn {
+    from { transform: translateX(120%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
   }
 </style>
 
-<!-- ========== PAYWALL OVERLAY ========== -->
-<div id="paywall-overlay" style="display:flex; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:95%; max-width:1100px; max-height:95vh; overflow-y:auto; background:rgba(0,0,0,0.9); border:1px solid rgba(255,255,255,0.1); border-radius:24px; padding:24px 32px 32px; box-shadow:0 24px 80px rgba(0,0,0,0.7); z-index:100000; backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);">
+<div id="paywall-overlay">
+    <div class="pw-shell">
 
-    <!-- Compact Header (adaptive) -->
-    <div style="text-align:center; margin-bottom:16px;">
-        <h2 id="pwHeaderTitle" style="font-size:24px; font-weight:800; margin-bottom:4px;">Your trial has ended</h2>
-        <p id="pwHeaderSubtitle" style="font-size:14px; color:#94a3b8;">Choose how to continue.</p>
-    </div>
-
-    <ul style="display:flex; justify-content:flex-start; align-items:center; gap:20px; overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none; padding:20px 0; list-style:none;">
-        <!-- Free Plan -->
-        <li id="freePlanCard" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:20px; padding:24px; min-width:260px; flex:0 0 260px; position:relative; transition:0.3s;">
-            <div id="freePlanBadge" style="display:none; position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:#facc15; color:#000; font-size:11px; font-weight:800; padding:5px 18px; border-radius:20px; white-space:nowrap;">Pending review</div>
-            <h3 style="font-size:16px; font-weight:600; margin-bottom:4px;">Free</h3>
-            <p style="font-size:34px; font-weight:800; line-height:1; margin-bottom:2px;">$0<span style="font-size:13px; color:#94a3b8;">/month</span></p>
-            <p style="font-size:12px; color:#94a3b8; margin-bottom:16px;">Apply via DM</p>
-            <ul style="margin:14px 0 20px; padding:0; list-style:none; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
-                <li style="display:flex; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fas fa-check" style="margin-right:8px; color:#2dd4bf;"></i> Full access</li>
-                <li style="display:flex; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fas fa-check" style="margin-right:8px; color:#2dd4bf;"></i> No payment needed</li>
-                <li style="display:flex; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fas fa-check" style="margin-right:8px; color:#2dd4bf;"></i> DM us to apply</li>
-                <li style="display:flex; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fas fa-times" style="margin-right:8px; color:#64748b;"></i> Manual review</li>
-            </ul>
-            <button class="btn--free" onclick="openFreeWizard()" style="display:block; width:100%; padding:12px; border-radius:40px; font-size:14px; font-weight:700; cursor:pointer; border:1px solid rgba(255,255,255,0.2); background:transparent; color:#f8fafc;">Apply Now</button>
-            <p style="font-size:10px; color:#64748b; margin-top:10px; text-align:center;">Adds to review queue</p>
-        </li>
-
-    <!-- Paid Plan -->
-        <li id="paidPlanCard" style="background:linear-gradient(145deg, rgba(45,212,191,0.12), rgba(0,0,0,0.4)); border:2px solid #2dd4bf; border-radius:20px; padding:24px; min-width:340px; flex:0 0 340px; position:relative; transition:0.3s; transform:scale(1.02); box-shadow:0 0 40px rgba(45,212,191,0.2);">
-            <span id="paidPlanRibbon" style="position:absolute; top:-12px; left:50%; transform:translateX(-50%); background:#2dd4bf; color:#000; font-size:11px; font-weight:800; padding:5px 18px; border-radius:20px; white-space:nowrap;">Instant</span>
-            <h3 style="font-size:16px; font-weight:600; margin-bottom:4px;">Subscribe</h3>
-            <p style="font-size:34px; font-weight:800; line-height:1; margin-bottom:2px;">$19<span style="font-size:13px; color:#94a3b8;">/mo</span></p>
-            <p id="paidPlanSub" style="font-size:12px; color:#94a3b8; margin-bottom:16px;">No waiting</p>
-            <ul style="margin:14px 0 20px; padding:0; list-style:none; border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;">
-                <li style="display:flex; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fas fa-check" style="margin-right:8px; color:#2dd4bf;"></i> Full access</li>
-                <li style="display:flex; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fas fa-check" style="margin-right:8px; color:#2dd4bf;"></i> No DM needed</li>
-                <li style="display:flex; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fas fa-check" style="margin-right:8px; color:#2dd4bf;"></i> Instant activation</li>
-                <li style="display:flex; align-items:center; font-size:12px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.05);"><i class="fas fa-check" style="margin-right:8px; color:#2dd4bf;"></i> Cancel anytime</li>
-            </ul>
-            <button id="paidPlanBtn" class="btn btn--paid" onclick="openPaidModal()" style="display:block; width:100%; padding:12px; border-radius:40px; font-size:14px; font-weight:700; cursor:pointer; border:none; background:#2dd4bf; color:#000;">Subscribe – $19/mo</button>
-            <p id="paidPlanFooter" style="font-size:10px; color:#64748b; margin-top:10px; text-align:center;">Secure billing · cancel in one click</p>
-        </li>
-    </ul>
-
-    <div style="display:flex; justify-content:center; gap:40px; margin-top:20px; flex-wrap:wrap; text-align:center;">
-        <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:#94a3b8;"><i class="fas fa-shield-alt" style="color:#2dd4bf;"></i> Secure billing</div>
-        <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:#94a3b8;"><i class="fas fa-clock" style="color:#2dd4bf;"></i> Manual review</div>
-        <div style="display:flex; align-items:center; gap:8px; font-size:13px; color:#94a3b8;"><i class="fas fa-times-circle" style="color:#2dd4bf;"></i> No card required for free</div>
-    </div>
-
-    <div style="margin-top:32px;">
-        <h2 style="text-align:center; font-size:20px; margin-bottom:16px;">Frequently Asked Questions</h2>
-
-        <div class="pw-faq-item" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px 16px; margin-bottom:8px;">
-            <div class="pw-faq-question" onclick="toggleFaq(this)" style="font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-size:14px;">How does the free application work? <i class="fas fa-chevron-down"></i></div>
-            <div class="pw-faq-answer">You select a platform, copy your application ID, and DM us on that platform. We'll review your account and respond with next steps.</div>
+        <div class="pw-header">
+            <h1 id="pwHeaderTitle">Your trial has ended</h1>
+            <p id="pwHeaderSubtitle">Choose how to continue.</p>
         </div>
-        <div class="pw-faq-item" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px 16px; margin-bottom:8px;">
-            <div class="pw-faq-question" onclick="toggleFaq(this)" style="font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-size:14px;">How long does review take? <i class="fas fa-chevron-down"></i></div>
-            <div class="pw-faq-answer">We add you to the review queue. We can't guarantee a timeframe – it depends on our current workload. We'll respond to your DM when we get to it.</div>
-        </div>
-        <div class="pw-faq-item" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px 16px; margin-bottom:8px;">
-            <div class="pw-faq-question" onclick="toggleFaq(this)" style="font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-size:14px;">Can I cancel my subscription anytime? <i class="fas fa-chevron-down"></i></div>
-            <div class="pw-faq-answer">Yes. You can cancel in one click from your account settings, and you'll keep access until the end of the billing period.</div>
-        </div>
-        <div class="pw-faq-item" style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:12px 16px; margin-bottom:8px;">
-            <div class="pw-faq-question" onclick="toggleFaq(this)" style="font-weight:600; cursor:pointer; display:flex; justify-content:space-between; align-items:center; font-size:14px;">What if I don't have social media? <i class="fas fa-chevron-down"></i></div>
-            <div class="pw-faq-answer">Choose "Other" – we'll provide alternative instructions in our reply.</div>
-        </div>
-    </div>
 
-    <div style="text-align:center; margin-top:32px; padding:20px; background:rgba(45,212,191,0.05); border-radius:16px; border:1px solid rgba(45,212,191,0.2);">
-        <h3 style="color:#2dd4bf; font-size:18px; margin-bottom:12px;">Still undecided? Get access now.</h3>
-        <button onclick="openPaidModal()" style="display:inline-block; width:auto; padding:12px 32px; margin:0 8px; border-radius:40px; background:#2dd4bf; border:none; color:#000; font-weight:600;">Subscribe – $19/mo</button>
-        <button onclick="openFreeWizard()" style="display:inline-block; width:auto; padding:12px 32px; margin:0 8px; border-radius:40px; background:transparent; border:1px solid rgba(255,255,255,0.2); color:#f8fafc; font-weight:600;">Apply for Free</button>
+        <div class="pw-plans">
+
+            <!-- Free Plan -->
+            <div class="pw-card pw-card-free" id="freePlanCard">
+                <div class="pw-ribbon" id="freePlanBadge" style="display:none; background:#facc15;">Pending review</div>
+                <div class="pw-plan-name">Free</div>
+                <div class="pw-price">$0<span>/month</span></div>
+                <div class="pw-tagline">Apply via DM</div>
+                <ul class="pw-features">
+                    <li><i class="fas fa-check"></i> Full access</li>
+                    <li><i class="fas fa-check"></i> No payment needed</li>
+                    <li><i class="fas fa-check"></i> DM us to apply</li>
+                    <li class="dim"><i class="fas fa-times"></i> Manual review</li>
+                </ul>
+                <button class="pw-cta pw-cta-free" id="freePlanBtn" onclick="openFreeWizard()">Apply Now</button>
+                <div class="pw-fine">Adds to review queue</div>
+            </div>
+
+            <!-- Paid Plan -->
+            <div class="pw-card pw-card-paid" id="paidPlanCard">
+                <div class="pw-ribbon" id="paidPlanRibbon">Instant</div>
+                <div class="pw-plan-name">Subscribe</div>
+                <div class="pw-price">$19<span>/mo</span></div>
+                <div class="pw-tagline" id="paidPlanSub">No waiting</div>
+                <ul class="pw-features">
+                    <li><i class="fas fa-check"></i> Full access</li>
+                    <li><i class="fas fa-check"></i> No DM needed</li>
+                    <li><i class="fas fa-check"></i> Instant activation</li>
+                    <li><i class="fas fa-check"></i> Cancel anytime</li>
+                </ul>
+                <button class="pw-cta pw-cta-paid" id="paidPlanBtn" onclick="openPaidModal()">Subscribe – $19/mo</button>
+                <div class="pw-fine" id="paidPlanFooter">Secure billing · cancel in one click</div>
+            </div>
+
+        </div>
+
+        <div class="pw-trust">
+            <div class="pw-trust-item"><i class="fas fa-shield-alt"></i> Secure billing</div>
+            <div class="pw-trust-item"><i class="fas fa-clock"></i> Manual review</div>
+            <div class="pw-trust-item"><i class="fas fa-times-circle"></i> No card required for free</div>
+        </div>
+
+        <div class="pw-faq-section">
+            <h2>Frequently Asked Questions</h2>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">How does the free application work? <i class="fas fa-chevron-down"></i></div>
+                <div class="faq-answer">You select a platform, copy your application ID, and DM us on that platform. We'll review your account and respond with next steps.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">How long does review take? <i class="fas fa-chevron-down"></i></div>
+                <div class="faq-answer">We add you to the review queue. We can't guarantee a timeframe — it depends on our current workload. We'll respond to your DM when we get to it.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">Can I cancel my subscription anytime? <i class="fas fa-chevron-down"></i></div>
+                <div class="faq-answer">Yes. You can cancel in one click from your account settings, and you'll keep access until the end of the billing period.</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">What if I don't have social media? <i class="fas fa-chevron-down"></i></div>
+                <div class="faq-answer">Choose "Other" — we'll accept an organic video you create yourself and provide instructions via email.</div>
+            </div>
+        </div>
+
+        <div class="pw-bottom">
+            <h3>Still undecided? Get access now.</h3>
+            <button class="pw-cta pw-cta-paid" onclick="openPaidModal()">Subscribe – $19/mo</button>
+            <button class="pw-cta pw-cta-free" onclick="openFreeWizard()">Apply for Free</button>
+        </div>
+
     </div>
 </div>
 
-<!-- ========== FREE WIZARD MODAL ========== -->
-<div id="freeWizardModal" style="position:fixed; inset:0; z-index:100001; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); display:none; justify-content:center; align-items:center; padding:20px;">
-    <div style="background:rgba(0,0,0,0.95); border:1px solid rgba(255,255,255,0.1); border-radius:20px; padding:24px; max-width:480px; width:100%; max-height:90vh; overflow-y:auto; position:relative;">
-        <button onclick="closeFreeWizard()" style="position:absolute; top:12px; right:16px; background:none; border:none; color:#94a3b8; font-size:22px; cursor:pointer;">✕</button>
+<div id="freeWizardModal" class="pw-modal">
+    <div class="pw-modal-inner">
         <div id="freeWizardContent"></div>
     </div>
 </div>
 
-<!-- ========== PAID MODAL (STRIPE) ========== -->
-<div id="paidModal" style="position:fixed; inset:0; z-index:100001; background:rgba(0,0,0,0.8); backdrop-filter:blur(10px); display:none; justify-content:center; align-items:center; padding:20px;">
-    <div style="background:rgba(0,0,0,0.95); border:1px solid rgba(45,212,191,0.3); border-radius:20px; padding:28px 24px; max-width:480px; width:100%; max-height:90vh; overflow-y:auto; position:relative;">
-        <button onclick="closePaidModal()" style="position:absolute; top:12px; right:16px; background:none; border:none; color:#94a3b8; font-size:22px; cursor:pointer; z-index:10;">✕</button>
-
+<div id="paidModal" class="pw-modal">
+    <div class="pw-modal-inner">
         <div id="stripe-loading">
-            <div style="text-align:center; margin:20px 0;">
-                <div id="loading-percent" style="font-size:24px; font-weight:700; color:#2dd4bf; margin-bottom:8px;">0%</div>
-                <div style="width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
-                    <div id="loading-bar-fill" style="height:100%; width:0%; background:#2dd4bf; transition:width 0.1s linear;"></div>
+            <div class="pw-loading">
+                <div class="pw-loading-pct" id="loading-percent">0%</div>
+                <div class="pw-loading-track">
+                    <div class="pw-loading-fill" id="loading-bar-fill"></div>
                 </div>
-                <p style="font-size:12px; color:#94a3b8; margin-top:8px;">Loading secure payment...</p>
+                <div class="pw-loading-sub">Loading secure payment…</div>
             </div>
         </div>
 
         <div id="stripe-payment-content" style="display:none;">
-            <h3 style="text-align:center; color:#f8fafc; margin-bottom:8px;">Subscribe $19/mo</h3>
-            <div style="background:rgba(255,255,255,0.03); border-radius:16px; padding:16px; margin:12px 0; font-size:0.9rem; color:#e2e8f0;">
-                <div style="display:flex; justify-content:space-between; padding:4px 0; color:#94a3b8;">Subtotal <span style="font-weight:500;">$19.00</span></div>
-                <div style="display:flex; justify-content:space-between; padding:4px 0; color:#94a3b8;">Tax (9.1%) <span style="font-weight:500;">$1.73</span></div>
-                <div style="border-top:1px solid rgba(255,255,255,0.1); margin-top:8px; padding-top:12px; font-weight:700; color:#f8fafc; font-size:1.1rem; display:flex; justify-content:space-between;">Total <span>$20.73</span></div>
+            <h3 style="text-align:center; margin-bottom:14px;">Subscribe — $19/mo</h3>
+            <div class="pw-price-box">
+                <div class="pw-price-row"><span>Subtotal</span><span>$19.00</span></div>
+                <div class="pw-price-row"><span>Tax (9.1%)</span><span>$1.73</span></div>
+                <div class="pw-price-row total"><span>Total</span><span>$20.73</span></div>
             </div>
-            <div id="payment-element"></div>
-            <div id="payment-error" style="color:#f87171; font-size:0.85rem; min-height:1.2rem; margin-top:4px;"></div>
-            <button id="paywall-submit-btn" onclick="processPayment()" style="width:100%; background:#2dd4bf; border:none; border-radius:40px; padding:14px; font-weight:700; font-size:1rem; color:#030408; cursor:pointer; margin-top:8px;" disabled>Subscribe — $20.73</button>
-            <div id="payment-status" style="color:#4ade80; font-size:0.9rem; margin-top:8px; text-align:center;"></div>
+            <div id="payment-element" style="padding:24px; text-align:center; color:#94a3b8; font-size:13px; background:rgba(255,255,255,0.02); border-radius:12px; margin-bottom:12px;">
+                Stripe Payment Element mounts here
+            </div>
+            <div id="payment-error" style="color:#f87171; font-size:12px; min-height:16px; margin-bottom:4px;"></div>
+            <button id="paywall-submit-btn" class="pw-btn-primary" onclick="processPayment()" disabled style="opacity:0.5;">Subscribe — $20.73</button>
+            <div id="payment-status" style="color:#4ade80; font-size:13px; margin-top:10px; text-align:center;"></div>
         </div>
     </div>
 </div>
+
+<div id="toast-container"></div>
 <script>
 (function() {
     'use strict';
