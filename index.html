@@ -4649,14 +4649,23 @@ tr { break-inside: avoid; }
 
     const daysSpan = document.getElementById('trial-days-left');
     if (daysSpan) daysSpan.textContent = getTrialDaysLeft();
+
+    // Warm up the paid flow in the background
+    preloadPaidFlow();
   }
 
   function wireUp() {
     const $ = id => document.getElementById(id);
     const onSubmit = $('paywall-submit-btn'); if (onSubmit) onSubmit.addEventListener('click', handlePayment);
     const onFree = $('freePlanBtn'); if (onFree) onFree.addEventListener('click', openFreeWizard);
-    const onPaid = $('paidPlanBtn'); if (onPaid) onPaid.addEventListener('click', openPaidModal);
-    const onBottomPaid = $('pwBottomPaid'); if (onBottomPaid) onBottomPaid.addEventListener('click', openPaidModal);
+    const onPaid = $('paidPlanBtn'); if (onPaid) {
+      onPaid.addEventListener('click', openPaidModal);
+      onPaid.addEventListener('mouseenter', () => { preloadPaymentIntent().catch(() => {}); }, { once: true });
+    }
+    const onBottomPaid = $('pwBottomPaid'); if (onBottomPaid) {
+      onBottomPaid.addEventListener('click', openPaidModal);
+      onBottomPaid.addEventListener('mouseenter', () => { preloadPaymentIntent().catch(() => {}); }, { once: true });
+    }
     const onBottomFree = $('pwBottomFree'); if (onBottomFree) onBottomFree.addEventListener('click', openFreeWizard);
     const onPaidCancel = $('pwPaidCancel'); if (onPaidCancel) onPaidCancel.addEventListener('click', closePaidModal);
     const onBillingClose = $('pwBillingClose'); if (onBillingClose) onBillingClose.addEventListener('click', closeBillingManager);
@@ -5201,33 +5210,37 @@ I will not send it twice.</div>
     if (b) b.style.width = pct + '%';
   }
 
-  async function openPaidModal() {
-    const cached = getCachedStatus();
-    if (cached && cached.active) {
-      openBillingManager();
-      return;
+  // ── Paid flow preload state ──
+  const _paidPreload = {
+    stripeJSReady: false,
+    piReady: false,
+    clientSecret: null,
+    stripeJsPromise: null,
+    piPromise: null,
+    error: null
+  };
+
+  function preloadStripeJS() {
+    if (_paidPreload.stripeJSReady) return Promise.resolve();
+    if (_paidPreload.stripeJsPromise) return _paidPreload.stripeJsPromise;
+    if (typeof Stripe !== 'undefined') {
+      _paidPreload.stripeJSReady = true;
+      return Promise.resolve();
     }
-    document.getElementById('paidModal').style.display = 'flex';
-    document.getElementById('stripe-loading').style.display = 'block';
-    document.getElementById('stripe-payment-content').style.display = 'none';
-    updateStripeProgress(0);
-    _paidInitToken++;
-    await mountPaymentElement(_paidInitToken);
+    _paidPreload.stripeJsPromise = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'https://js.stripe.com/v3/';
+      s.onload = () => { _paidPreload.stripeJSReady = true; resolve(); };
+      s.onerror = () => { _paidPreload.error = 'stripe_js'; reject(new Error('Stripe.js failed to load')); };
+      document.head.appendChild(s);
+    });
+    return _paidPreload.stripeJsPromise;
   }
 
-  async function mountPaymentElement(myToken) {
-    const isStale = () => myToken !== _paidInitToken;
-    const modal = document.getElementById('paidModal');
-    if (!modal) return;
-    const errorEl = modal.querySelector('#payment-error');
-    const submitBtn = modal.querySelector('#paywall-submit-btn');
-    let pct = 0;
-    const loadingTimer = setInterval(() => {
-      if (isStale()) { clearInterval(loadingTimer); return; }
-      pct = Math.min(85, pct + 8 + Math.random() * 8);
-      updateStripeProgress(pct);
-    }, 150);
-    try {
+  function preloadPaymentIntent() {
+    if (_paidPreload.piReady) return Promise.resolve(_paidPreload.clientSecret);
+    if (_paidPreload.piPromise) return _paidPreload.piPromise;
+    _paidPreload.piPromise = (async () => {
       const userId = getUserId();
       const resp = await fetch(`${WORKER_URL}/api/create-payment-intent`, {
         method: 'POST',
@@ -5236,17 +5249,76 @@ I will not send it twice.</div>
       });
       if (!resp.ok) throw new Error('Failed to create PaymentIntent');
       const data = await resp.json();
-      clientSecret = data.clientSecret;
-      if (typeof Stripe === 'undefined') {
-        await new Promise((resolve, reject) => {
-          const s = document.createElement('script');
-          s.src = 'https://js.stripe.com/v3/';
-          s.onload = resolve;
-          s.onerror = () => reject(new Error('Stripe.js failed to load'));
-          document.head.appendChild(s);
-        });
-      }
-      if (isStale()) { clearInterval(loadingTimer); return; }
+      _paidPreload.clientSecret = data.clientSecret;
+      _paidPreload.piReady = true;
+      return data.clientSecret;
+    })();
+    return _paidPreload.piPromise;
+  }
+
+  // Kick off both — Stripe.js immediately, PI after a short delay
+  function preloadPaidFlow() {
+    preloadStripeJS().catch(() => {});
+    setTimeout(() => {
+      preloadPaymentIntent().catch(() => {});
+    }, 1200);
+  }
+
+  async function openPaidModal() {
+    const cached = getCachedStatus();
+    if (cached && cached.active) {
+      openBillingManager();
+      return;
+    }
+    document.getElementById('paidModal').style.display = 'flex';
+
+    // If preload is done → instant open, no loading bar
+    if (_paidPreload.piReady && _paidPreload.stripeJSReady) {
+      document.getElementById('stripe-loading').style.display = 'none';
+      document.getElementById('stripe-payment-content').style.display = 'block';
+      _paidInitToken++;
+      await mountPaymentElement(_paidInitToken);
+      return;
+    }
+
+    // Otherwise show the loading bar (real work is happening now)
+    document.getElementById('stripe-loading').style.display = 'block';
+    document.getElementById('stripe-payment-content').style.display = 'none';
+    updateStripeProgress(0);
+    _paidInitToken++;
+    await mountPaymentElement(_paidInitToken);
+  }
+
+async function mountPaymentElement(myToken) {
+    const isStale = () => myToken !== _paidInitToken;
+    const modal = document.getElementById('paidModal');
+    if (!modal) return;
+    const errorEl = modal.querySelector('#payment-error');
+    const submitBtn = modal.querySelector('#paywall-submit-btn');
+
+    // Only animate the fake progress bar if we're actually waiting on the network.
+    // When the preload finished, this is instant — no bar needed.
+    const needsFetch = !(_paidPreload.piReady && _paidPreload.stripeJSReady);
+    let loadingTimer = null;
+    if (needsFetch) {
+      let pct = 0;
+      loadingTimer = setInterval(() => {
+        if (isStale()) { clearInterval(loadingTimer); return; }
+        pct = Math.min(85, pct + 8 + Math.random() * 8);
+        updateStripeProgress(pct);
+      }, 150);
+    }
+
+    try {
+      // Use preloaded values if available; otherwise they fetch now.
+      const [, piSecret] = await Promise.all([
+        preloadStripeJS(),
+        preloadPaymentIntent()
+      ]);
+      clientSecret = piSecret;
+
+      if (isStale()) { if (loadingTimer) clearInterval(loadingTimer); return; }
+
       const stripe = Stripe(PUBLISHABLE_KEY);
       const elements = stripe.elements({
         appearance: {
@@ -5263,7 +5335,7 @@ I will not send it twice.</div>
       const paymentElement = elements.create('payment', {
         defaultValues: { billingDetails: { name: '', address: { line1: '', postal_code: '' } } }
       });
-      clearInterval(loadingTimer);
+      if (loadingTimer) clearInterval(loadingTimer);
       updateStripeProgress(100);
       document.getElementById('stripe-loading').style.display = 'none';
       document.getElementById('stripe-payment-content').style.display = 'block';
@@ -5275,7 +5347,7 @@ I will not send it twice.</div>
       submitBtn.disabled = false;
       submitBtn.textContent = 'Subscribe — $20.73';
     } catch (err) {
-      clearInterval(loadingTimer);
+      if (loadingTimer) clearInterval(loadingTimer);
       if (isStale()) return;
       updateStripeProgress(100);
       document.getElementById('stripe-loading').style.display = 'none';
