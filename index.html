@@ -14206,7 +14206,13 @@ I will not send it twice.</div>
         aboutOverlay.style.display = 'none';
       });
     }
-    // No boot check. No auto-show. Overlay stays hidden until app asks.
+
+    // Auto-show paywall if user has no access
+    (async function boot() {
+      if (!(await window.__paywall.isAllowed())) {
+        showFullPage();
+      }
+    })();
   }
 
   ['paidModal', 'freeWizardModal', 'billing-manager-modal', 'pw-game-modal'].forEach(id => {
