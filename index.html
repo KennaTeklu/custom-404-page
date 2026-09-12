@@ -13874,19 +13874,19 @@ function requestFullscreen() {
         const content = document.getElementById('freeWizardContent');
         if (freeStep === 1) {
             content.innerHTML = `
-                <h3 style="font-size:18px; font-weight:700; margin-bottom:10px;">Choose a platform</h3>
-                <p style="font-size:13px; color:#94a3b8; margin-bottom:16px;">We'll open your DM to our account there.</p>
-                <div style="position:relative; margin-bottom:16px;">
-                    <input type="text" id="platformSearch" role="combobox" aria-controls="platformList" aria-expanded="false" aria-autocomplete="list" aria-label="Search platforms" style="width:100%; padding:10px 14px; background:rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:#f8fafc; font-size:14px; outline:none;" placeholder="Search platform..." oninput="filterPlatforms(this.value)">
-                    <div id="platformList" role="listbox" aria-label="Platform options" style="position:absolute; top:100%; left:0; width:100%; max-height:200px; overflow-y:auto; background:rgba(0,0,0,0.95); border:1px solid rgba(255,255,255,0.1); border-radius:12px; margin-top:4px; z-index:20; display:none;"></div>
+                <h3>Choose a platform</h3>
+                <p>We'll open your DM to our account there.</p>
+                <div class="pw-dropdown-wrap">
+                    <input type="text" id="platformSearch" class="pw-dropdown-input" role="combobox" aria-controls="platformList" aria-expanded="false" aria-autocomplete="list" aria-label="Search platforms" placeholder="Search platform..." oninput="filterPlatforms(this.value)">
+                    <div id="platformList" class="pw-dropdown-list" role="listbox" aria-label="Platform options"></div>
                 </div>
-                <button id="nextFreeBtn" style="margin-top:16px; padding:12px; border-radius:40px; width:100%; border:1px solid rgba(255,255,255,0.2); background:transparent; color:#f8fafc; cursor:pointer; opacity:0.5; pointer-events:none;" disabled>Next →</button>
+                <button id="nextFreeBtn" class="pw-btn-primary" disabled style="opacity:0.5; pointer-events:none;">Next →</button>
             `;
             const list = document.getElementById('platformList');
             list.innerHTML = socials.map((s, idx) => `
-                <div class="dropdown-item" data-idx="${idx}" onpointerdown="selectPlatform(${idx})" style="display:flex; align-items:center; gap:10px; padding:8px 14px; cursor:pointer;">
-                    <img src="${s.icon}" alt="${s.name}" style="width:20px; height:20px;">
-                    <span style="font-size:13px;">${s.name}</span>
+                <div class="pw-dropdown-item" data-idx="${idx}" onpointerdown="selectPlatform(${idx})">
+                    <img src="${s.icon}" alt="${s.name}">
+                    <span>${s.name}</span>
                 </div>
             `).join('');
             const searchInput = document.getElementById('platformSearch');
@@ -13904,7 +13904,7 @@ function requestFullscreen() {
             // Escape dismisses. State lives on `list.dataset.hl` so it survives
             // filterPlatforms() rebuilding the inner HTML.
             searchInput.addEventListener('keydown', (e) => {
-                const items = list.querySelectorAll('.dropdown-item');
+                const items = list.querySelectorAll('.pw-dropdown-item');
                 if (!items.length) return;
                 let hl = parseInt(list.dataset.hl || '-1', 10);
 
@@ -13945,20 +13945,20 @@ function requestFullscreen() {
             if (isOther) {
                 // ---- Other: organic video by email ----
                 content.innerHTML = `
-                    <h3 style="font-size:18px; font-weight:700; margin-bottom:10px;">Apply by email</h3>
-                    <p style="font-size:13px; color:#94a3b8; margin-bottom:16px;">Since no platform fit, we accept an organic (non-AI) video you create yourself. Record it, then send us the link or file by email.</p>
+                    <h3>Apply by email</h3>
+                    <p>Since no platform fit, we accept an organic (non-AI) video you create yourself. Record it, then send us the link or file by email.</p>
 
                     <div style="background:rgba(250,204,21,0.08); border:1px solid rgba(250,204,21,0.3); border-radius:12px; padding:12px 14px; margin-bottom:16px;">
                         <p style="font-size:12px; color:#facc15; margin:0; line-height:1.5;"><strong>Guidelines:</strong><br>• Video must be original, recorded by you<br>• No AI-generated content<br>• Any length is fine — short is fine<br>• We post it with your permission</p>
                     </div>
 
-                    <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:16px; border-left:3px solid #2dd4bf;">
-                        <p style="color:#94a3b8; margin-bottom:6px;">Your email message:</p>
-                        <div id="appMessage" style="background:rgba(0,0,0,0.4); border-radius:8px; padding:12px; font-size:13px; color:#94a3b8; font-family:monospace; word-break:break-all; margin-bottom:12px; border:1px solid rgba(255,255,255,0.05);">Application ID: ${id}<br>I want free access.<br>I will attach an organic video I made.<br>I grant permission to post it on your channels.<br>This message wasn't edited.<br>I will not send it twice.</div>
-                        <button onclick="copyAndOpenDM()" style="background:#2dd4bf; color:#000; border:none; border-radius:40px; padding:12px; font-weight:700; cursor:pointer; width:100%; display:flex; align-items:center; justify-content:center; gap:8px;"><i class="fas fa-envelope"></i> Copy & Open Email</button>
+                    <div class="pw-copy-block">
+                        <div class="pw-copy-label">Your email message</div>
+                        <div class="pw-copy-message" id="appMessage">Application ID: ${id}<br>I want free access.<br>I will attach an organic video I made.<br>I grant permission to post it on your channels.<br>This message wasn't edited.<br>I will not send it twice.</div>
+                        <button class="pw-btn-primary" onclick="copyAndOpenDM()"><i class="fas fa-envelope"></i> Copy & Open Email</button>
                         <p style="margin-top:10px; text-align:center; font-size:12px; color:#64748b;">Send to: <strong style="color:#94a3b8;">apply@try4ever.com</strong></p>
-                        <button onclick="finishFreeApplication()" style="margin-top:10px; background:transparent; color:#94a3b8; border:1px solid rgba(255,255,255,0.15); border-radius:40px; padding:10px; font-weight:600; cursor:pointer; width:100%; font-size:13px;">I've sent the email →</button>
-                        <button onclick="goBackToPlatformSelection()" style="margin-top:8px; background:transparent; color:#64748b; border:none; padding:8px; cursor:pointer; width:100%; font-size:12px;">← Choose a different option</button>
+                        <button class="pw-btn-secondary" onclick="finishFreeApplication()">I've sent the email →</button>
+                        <button class="pw-btn-secondary" onclick="goBackToPlatformSelection()" style="margin-top:8px;">← Choose a different option</button>
                     </div>
                 `;
                 return;
@@ -13966,15 +13966,15 @@ function requestFullscreen() {
 
             // ---- Normal DM path ----
             content.innerHTML = `
-                <h3 style="font-size:18px; font-weight:700; margin-bottom:10px;">DM us on ${platform.name}</h3>
-                <p style="font-size:13px; color:#94a3b8; margin-bottom:16px;">Copy the message below, then click the button to open our DM on ${platform.name}. Paste the message there and send it.</p>
-                <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:16px; border-left:3px solid #2dd4bf; margin-top:20px;">
-                    <p style="color:#94a3b8; margin-bottom:6px;">Your application message:</p>
-                    <div id="appMessage" style="background:rgba(0,0,0,0.4); border-radius:8px; padding:12px; font-size:13px; color:#94a3b8; font-family:monospace; word-break:break-all; margin-bottom:12px; border:1px solid rgba(255,255,255,0.05);">Application ID: ${id}<br>I want free access.<br>This message wasn't edited.<br>I will not send it twice.</div>
-                    <button onclick="copyAndOpenDM()" style="background:#2dd4bf; color:#000; border:none; border-radius:40px; padding:12px; font-weight:700; cursor:pointer; width:100%; display:flex; align-items:center; justify-content:center; gap:8px;"><i class="fas fa-copy"></i> Copy & DM us on ${platform.name}</button>
+                <h3>DM us on ${platform.name}</h3>
+                <p>Copy the message below, then click the button to open our DM on ${platform.name}. Paste the message there and send it.</p>
+                <div class="pw-copy-block">
+                    <div class="pw-copy-label">Your application message</div>
+                    <div class="pw-copy-message" id="appMessage">Application ID: ${id}<br>I want free access.<br>This message wasn't edited.<br>I will not send it twice.</div>
+                    <button class="pw-btn-primary" onclick="copyAndOpenDM()"><i class="fas fa-copy"></i> Copy & DM us on ${platform.name}</button>
                     <a id="dmFallbackLink" href="${platform.dmUrl}" target="_blank" rel="noopener" style="display:none; margin-top:10px; text-align:center; font-size:13px; color:#2dd4bf; text-decoration:underline; word-break:break-all;">Open ${platform.name} DM manually →</a>
-                    <button onclick="finishFreeApplication()" style="margin-top:10px; background:transparent; color:#94a3b8; border:1px solid rgba(255,255,255,0.15); border-radius:40px; padding:10px; font-weight:600; cursor:pointer; width:100%; font-size:13px;">I've sent the DM →</button>
-                    <button onclick="goBackToPlatformSelection()" style="margin-top:8px; background:transparent; color:#64748b; border:none; padding:8px; cursor:pointer; width:100%; font-size:12px;">← Choose a different platform</button>
+                    <button class="pw-btn-secondary" onclick="finishFreeApplication()">I've sent the DM →</button>
+                    <button class="pw-btn-secondary" onclick="goBackToPlatformSelection()" style="margin-top:8px;">← Choose a different platform</button>
                 </div>
             `;
         } else if (freeStep === 3) {
@@ -13992,12 +13992,12 @@ function requestFullscreen() {
 
             if (isRejected) {
                 content.innerHTML = `
-                    <div style="text-align:center; padding:20px;">
-                        <div style="font-size:48px;">⚠️</div>
-                        <h3 style="color:#f8fafc; font-size:20px; margin:10px 0;">Application not approved</h3>
-                        <p style="color:#94a3b8; font-size:13px; margin-bottom:20px;">${platformLine}<br>Your previous application was not approved. You can apply again with a different platform or a different approach.</p>
-                        <button onclick="reapplyFreeApplication()" style="background:#2dd4bf; color:#000; border:none; border-radius:40px; padding:12px 24px; font-weight:600; cursor:pointer; width:100%; margin-bottom:8px;">Apply again</button>
-                        <button onclick="closeFreeWizard()" style="background:transparent; color:#94a3b8; border:1px solid rgba(255,255,255,0.15); border-radius:40px; padding:10px; font-weight:600; cursor:pointer; width:100%; font-size:13px;">Close</button>
+                    <div style="text-align:center; padding:12px 0;">
+                        <div style="font-size:48px; margin-bottom:6px;">⚠️</div>
+                        <h3>Application not approved</h3>
+                        <p>${platformLine}<br>Your previous application was not approved. You can apply again with a different platform or a different approach.</p>
+                        <button class="pw-btn-primary" onclick="reapplyFreeApplication()" style="margin-bottom:8px;">Apply again</button>
+                        <button class="pw-btn-secondary" onclick="closeFreeWizard()">Close</button>
                     </div>
                 `;
                 return;
@@ -14005,23 +14005,22 @@ function requestFullscreen() {
 
             // Pending state (default)
             content.innerHTML = `
-                <div style="text-align:center; padding:20px;">
-                    <div style="font-size:48px;">📬</div>
-                    <h3 style="color:#f8fafc; font-size:20px; margin:10px 0;">Application received</h3>
-                    <p style="color:#94a3b8; font-size:13px; margin-bottom:20px;">${platformLine}<br>You've been added to the review queue. We'll respond to your DM when we get to it.</p>
-                    <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:12px; margin-bottom:16px; border-left:3px solid #2dd4bf; text-align:left; position:relative;">
-                        <p style="font-size:11px; color:#94a3b8; margin-bottom:4px;">Your application ID (keep for reference):</p>
-                        <p style="font-size:12px; color:#f8fafc; font-family:monospace; word-break:break-all; margin:0; padding-right:60px;">${id}</p>
-                        <button onclick="copyApplicationId()" style="position:absolute; top:10px; right:10px; background:rgba(45,212,191,0.15); border:1px solid #2dd4bf; color:#2dd4bf; border-radius:20px; padding:4px 10px; font-size:11px; cursor:pointer; font-weight:600;">Copy</button>
+                <div style="text-align:center; padding:12px 0;">
+                    <div style="font-size:48px; margin-bottom:6px;">📬</div>
+                    <h3>Application received</h3>
+                    <p>${platformLine}<br>You've been added to the review queue. We'll respond to your DM when we get to it.</p>
+                    <div class="pw-copy-block" style="position:relative;">
+                        <div class="pw-copy-label">Your application ID (keep for reference)</div>
+                        <div class="pw-copy-message" style="padding-right:64px;">${id}</div>
+                        <button onclick="copyApplicationId()" style="position:absolute; top:36px; right:12px; background:rgba(45,212,191,0.15); border:1px solid #2dd4bf; color:#2dd4bf; border-radius:20px; padding:4px 10px; font-size:11px; cursor:pointer; font-weight:600;">Copy</button>
                     </div>
-                    <button onclick="refreshApplicationStatus()" id="refreshStatusBtn" style="background:transparent; color:#94a3b8; border:1px solid rgba(255,255,255,0.15); border-radius:40px; padding:10px; font-weight:600; cursor:pointer; width:100%; font-size:13px; margin-bottom:8px;">↻ Refresh status</button>
-                    <button onclick="closeFreeWizard()" style="background:#2dd4bf; color:#000; border:none; border-radius:40px; padding:12px 24px; font-weight:600; cursor:pointer; width:100%;">Close</button>
-                    <button onclick="withdrawApplication()" style="margin-top:8px; background:transparent; color:#f43f5e; border:1px solid rgba(244,63,94,0.3); border-radius:40px; padding:10px; font-weight:600; cursor:pointer; width:100%; font-size:12px;">Withdraw application</button>
+                    <button class="pw-btn-secondary" id="refreshStatusBtn" onclick="refreshApplicationStatus()" style="margin-bottom:8px;">↻ Refresh status</button>
+                    <button class="pw-btn-primary" onclick="closeFreeWizard()">Close</button>
+                    <button class="pw-btn-danger" onclick="withdrawApplication()">Withdraw application</button>
                 </div>
             `;
         }
     }
-
     function filterPlatforms(query) {
         const list = document.getElementById('platformList');
         const q = query.toLowerCase();
@@ -14497,6 +14496,7 @@ function requestFullscreen() {
             paymentElement.on('change', (event) => {
                 if (isStale()) return;
                 submitBtn.disabled = !event.complete;
+                submitBtn.style.opacity = event.complete ? '1' : '0.5';
                 if (event.complete) errorEl.textContent = '';
             });
 
@@ -14574,8 +14574,9 @@ function requestFullscreen() {
         // Reset submit button state
         const submitBtn = document.getElementById('paywall-submit-btn');
         if (submitBtn) {
-            submitBtn.disabled = false;
+            submitBtn.disabled = true;
             submitBtn.textContent = 'Subscribe — $20.73';
+            submitBtn.style.opacity = '0.5';
         }
 
         // Clear any lingering error/status messages
@@ -15098,7 +15099,7 @@ function requestFullscreen() {
 
     function updateFreePlanBadge() {
         const badge = document.getElementById('freePlanBadge');
-        const btn = document.querySelector('#freePlanCard .btn--free');
+        const btn = document.getElementById('freePlanBtn');
         if (!badge) return;
 
         let status = 'none'; // none | pending | rejected
