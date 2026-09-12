@@ -3857,11 +3857,14 @@ tr { break-inside: avoid; }
     background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 24px;
+    display: block;
+    padding: 40px 24px;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .pw-shell {
+    margin: 0 auto;
   }
 
   .pw-shell {
@@ -4332,23 +4335,89 @@ tr { break-inside: avoid; }
   }
 
   /* ── Responsive ── */
+  /* ── Tablet ── */
   @media (max-width: 800px) {
-    .pw-shell { padding: 28px 20px; }
+    #paywall-overlay { padding: 24px 16px; }
+    .pw-shell { padding: 28px 20px 24px; border-radius: 20px; }
+
     .pw-plans {
       flex-wrap: nowrap;
       overflow-x: auto;
       scrollbar-width: none;
+      -ms-overflow-style: none;
       justify-content: flex-start;
-      padding-bottom: 20px;
+      padding-bottom: 16px;
       margin: 0 -20px;
       padding-left: 20px;
       padding-right: 20px;
+      -webkit-overflow-scrolling: touch;
     }
     .pw-plans::-webkit-scrollbar { display: none; }
+
     .pw-card-free { flex: 0 0 240px; }
-    .pw-card-paid { flex: 0 0 300px; }
+    .pw-card-paid { flex: 0 0 300px; padding: 24px 20px; }
+
+    .pw-header { margin-bottom: 24px; }
     .pw-header h1 { font-size: 22px; }
     .pw-price { font-size: 34px; }
+
+    .pw-trust { gap: 20px; padding: 20px 0; }
+    .pw-bottom .pw-cta { padding: 12px 20px; margin: 0 4px; }
+    .pw-modal-inner { padding: 24px 20px; }
+  }
+
+  /* ── Phone ── */
+  @media (max-width: 480px) {
+    #paywall-overlay { padding: 16px 12px; }
+    .pw-shell { padding: 22px 16px 20px; border-radius: 16px; }
+
+    .pw-plans {
+      margin: 0 -16px;
+      padding-left: 16px;
+      padding-right: 16px;
+      gap: 12px;
+    }
+    .pw-card-free { flex: 0 0 220px; padding: 20px 16px; }
+    .pw-card-paid { flex: 0 0 280px; padding: 20px 16px; }
+
+    .pw-header h1 { font-size: 20px; }
+    .pw-header p { font-size: 13px; }
+    .pw-price { font-size: 30px; }
+    .pw-plan-name { font-size: 13px; }
+    .pw-features li { font-size: 12px; padding: 6px 0; }
+
+    /* Stack the bottom CTAs so they never overflow */
+    .pw-bottom .pw-cta {
+      display: block;
+      width: 100%;
+      margin: 6px 0;
+      padding: 12px 20px;
+    }
+
+    .pw-trust {
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      padding: 18px 0;
+    }
+
+    .pw-faq-section h2 { font-size: 16px; }
+    .faq-question { font-size: 13px; }
+    .faq-answer { font-size: 12px; }
+
+    .pw-modal-inner { padding: 20px 16px; border-radius: 16px; }
+    .pw-modal-inner h3 { font-size: 16px; }
+    .pw-modal-inner p { font-size: 12px; }
+    .pw-loading-pct { font-size: 24px; }
+  }
+
+  /* ── Very short viewports (landscape phone, split screen) ── */
+  @media (max-height: 600px) {
+    #paywall-overlay { padding: 16px 16px; }
+    .pw-shell { padding: 20px 20px 18px; }
+    .pw-header { margin-bottom: 16px; }
+    .pw-header h1 { font-size: 20px; }
+    .pw-plans { padding: 4px 0 16px; }
   }
 
   /* ── Preferences ── */
@@ -18754,11 +18823,14 @@ const showScratch = document.getElementById('print-show-scratch-space');
     });
 
     // ---- Expose functions globally for other scripts ----
+    // The expert-engine script defines some of these LATER in the page,
+    // so we must check existence before reading the bare identifier
+    // (a bare reference to an undefined global throws ReferenceError).
     window.openPrintSettings = openPrintSettings;
     window.printHTML = printHTML;
-    window.generateLearnPrintHTML = generateLearnPrintHTML;
-    window.generateCheatsheetPrintHTML = generateCheatsheetPrintHTML;
-    window.generateAdvancedQuizPrint = generateAdvancedQuizPrint;
+    if (typeof generateLearnPrintHTML === 'function') window.generateLearnPrintHTML = generateLearnPrintHTML;
+    if (typeof generateCheatsheetPrintHTML === 'function') window.generateCheatsheetPrintHTML = generateCheatsheetPrintHTML;
+    if (typeof generateAdvancedQuizPrint === 'function') window.generateAdvancedQuizPrint = generateAdvancedQuizPrint;
 
     // ---- Debug ----
     console.log('Magnificent print script loaded. All generators exposed globally.');
