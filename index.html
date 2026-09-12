@@ -2971,20 +2971,7 @@ button:hover,
 </style>
 <style>
 /* ========== PAYWALL OVERLAY – RESPONSIVE & SCROLLABLE ========== */
-#paywall-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 100000;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    overflow: hidden;
-	pointer-events: none; 
-}
+/* legacy #paywall-overlay block removed — superseded by the newer definition */
 
 #paywall-overlay .modal-medium {
     max-width: 480px;
@@ -3857,6 +3844,8 @@ tr { break-inside: avoid; }
     background: rgba(0, 0, 0, 0.85);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    display: block;
+    pointer-events: auto;
     display: block;
     padding: 40px 24px;
     overflow-y: auto;
