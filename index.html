@@ -4870,7 +4870,7 @@ tr { break-inside: avoid; }
                  placeholder="Search platform..." oninput="__pw_filterPlatforms(this.value)">
           <div id="platformList" class="pw-dropdown-list" role="listbox"></div>
         </div>
-        <button id="nextFreeBtn" class="pw-btn-primary" disabled>Next →</button>
+        <button id="nextFreeBtn" class="pw-btn-primary" disabled onclick="__pw_nextFreeStep()">Next →</button>
         <button class="pw-btn-secondary" onclick="__pw_closeFreeWizard()">Cancel</button>
       `;
       const list = document.getElementById('platformList');
@@ -4888,6 +4888,16 @@ tr { break-inside: avoid; }
           }
         }, 200);
       });
+
+      // Wire the Next button (built dynamically each render)
+      const nextBtn = document.getElementById('nextFreeBtn');
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+          if (nextBtn.disabled) return;
+          freeStep = 2;
+          renderFreeStep();
+        });
+      }
     } else if (freeStep === 2) {
       const id = getApplicationId();
       const platform = selectedPlatform ? socials.find(s => s.name === selectedPlatform) : socials[0];
@@ -5446,6 +5456,12 @@ function renewSubscription() {
   window.__pw_refreshStatus = refreshApplicationStatus;
   window.__pw_withdraw = withdrawApplication;
   window.__pw_reapply = reapplyFreeApplication;
+  window.__pw_nextFreeStep = function() {
+    const btn = document.getElementById('nextFreeBtn');
+    if (!btn || btn.disabled) return;
+    freeStep = 2;
+    renderFreeStep();
+  };
 
   window.pwTestOpenBilling = openBillingManager;
   window.resetPaywall = function() {
