@@ -4632,6 +4632,7 @@ tr { break-inside: avoid; }
   function showFullPage() {
     if (_paywallActive) return;
     _paywallActive = true;
+    window.__paywallActive = true;
 
     const tpl = document.getElementById('paywall-template');
     if (!tpl) { console.warn('[Paywall] template missing'); return; }
@@ -8170,6 +8171,7 @@ function flash3DNode(nodeId) {
 // ----------------------------------------------------------------------------
 const Core = {
 focus: (id, expand = true) => {
+    if (window.__paywallActive) return;
     if (State.selectedFolderId) {
         delete State.selectedFolderId;
         UI.restoreAllAfterFocus();
@@ -8296,6 +8298,7 @@ goUp: () => {
     }
 },
 refresh: async () => {
+    if (window.__paywallActive) return;
     // --- Restore leaf node ID from localStorage if not already set ---
     if (!State.leafNodeId) {
         const savedLeafId = localStorage.getItem('current_leaf_id');
@@ -8819,6 +8822,7 @@ const UI = {
     },
     checkBackupNag: () => { let last = localStorage.getItem('last_backup'); if (!last || Date.now() - last > 604800000) UI.toast("⚠️ Reminder: Click Backup to save your data!"); },
 updateBreadcrumbs: () => {
+    if (window.__paywallActive) return;
     const b = document.getElementById('breadcrumbs');
     if (!b) return;
     
@@ -8902,6 +8906,7 @@ updateBreadcrumbs: () => {
     }
 },
 renderFolders: () => {
+    if (window.__paywallActive) return;
     // Safe query with fallbacks
     const searchInput = document.getElementById('search-input');
     const query = searchInput?.value?.toLowerCase() || '';
@@ -9871,6 +9876,10 @@ async function removeLibraryCategories() {
 // 8. EVENT LISTENERS & INITIALIZATION (fully connected)
 // ----------------------------------------------------------------------------
 window.addEventListener('load', async () => {
+    if (window.__paywallActive || !document.getElementById('map-container')) return;
+    // ---- Verify magic constant ----
+    // Bail if the paywall has already replaced the body
+    if (!document.getElementById('map-container')) return;
     // ---- Verify magic constant ----
     if (typeof MAGIC === 'undefined' || MAGIC !== (0xDEADBEEF ^ 0x55AA55AA)) {
         document.body.innerHTML = `<!DOCTYPE html>
@@ -12154,7 +12163,7 @@ const setupDrop = (zoneId, fileInputId, isCat) => {
         if (e.dataTransfer.files.length === 0) return;
         // Check subscription
         if (!(await window.__paywall.isAllowed())) {
-            window.__paywall.showPanel(document.getElementById('upload-hub-modal').querySelector('.modal-large'));
+            window.__paywall.showFullPage();
             return;
         }
         await Parser.process(e.dataTransfer.files[0], isCat);
@@ -12197,7 +12206,7 @@ document.getElementById('paste-submit-btn').addEventListener('click', async () =
     // Check subscription
     if (!(await window.__paywall.isAllowed())) {
         // Show paywall in the modal
-        window.__paywall.showPanel(document.getElementById('paste-json-modal').querySelector('.modal-medium'));
+        window.__paywall.showFullPage();
         return;
     }
     const jsonText = document.getElementById('paste-json-textarea').value;
@@ -15653,6 +15662,7 @@ window._onboardingEnterHandler = enterHandler; // optional, for cleanup
     function init() {
         console.log('[Onboarding] Init running...');
         const checkReady = setInterval(() => {
+            if (!document.getElementById('map-container')) { clearInterval(checkReady); return; }
             if (window.State && window.Core && window.Graph3D && window.UI && typeof MathCore !== 'undefined' && typeof DB !== 'undefined') {
                 clearInterval(checkReady);
                 console.log('[Onboarding] App ready. Onboarding needed?', isOnboardingNeeded());
@@ -15834,6 +15844,8 @@ document.getElementById('dock-add').addEventListener('click', async function() {
             setTimeout(waitForApp, 200);
             return;
         }
+        // Bail if the paywall already replaced the body
+        if (!document.getElementById('map-container')) return;
         initStatsPanel();
     }
     waitForApp();
@@ -16402,7 +16414,9 @@ document.getElementById('dock-add').addEventListener('click', async function() {
 <script>
 // ─── Force control card to respect saved state ───
 setTimeout(() => {
+    if (window.__paywallActive) return;
     const card = document.getElementById('control-card');
+    if (!card) return;
     if (localStorage.getItem('control_card_collapsed') === 'true') {
         card.classList.add('collapsed');
     } else {
